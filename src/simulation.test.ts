@@ -433,7 +433,7 @@ test("upgrade saves migrate old data, clamp invalid ranks and survive a new expe
     },
   });
   const g = new Game(7);
-  g.upgrades = { wick: 2, boots: 1, spark: 3 };
+  g.upgrades = { wick: 2, boots: 1, spark: 3, compass: 1 };
   g.save();
   const loaded = new Game(1);
   assert.equal(loaded.load(), true);
@@ -443,9 +443,42 @@ test("upgrade saves migrate old data, clamp invalid ranks and survive a new expe
   delete old.upgrades;
   data.set("lastlight-save", JSON.stringify(old));
   loaded.load();
-  assert.deepEqual(loaded.upgrades, { wick: 0, boots: 0, spark: 0 });
+  assert.deepEqual(loaded.upgrades, {
+    wick: 0,
+    boots: 0,
+    spark: 0,
+    compass: 0,
+  });
   old.upgrades = { wick: 99, boots: -2, spark: "bad" };
   data.set("lastlight-save", JSON.stringify(old));
   loaded.load();
-  assert.deepEqual(loaded.upgrades, { wick: 3, boots: 0, spark: 0 });
+  assert.deepEqual(loaded.upgrades, {
+    wick: 3,
+    boots: 0,
+    spark: 0,
+    compass: 0,
+  });
+});
+
+test("sanctuary compass is locked until purchased and gives camera-relative bearings", () => {
+  const g = new Game(1);
+  assert.equal(g.sanctuaryBearing(0), null);
+  g.phase = "SANCTUARY";
+  g.banked = 3;
+  assert.equal(g.purchaseUpgrade("compass"), true);
+  assert.equal(g.banked, 0);
+  assert.equal(g.purchaseUpgrade("compass"), false);
+  g.player.x = g.destination.x;
+  g.player.z = g.destination.z + 10;
+  assert.deepEqual(g.sanctuaryBearing(0), { angle: 0, distance: 10 });
+  assert.ok(
+    Math.abs(g.sanctuaryBearing(Math.PI / 2)!.angle + Math.PI / 2) < 0.00001,
+  );
+  g.player.x = g.destination.x + 10;
+  g.player.z = g.destination.z;
+  assert.ok(Math.abs(g.sanctuaryBearing(0)!.angle - Math.PI / 2) < 0.00001);
+  const a = g.sanctuaryBearing(100 * Math.PI)!.angle;
+  assert.ok(a >= -Math.PI && a <= Math.PI);
+  g.reset(44);
+  assert.equal(g.upgrades.compass, 1);
 });

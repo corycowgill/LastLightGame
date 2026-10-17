@@ -27,6 +27,12 @@ export const CONFIG = {
   burstCooldown: 18,
 };
 export const UPGRADES = {
+  compass: {
+    name: "Sanctuary Compass",
+    description: "A bearing toward the distant golden fire",
+    cap: 1,
+    cost: 3,
+  },
   wick: {
     name: "Efficient Wick",
     description: "8% less fuel per rank",
@@ -174,7 +180,12 @@ export class Game {
   matches = 3;
   artifacts = 0;
   banked = 0;
-  upgrades: Record<Upgrade, number> = { wick: 0, boots: 0, spark: 0 };
+  upgrades: Record<Upgrade, number> = {
+    wick: 0,
+    boots: 0,
+    spark: 0,
+    compass: 0,
+  };
   elapsed = 0;
   message = "";
   completed = false;
@@ -253,6 +264,19 @@ export class Game {
       },
     ]);
     this.enemies = [{ x: 84, z: 24, kind: "stalker", state: "LISTENING" }];
+  }
+  sanctuaryBearing(cameraYaw: number) {
+    if (!this.upgrades.compass) return null;
+    const dx = this.destination.x - this.player.x;
+    const dz = this.destination.z - this.player.z;
+    const distance = Math.hypot(dx, dz);
+    const heading = Math.atan2(-dx, -dz);
+    // The compass points at the fire, not at a route through walls.
+    const angle = Math.atan2(
+      Math.sin(heading - cameraYaw),
+      Math.cos(heading - cameraYaw),
+    );
+    return { angle: angle || 0, distance };
   }
   get fuelRate() {
     return [0.35, 1, 3.5][this.mode] * (1 - 0.08 * this.upgrades.wick);

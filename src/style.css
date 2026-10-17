@@ -777,3 +777,52 @@ body[data-touch="true"] #lookHint {
     height: 22px;
   }
 }
+
+#compass {
+  position: absolute;
+  top: max(100px, calc(env(safe-area-inset-top) + 78px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e9c68b;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  padding: 7px 12px;
+  background: #070c12ba;
+  border: 1px solid #e9c68b40;
+  border-radius: 20px;
+  pointer-events: none;
+}
+#compass[hidden] {
+  display: none;
+}
+#compassNeedle {
+  display: inline-block;
+  font-size: 20px;
+  line-height: 1;
+}
+@media (max-height: 500px) {
+  #compass {
+    top: max(57px, calc(env(safe-area-inset-top) + 45px));
+    font-size: 9px;
+    padding: 4px 9px;
+  }
+}
+
+@media (min-width: 951px) and (min-height: 501px) {
+  body[data-touch="true"] footer {
+    top: 150px;
+    bottom: auto;
+    left: auto;
+    right: 24px;
+    width: 220px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  body[data-touch="true"] footer .hint {
+    display: none;
+  }
+}

@@ -510,6 +510,27 @@ function updateHUD() {
       "aria-pressed",
       String(Number(button.dataset.touchMode) === game.mode),
     );
+  const compass = game.sanctuaryBearing(cameraControls.pose.yaw);
+  $("compass").hidden = !compass;
+  if (compass) {
+    $("compassNeedle").style.transform = `rotate(${-compass.angle}rad)`;
+    const degrees = (Math.abs(compass.angle) * 180) / Math.PI;
+    const direction =
+      compass.distance < 4
+        ? "NEARBY"
+        : degrees < 18
+          ? "AHEAD"
+          : degrees > 155
+            ? "BEHIND"
+            : compass.angle > 0
+              ? "LEFT"
+              : "RIGHT";
+    $("compassText").textContent = `GOLDEN FIRE | ${direction}`;
+    $("compass").setAttribute(
+      "aria-label",
+      `Sanctuary compass: golden fire ${direction.toLowerCase()}. Bearing only; passages may turn.`,
+    );
+  }
   const pct = Math.max(0, game.fuel / game.maxFuel);
   $("fuelBar").style.width = `${pct * 100}%`;
   $("staminaBar").style.width = `${game.player.stamina * 100}%`;
