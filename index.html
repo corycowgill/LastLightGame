@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#070c12" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>The Last Light</title>
+  </head>
+  <body>
+    <div id="scene"></div>
+    <div id="vignette"></div>
+    <div id="hud" hidden>
+      <header>
+        <div class="brand">
+          THE LAST LIGHT<span>THE FORGOTTEN CATACOMBS</span>
+        </div>
+        <div id="bearing"></div>
+        <button id="pauseButton">ESC · PAUSE</button>
+      </header>
+      <div id="notice"></div>
+      <div id="phase"></div>
+      <div id="direction"></div>
+      <footer>
+        <section class="fuel">
+          <div class="label">
+            <span id="mode">STEADY FLAME</span><span id="fuelText"></span>
+          </div>
+          <div class="meter"><i id="fuelBar"></i></div>
+          <div class="modes">[1] EMBER <b>[2] STEADY</b> [3] BLAZE</div>
+          <div class="stamina"><i id="staminaBar"></i></div>
+        </section>
+        <section id="inventory"></section>
+        <section class="hint">
+          WASD Move · SHIFT Sprint · C Crouch<br />E Interact / Relight · Q
+          Chalk · F Flame burst · TAB Journal
+        </section>
+      </footer>
+      <div id="prompt"></div>
+    </div>
+    <div id="overlay"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
