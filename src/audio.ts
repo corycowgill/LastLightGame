@@ -1,6 +1,7 @@
 import type { Game } from "./simulation";
 export class GameAudio {
-  private ctx?: AudioContext;
+  private ctx?: AudioContext | OfflineAudioContext;
+  captureTime?: number;
   private master?: GainNode;
   private hum?: GainNode;
   private oscillator?: OscillatorNode;
@@ -16,12 +17,12 @@ export class GameAudio {
   private phase = "";
   private lastX = 0;
   private lastZ = 0;
-  start() {
+  start(context?: AudioContext | OfflineAudioContext) {
     if (this.ctx) {
-      void this.ctx.resume();
+      if (this.ctx instanceof AudioContext) void this.ctx.resume();
       return;
     }
-    const c = (this.ctx = new AudioContext());
+    const c = (this.ctx = context ?? new AudioContext());
     this.master = c.createGain();
     this.master.gain.value = this.level;
     this.master.connect(c.destination);
@@ -34,7 +35,7 @@ export class GameAudio {
     this.noise = c.createBuffer(1, c.sampleRate, c.sampleRate);
     const values = this.noise.getChannelData(0);
     for (let i = 0; i < values.length; i++) values[i] = Math.random() * 2 - 1;
-    void c.resume();
+    if (c instanceof AudioContext) void c.resume();
   }
   set volume(v: number) {
     this.setVolume(v);
@@ -45,12 +46,16 @@ export class GameAudio {
   setVolume(v: number) {
     this.level = Math.max(0, Math.min(1, v));
     if (this.ctx && this.master)
-      this.master.gain.setTargetAtTime(this.level, this.ctx.currentTime, 0.1);
+      this.master.gain.setTargetAtTime(
+        this.level,
+        this.captureTime ?? this.ctx.currentTime,
+        0.1,
+      );
   }
   private tone(f: number, duration: number, volume: number, end = f, pan = 0) {
     if (!this.ctx || !this.master) return;
     const c = this.ctx,
-      t = c.currentTime,
+      t = this.captureTime ?? c.currentTime,
       o = c.createOscillator(),
       g = c.createGain(),
       p = c.createStereoPanner();
@@ -61,7 +66,7 @@ export class GameAudio {
     g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
     p.pan.value = Math.max(-1, Math.min(1, pan));
     o.connect(g).connect(p).connect(this.master);
-    o.start();
+    o.start(t);
     o.stop(t + duration + 0.01);
     o.onended = () => {
       o.disconnect();
@@ -72,7 +77,7 @@ export class GameAudio {
   private air(duration: number, volume: number, frequency: number, pan = 0) {
     if (!this.ctx || !this.master || !this.noise) return;
     const c = this.ctx,
-      t = c.currentTime,
+      t = this.captureTime ?? c.currentTime,
       s = c.createBufferSource(),
       f = c.createBiquadFilter(),
       g = c.createGain(),
@@ -101,7 +106,7 @@ export class GameAudio {
       hunt = phase === "HUNT_ACTIVE" || phase === "HUNT_GRACE";
     this.hum.gain.setTargetAtTime(
       hunt ? 0.055 : 0.005,
-      this.ctx.currentTime,
+      this.captureTime ?? this.ctx.currentTime,
       1,
     );
     if (phase !== this.phase) {
@@ -177,7 +182,7 @@ export class GameAudio {
   }
   dispose() {
     this.oscillator?.stop();
-    void this.ctx?.close();
+    if (this.ctx instanceof AudioContext) void this.ctx.close();
     this.ctx = undefined;
     this.master = undefined;
     this.hum = undefined;

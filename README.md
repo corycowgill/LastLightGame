@@ -34,7 +34,8 @@ The simulation advances at 60 Hz. World grid cells represent two metres. Gamepla
 
 ## Deployment
 
-`npm run build` creates `dist/`. Serve this directory from any static host. The included `render.yaml` configures a Render static site with `npm ci && npm run build`. The game does not require server routes. Optional Google Fonts have system font fallbacks.
+pm run build`creates`dist/`. Serve this directory from any static host. The included `render.yaml` configures a Render static site with 
+pm ci && npm run build`. The game does not require server routes. Optional Google Fonts have system font fallbacks.
 
 ## Developer mode
 
@@ -43,3 +44,7 @@ Append `?debug` to the URL. H forces extinction/Hunt, R refills fuel, T teleport
 ## Scope
 
 This is the playable Catacombs checkpoint toward the complete vertical slice. The intended 10–20 minute pacing, visual acceptance and hardware performance still need review. Additional biomes, advanced progression branches, region streaming and a full developer visualization suite are future work. See BUILD_STATUS.md for verification and known limitations. Do not treat a successful build alone as playtest acceptance.
+
+## Current-state demo
+
+[Watch the v1 gameplay demo](docs/demos/README.md) — 71 seconds with original game audio, demonstrating torch modes, the Hunt, relighting, and sanctuary banking.

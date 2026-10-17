@@ -20,14 +20,21 @@ Updated 2026-10-17. Version 0.1: playable Catacombs checkpoint for review. The f
 
 ## Validation
 
-- `npm test`: **22 passed, 0 failed**.
+-
+
+pm test`: **22 passed, 0 failed**.
+
 - Connectivity and deterministic generation checked across 100 seeds.
 - Rules cover movement/collision, camera clipping, fuel rates and switching, burst cooldown, extinction/grace, navigable spawn, line of sight, hearing around separating walls, relighting, sanctuary protection, pickups, chalk, persistence, banking and death loss.
 - A regression requires the Hunter to traverse several cells and actually catch an exposed stationary player. This catches waypoint oscillation that an escape-only test misses.
 - A scenario physically walks an escape route after Hunter activation and verifies banking and banishment.
 - The full route driver physically traverses the generated expedition, collects artifacts, forces extinction, observes the active Hunt and banks discoveries.
-- `npm run build`: TypeScript passes and Vite emits deployable `dist/`; game JS about 37 kB and Three.js about 489 kB before compression.
-- Production build served locally using `npm run preview` at http://127.0.0.1:4173/.
+-
+
+pm run build`: TypeScript passes and Vite emits deployable `dist/`; game JS about 37 kB and Three.js about 489 kB before compression.
+
+- Production build served locally using
+  pm run preview` at http://127.0.0.1:4173/.
 - Final corrected production scenario banked one relic. Purchasing a reservoir upgrade, reloading, continuing, and opening the journal confirmed a persistent capacity of 810 Steady seconds.
 - Browser UI verification observed EXPLORING → HUNT_ACTIVE → SANCTUARY / BANISHED and an explicit scenario PASS. Menus, settings, graphics selection and pause were exercised; no runtime error logs were observed.
 - Browser screenshot capture timed out even on a separate blank tab. Consequently no screenshot-based visual acceptance is claimed, and hardware frame-rate acceptance remains open. The in-app browser's frame reporting was low; test on normal hardware before treating performance as accepted.
@@ -49,4 +56,12 @@ Normal developer keys with `?debug`: H forces extinction, R refills fuel, T tele
 
 ## Resume instructions
 
-Run `npm ci`, `npm test`, `npm run build`, then `npm run dev`. Read README.md and this file. Preserve the shared grid/metre convention: World cell/start/exit coordinates are grid units (two metres each); player, enemy, item, chalk and navigation-path coordinates are metres. Keep gameplay perception independent of renderer quality. Review the two early checkpoints before expanding: torchlit third-person exploration, then a fair survivable Hunter encounter.
+Run
+pm ci`, 
+pm test`,
+pm run build`, then 
+pm run dev`. Read README.md and this file. Preserve the shared grid/metre convention: World cell/start/exit coordinates are grid units (two metres each); player, enemy, item, chalk and navigation-path coordinates are metres. Keep gameplay perception independent of renderer quality. Review the two early checkpoints before expanding: torchlit third-person exploration, then a fair survivable Hunter encounter.
+
+## V1 demo recording
+
+A 70.875-second 720p/24 fps demo with original stereo game audio is saved at `docs/demos/the-last-light-v1.mp4`. See `docs/demos/README.md` for the timeline and reproducible capture steps. The scripted fixed-step recording shows the existing game systems and does not establish real-time performance acceptance.

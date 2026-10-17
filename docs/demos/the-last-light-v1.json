@@ -1,0 +1,45 @@
+{
+  "seed": 104729,
+  "fps": 24,
+  "width": 1280,
+  "height": 720,
+  "source": "Actual v1 simulation, renderer and procedural sound",
+  "scripted": true,
+  "events": [
+    {
+      "time": 38.375,
+      "event": "Scripted extinction"
+    },
+    {
+      "time": 38.375,
+      "event": "EXTINGUISHING"
+    },
+    {
+      "time": 39.375,
+      "event": "HUNT_GRACE"
+    },
+    {
+      "time": 47.375,
+      "event": "HUNT_ACTIVE"
+    },
+    {
+      "time": 49.375,
+      "event": "RELIGHTING"
+    },
+    {
+      "time": 51.333333333333336,
+      "event": "EXPLORING"
+    },
+    {
+      "time": 66.79166666666667,
+      "event": "SANCTUARY"
+    }
+  ],
+  "duration": 70.875,
+  "banked": 1,
+  "frames": 1701,
+  "sourceCommit": "8bf08d7",
+  "recordedDate": "2026-10-17",
+  "captureMethod": "Fixed-step scripted gameplay rendered frame by frame; presentation captions and compact HUD composited over real WebGL frames. Original game audio scheduled in OfflineAudioContext. Not a real-time performance benchmark.",
+  "output": "the-last-light-v1.mp4"
+}

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>The Last Light — v1 recording</title>
+    <style>
+      body {
+        margin: 0;
+        background: #080e17;
+        color: #d8c6a4;
+        font: 14px Arial;
+      }
+      main {
+        max-width: 1280px;
+        margin: auto;
+        padding: 20px;
+      }
+      button,
+      a {
+        background: #20313c;
+        color: #f2d4a1;
+        border: 1px solid #7d6643;
+        padding: 14px 22px;
+        display: inline-block;
+        margin: 8px;
+        cursor: pointer;
+      }
+      #stage {
+        width: 1280px;
+        height: 720px;
+        position: absolute;
+        left: -1500px;
+        top: 0;
+      }
+      #output {
+        width: 100%;
+        max-width: 1280px;
+        display: block;
+      }
+      p {
+        color: #9baab3;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>The Last Light · Current State v1</h1>
+      <p>
+        Records the actual game simulation and renderer at fixed steps. Scripted
+        camera and controls demonstrate current functionality. Frame-by-frame
+        capture is not a performance benchmark.
+      </p>
+      <button id="record">Record v1 walkthrough</button
+      ><span id="status">Ready</span>
+      <div id="downloads"></div>
+      <canvas id="output" width="1280" height="720"></canvas>
+      <div id="stage"></div>
+    </main>
+    <script type="module" src="/src/demo-record.ts"></script>
+  </body>
+</html>
