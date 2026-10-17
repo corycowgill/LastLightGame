@@ -357,3 +357,95 @@ test("movement cannot pass through the starting sanctuary brazier", () => {
   assert.ok(g.player.z >= 0.85);
   assert.ok(g.player.z < 1);
 });
+
+test("upgrades require sanctuary, sufficient banked relics and respect rank caps", () => {
+  const g = new Game(1);
+  g.banked = 30;
+  assert.equal(g.purchaseUpgrade("wick"), false);
+  g.phase = "SANCTUARY";
+  for (const kind of ["wick", "boots", "spark"] as const) {
+    for (let i = 0; i < 3; i++) assert.equal(g.purchaseUpgrade(kind), true);
+    assert.equal(g.purchaseUpgrade(kind), false);
+  }
+  assert.equal(g.banked, 12);
+  g.banked = 0;
+  assert.equal(g.purchaseUpgrade("reservoir"), false);
+  g.banked = 10;
+  for (let i = 0; i < 5; i++)
+    assert.equal(g.purchaseUpgrade("reservoir"), true);
+  assert.equal(g.maxFuel, 1170);
+  assert.equal(g.fuel, 1170);
+  assert.equal(g.purchaseUpgrade("reservoir"), false);
+});
+
+test("wick reduces all flame rates without preventing depletion and spark speeds relighting", () => {
+  const g = new Game(1);
+  away(g);
+  g.upgrades.wick = 3;
+  for (const mode of [0, 1, 2]) {
+    g.setMode(mode);
+    g.fuel = 100;
+    advance(g, 1);
+    assert.ok(Math.abs(g.fuel - (100 - [0.35, 1, 3.5][mode] * 0.76)) < 0.00001);
+  }
+  g.upgrades.spark = 3;
+  g.forceHunt();
+  advance(g, 1.1);
+  g.relight();
+  advance(g, 1.2);
+  assert.equal(g.phase, "RELIGHTING");
+  advance(g, 0.1);
+  assert.equal(g.phase, "EXPLORING");
+  g.fuel = 0.001;
+  advance(g, 0.1);
+  assert.equal(g.phase, "EXTINGUISHING");
+});
+
+test("soft boots reduce audible Stalker investigations without making footsteps silent", () => {
+  const normal = new Game(1),
+    quiet = new Game(1);
+  for (const g of [normal, quiet]) {
+    away(g);
+    g.enemies = [{ x: 35, z: 0, state: "LISTENING", kind: "stalker" }];
+  }
+  quiet.upgrades.boots = 3;
+  assert.equal(normal.footstepNoise(false, false), 5);
+  assert.equal(quiet.footstepNoise(false, false), 3.2);
+  assert.ok(quiet.footstepNoise(true, false) > 7);
+  assert.ok(quiet.footstepNoise(false, true) > 0);
+  const walk = { ...idle, forward: 1 };
+  normal.step(1 / 60, walk);
+  quiet.step(1 / 60, walk);
+  // Both still make enough walking noise to attract a nearby Stalker.
+  assert.equal(normal.enemies[0].state, "INVESTIGATING");
+  assert.equal(quiet.enemies[0].state, "INVESTIGATING");
+  assert.equal(quiet.player.x, normal.player.x);
+  assert.equal(quiet.player.z, normal.player.z);
+});
+
+test("upgrade saves migrate old data, clamp invalid ranks and survive a new expedition", () => {
+  const data = new Map<string, string>();
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => data.get(k) ?? null,
+      setItem: (k: string, v: string) => data.set(k, v),
+    },
+  });
+  const g = new Game(7);
+  g.upgrades = { wick: 2, boots: 1, spark: 3 };
+  g.save();
+  const loaded = new Game(1);
+  assert.equal(loaded.load(), true);
+  loaded.reset(8);
+  assert.deepEqual(loaded.upgrades, g.upgrades);
+  const old = JSON.parse(data.get("lastlight-save")!);
+  delete old.upgrades;
+  data.set("lastlight-save", JSON.stringify(old));
+  loaded.load();
+  assert.deepEqual(loaded.upgrades, { wick: 0, boots: 0, spark: 0 });
+  old.upgrades = { wick: 99, boots: -2, spark: "bad" };
+  data.set("lastlight-save", JSON.stringify(old));
+  loaded.load();
+  assert.deepEqual(loaded.upgrades, { wick: 3, boots: 0, spark: 0 });
+});

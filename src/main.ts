@@ -1,3 +1,4 @@
+import { UPGRADES, type Upgrade } from "./simulation";
 import "./style.css";
 import { CameraControls, orbit, zoom } from "./controls";
 import {
@@ -313,11 +314,12 @@ function journal() {
   running = false;
   cameraControls.release();
   panel(
-    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>What remains of us.</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel)} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><div id="actions"></div>`,
+    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>What remains of us.</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (1 - 0.08 * game.upgrades.wick))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><div id="actions"></div>`,
   );
   button("resume", "CLOSE JOURNAL", resume);
 }
 function ended() {
+  updateHUD();
   screen = "ended";
   keys.clear();
   audio.setVolume(0);
@@ -331,15 +333,27 @@ function ended() {
   panel(
     `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}</div><h2>${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? "Your unbanked discoveries remain in the Catacombs. Your banked relics endure." : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
   );
-  if (!dead && game.maxFuel < 1170)
-    button("upgrade", "UPGRADE FUEL RESERVOIR · 1 RELIC", () => {
-      if (game.banked >= 1 && game.maxFuel < 1170) {
-        game.banked--;
-        game.maxFuel += 90;
-        game.save();
-        ended();
-      }
-    });
+  if (!dead) {
+    if (game.maxFuel < 1170) {
+      button("upgrade", "FUEL RESERVOIR +90s | 1 RELIC", () => {
+        if (game.purchaseUpgrade("reservoir")) ended();
+      });
+      ($("upgrade") as HTMLButtonElement).disabled = game.banked < 1;
+    }
+    for (const kind of Object.keys(UPGRADES) as Upgrade[]) {
+      const spec = UPGRADES[kind],
+        level = game.upgrades[kind];
+      button(
+        `upgrade-${kind}`,
+        `${spec.name.toUpperCase()} | ${level}/${spec.cap} | ${level === spec.cap ? "MASTERED" : `${spec.cost} RELICS`} | ${spec.description}`,
+        () => {
+          if (game.purchaseUpgrade(kind)) ended();
+        },
+      );
+      ($(`upgrade-${kind}`) as HTMLButtonElement).disabled =
+        level >= spec.cap || game.banked < spec.cost;
+    }
+  }
   button("again", "DESCEND AGAIN", () => begin(false));
   button("menu", "MAIN MENU", menu);
 }

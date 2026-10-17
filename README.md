@@ -49,6 +49,10 @@ Automated controller snapshots and independent touch pointers are tested; physic
 
 Reach the far golden sanctuary with artifacts to bank discoveries. Fuel depletion starts the Hunt; it does not kill you. Use a match to relight, break sight and quiet your footsteps, or reach sanctuary. Death loses carried artifacts. Progress saves to this browser and origin.
 
+## Sanctuary equipment
+
+Bank relics at the destination fire, then spend them before descending again. Reservoir ranks cost one relic and add 90 fuel seconds (five ranks). Efficient Wick, Soft Boots and Quick Spark each cost two relics per rank, up to three ranks: 8% less fuel burn, 12% less footstep noise, or 0.25 seconds faster relighting per rank. Bursts and noisy interactions retain their cost/noise. Upgrades persist through death, refresh and new expeditions. Unaffordable or mastered upgrades are disabled.
+
 ## Architecture
 
 - `src/simulation.ts`: seeded walkable world, fixed-step gameplay, collision, pathfinding, perception, torch and Hunt state machines, expedition and save state. No rendering dependencies.

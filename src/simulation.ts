@@ -26,6 +26,27 @@ export const CONFIG = {
   burstCost: 45,
   burstCooldown: 18,
 };
+export const UPGRADES = {
+  wick: {
+    name: "Efficient Wick",
+    description: "8% less fuel per rank",
+    cap: 3,
+    cost: 2,
+  },
+  boots: {
+    name: "Soft Boots",
+    description: "12% quieter footsteps per rank",
+    cap: 3,
+    cost: 2,
+  },
+  spark: {
+    name: "Quick Spark",
+    description: "0.25s faster relighting per rank",
+    cap: 3,
+    cost: 2,
+  },
+} as const;
+export type Upgrade = keyof typeof UPGRADES;
 const key = (x: number, z: number) => `${x},${z}`;
 const dist = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.z - b.z);
 const grids = new WeakMap<World, Set<string>>();
@@ -153,6 +174,7 @@ export class Game {
   matches = 3;
   artifacts = 0;
   banked = 0;
+  upgrades: Record<Upgrade, number> = { wick: 0, boots: 0, spark: 0 };
   elapsed = 0;
   message = "";
   completed = false;
@@ -232,6 +254,32 @@ export class Game {
     ]);
     this.enemies = [{ x: 84, z: 24, kind: "stalker", state: "LISTENING" }];
   }
+  get fuelRate() {
+    return [0.35, 1, 3.5][this.mode] * (1 - 0.08 * this.upgrades.wick);
+  }
+  footstepNoise(sprint: boolean, crouch: boolean) {
+    return (crouch ? 1 : sprint ? 11 : 5) * (1 - 0.12 * this.upgrades.boots);
+  }
+  get relightDuration() {
+    return CONFIG.relight - 0.25 * this.upgrades.spark;
+  }
+  purchaseUpgrade(kind: Upgrade | "reservoir") {
+    if (this.phase !== "SANCTUARY") return false;
+    if (kind === "reservoir") {
+      if (this.banked < 1 || this.maxFuel >= 1170) return false;
+      this.banked--;
+      this.maxFuel = Math.min(1170, this.maxFuel + 90);
+      this.fuel = this.maxFuel;
+    } else {
+      const spec = UPGRADES[kind];
+      if (!spec || this.upgrades[kind] >= spec.cap || this.banked < spec.cost)
+        return false;
+      this.banked -= spec.cost;
+      this.upgrades[kind]++;
+    }
+    this.save();
+    return true;
+  }
   setMode(n: number) {
     if (Number.isInteger(n) && n >= 0 && n <= 2) this.mode = n;
   }
@@ -271,7 +319,7 @@ export class Game {
     ) {
       this.matches--;
       this.phase = "RELIGHTING";
-      this.timer = CONFIG.relight;
+      this.timer = this.relightDuration;
       this.say("Striking a match…");
     } else if (this.fuel === 0 && this.matches === 0)
       this.say("No matches remain. Find sanctuary fire.");
@@ -302,7 +350,7 @@ export class Game {
         this.fuel = Math.min(this.maxFuel, this.fuel + 180);
         if (this.fuel > 0 && this.phase !== "EXPLORING") {
           this.phase = "RELIGHTING";
-          this.timer = CONFIG.relight;
+          this.timer = this.relightDuration;
         }
       } else if (item.kind === "match") this.matches++;
       else this.artifacts++;
@@ -374,14 +422,10 @@ export class Game {
       this.noiseTimer > 0
         ? 15
         : moving
-          ? input.crouch
-            ? 1
-            : sprint
-              ? 11
-              : 5
+          ? this.footstepNoise(sprint, input.crouch)
           : 0;
     if (this.phase === "EXPLORING") {
-      this.fuel = Math.max(0, this.fuel - dt * [0.35, 1, 3.5][this.mode]);
+      this.fuel = Math.max(0, this.fuel - dt * this.fuelRate);
       if (this.fuel === 0) this.forceHunt();
     } else if (
       ["EXTINGUISHING", "HUNT_GRACE", "RELIGHTING"].includes(this.phase)
@@ -562,6 +606,7 @@ export class Game {
           seed: this.world.seed,
           banked: this.banked,
           maxFuel: this.maxFuel,
+          upgrades: this.upgrades,
           player: this.player,
           fuel: this.fuel,
           mode: this.mode,
@@ -585,6 +630,12 @@ export class Game {
       if (!d || d.version !== 1) return false;
       this.banked = Math.max(0, Number(d.banked) || 0);
       this.maxFuel = Math.min(1170, Math.max(720, Number(d.maxFuel) || 720));
+      for (const kind of Object.keys(UPGRADES) as Upgrade[]) {
+        const level = Number(d.upgrades?.[kind]);
+        this.upgrades[kind] = Number.isFinite(level)
+          ? Math.min(UPGRADES[kind].cap, Math.max(0, Math.floor(level)))
+          : 0;
+      }
       this.reset(Number(d.seed) || 1);
       if (!["DEAD", "SANCTUARY"].includes(d.phase)) {
         if (d.player && walkable(this.world, d.player.x, d.player.z))
