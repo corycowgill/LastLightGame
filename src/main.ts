@@ -1,4 +1,5 @@
 import "./style.css";
+import { CameraControls } from "./controls";
 import { ExpeditionCheck } from "./qa";
 let check: ExpeditionCheck | undefined;
 import { Game } from "./simulation";
@@ -11,8 +12,6 @@ let game = new Game(104729),
 let draw = true;
 let started = false;
 let running = false,
-  yaw = -Math.PI / 2,
-  pitch = 0.18,
   accumulator = 0,
   last = performance.now(),
   fps = 60;
@@ -25,6 +24,26 @@ try {
     ...JSON.parse(localStorage.getItem("lastlight-settings") || "{}"),
   };
 } catch {}
+let screen = "menu";
+const cameraControls = new CameraControls(
+  $("scene"),
+  () => running,
+  () => settings.sensitivity,
+  () => {
+    draw = true;
+  },
+  (captured, unavailable) => {
+    $("captureMouse").textContent = captured
+      ? "RELEASE MOUSE"
+      : "CAPTURE MOUSE";
+    $("lookHint").textContent = captured
+      ? "Mouse: look · Wheel: zoom · Esc: pause"
+      : unavailable
+        ? "Mouse capture unavailable · Drag or use arrow keys"
+        : "Drag: look · Arrows: look · Wheel: zoom";
+  },
+);
+$("captureMouse").onclick = () => void cameraControls.capture();
 const intro = `<div class="eyebrow">AN EXPEDITION INTO THE FORGOTTEN CATACOMBS</div><h1>THE LAST<br><em>LIGHT</em></h1><p class="tagline">When the flame dies, the hunt begins.</p><div class="divider"></div><p class="description">Carry a fragile flame into a labyrinth that remembers.<br>Find the reliquaries. Follow the golden fires home.<br>And if your light goes out — keep moving.</p>`;
 function panel(content: string) {
   $("overlay").innerHTML = `<main class="panel">${content}</main>`;
@@ -38,9 +57,10 @@ function button(id: string, text: string, action: () => void) {
   b.onclick = action;
 }
 function menu() {
+  screen = "menu";
   audio.setVolume(0);
   running = false;
-  document.exitPointerLock?.();
+  cameraControls.release();
   panel(
     intro +
       '<div id="actions"></div><div class="version">A CATACOMBS EXPEDITION · HEADPHONES RECOMMENDED</div>',
@@ -53,7 +73,7 @@ function menu() {
     button("check", "RUN EXPEDITION CHECK", () => {
       begin(false);
       check = new ExpeditionCheck(game.world);
-      document.exitPointerLock?.();
+      cameraControls.release();
     });
 }
 function rebuild() {
@@ -66,8 +86,11 @@ function rebuild() {
 function begin(load: boolean) {
   check = undefined;
   started = true;
-  yaw = -Math.PI / 2;
-  pitch = 0.18;
+  Object.assign(cameraControls.pose, {
+    yaw: -Math.PI / 2,
+    pitch: 0.25,
+    distance: 3.7,
+  });
   if (load) {
     try {
       game.load();
@@ -77,12 +100,16 @@ function begin(load: boolean) {
       Number(new URLSearchParams(location.search).get("seed")) ||
         Date.now() % 1000000,
     );
+  if (load) cameraControls.pose.yaw = game.player.yaw;
+  else game.player.yaw = cameraControls.pose.yaw;
   rebuild();
   audio.start();
   audio.setVolume(settings.volume);
   resume();
 }
 function resume() {
+  if (game.phase === "DEAD" || game.completed) return;
+  screen = "playing";
   audio.setVolume(settings.volume);
   running = true;
   keys.clear();
@@ -90,17 +117,16 @@ function resume() {
   $("hud").hidden = false;
   last = performance.now();
   accumulator = 0;
-  $("scene")
-    .requestPointerLock?.()
-    ?.catch(() => {});
+  $("scene").focus({ preventScroll: true });
 }
 function pause() {
   if (!running) return;
+  screen = "pause";
   audio.setVolume(0);
   running = false;
   keys.clear();
   game.save();
-  document.exitPointerLock?.();
+  cameraControls.release();
   panel(
     '<div class="eyebrow">THE DARKNESS CAN WAIT</div><h2>Take a breath.</h2><p>Your expedition is saved.</p><div id="actions"></div>',
   );
@@ -110,16 +136,18 @@ function pause() {
   button("menu", "MAIN MENU", menu);
 }
 function controls() {
+  screen = "guide";
   panel(
-    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Mouse · Look<br>SHIFT · Sprint &nbsp; C / CTRL · Crouch<br>E · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps. Break sight around corners to lose the Hunter. A match restores a reserve of fuel after a two second relight. Golden sanctuary fires banish the Hunt.</p><div id="actions"></div>',
+    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Drag mouse / arrow keys · Look &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C / CTRL · Crouch<br>E · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps. Break sight around corners to lose the Hunter. A match restores a reserve of fuel after a two second relight. Golden sanctuary fires banish the Hunt.</p><div id="actions"></div>',
   );
   button("back", "BACK", menu);
 }
 function showSettings() {
+  screen = "settings";
   const was = running;
   if (was) {
     running = false;
-    document.exitPointerLock?.();
+    cameraControls.release();
   }
   panel(
     `<div class="eyebrow">SETTINGS</div><h2>Shape your experience.</h2><label>Mouse sensitivity <input id="sensitivity" type="range" min="0.2" max="2" step="0.1" value="${settings.sensitivity}"></label><label>Audio volume <input id="volume" type="range" min="0" max="1" step="0.05" value="${settings.volume}"></label><label>Visual sound cues <input id="cues" type="checkbox" ${settings.cues ? "checked" : ""}></label><label>Graphics <select id="quality"><option value="high">High</option><option value="low">Low</option></select></label><div id="actions"></div>`,
@@ -138,18 +166,22 @@ function showSettings() {
   });
 }
 function journal() {
+  screen = "journal";
+  keys.clear();
   audio.setVolume(0);
   running = false;
-  document.exitPointerLock?.();
+  cameraControls.release();
   panel(
     `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>What remains of us.</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel)} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><div id="actions"></div>`,
   );
   button("resume", "CLOSE JOURNAL", resume);
 }
 function ended() {
+  screen = "ended";
+  keys.clear();
   audio.setVolume(0);
   running = false;
-  document.exitPointerLock?.();
+  cameraControls.release();
   if (check) {
     check.input(game);
     console.info(check.status);
@@ -171,13 +203,24 @@ function ended() {
   button("menu", "MAIN MENU", menu);
 }
 window.addEventListener("keydown", (e) => {
-  if (["Tab", "Space", "ArrowUp", "ArrowDown"].includes(e.code))
+  if (
+    running &&
+    [
+      "Tab",
+      "Space",
+      "ArrowUp",
+      "ArrowDown",
+      "ArrowLeft",
+      "ArrowRight",
+    ].includes(e.code)
+  )
     e.preventDefault();
   if (e.repeat) return;
   if (e.code === "Escape") {
-    if (started) {
-      running ? pause() : resume();
-    }
+    if (running) pause();
+    else if (started && ["pause", "journal", "settings"].includes(screen))
+      resume();
+    else if (["guide", "settings"].includes(screen)) menu();
     return;
   }
   if (!running) return;
@@ -199,23 +242,11 @@ window.addEventListener("keydown", (e) => {
 });
 window.addEventListener("keyup", (e) => keys.delete(e.code));
 window.addEventListener("blur", pause);
-document.addEventListener("mousemove", (e) => {
-  if (running && document.pointerLockElement) {
-    yaw -= e.movementX * 0.002 * settings.sensitivity;
-    pitch = Math.max(
-      -0.15,
-      Math.min(0.9, pitch + e.movementY * 0.002 * settings.sensitivity),
-    );
-  }
-});
-$("scene").addEventListener("click", () => {
-  if (running)
-    $("scene")
-      .requestPointerLock?.()
-      ?.catch(() => {});
-});
 $("pauseButton").onclick = pause;
-window.addEventListener("resize", () => view?.resize());
+window.addEventListener("resize", () => {
+  view?.resize();
+  draw = true;
+});
 let saveTimer = 0;
 function frame(now: number) {
   const rawDt = (now - last) / 1000;
@@ -223,10 +254,7 @@ function frame(now: number) {
   last = now;
   fps = fps * 0.95 + (1 / Math.max(rawDt, 0.001)) * 0.05;
   if (running) {
-    yaw +=
-      (Number(keys.has("ArrowLeft")) - Number(keys.has("ArrowRight"))) *
-      dt *
-      1.7;
+    cameraControls.keyboard(keys, dt);
     accumulator += dt * (check ? 8 : 1);
     while (accumulator >= 1 / 60) {
       game.step(
@@ -238,7 +266,7 @@ function frame(now: number) {
               strafe: Number(keys.has("KeyD")) - Number(keys.has("KeyA")),
               sprint: keys.has("ShiftLeft") || keys.has("ShiftRight"),
               crouch: keys.has("KeyC") || keys.has("ControlLeft"),
-              yaw,
+              yaw: cameraControls.pose.yaw,
             },
       );
       accumulator -= 1 / 60;
@@ -253,7 +281,13 @@ function frame(now: number) {
     if (game.phase === "DEAD" || game.completed) ended();
   }
   if (running || draw) {
-    view?.update(game, running ? dt : 0, yaw, pitch);
+    view?.update(
+      game,
+      running ? dt : 0,
+      cameraControls.pose.yaw,
+      cameraControls.pose.pitch,
+      cameraControls.pose.distance,
+    );
     draw = false;
   }
   requestAnimationFrame(frame);
@@ -290,6 +324,11 @@ function updateHUD() {
   $("bearing").textContent = new URLSearchParams(location.search).has("debug")
     ? `${fps.toFixed(0)} FPS · ${game.phase} · ${game.hunter.state} · ${view.renderer.info.render.calls} DRAWS`
     : "SEEK THE GOLDEN FIRE";
+  $("scene").dataset.cameraYaw = cameraControls.pose.yaw.toFixed(3);
+  $("scene").dataset.cameraPitch = cameraControls.pose.pitch.toFixed(3);
+  $("scene").dataset.cameraDistance = cameraControls.pose.distance.toFixed(2);
+  $("scene").dataset.playerX = game.player.x.toFixed(2);
+  $("scene").dataset.playerZ = game.player.z.toFixed(2);
   const threat =
     hunt && game.hunter.state !== "DORMANT"
       ? game.hunter
@@ -300,8 +339,13 @@ function updateHUD() {
       dz = threat.z - game.player.z,
       d = Math.hypot(dx, dz);
     if (d < 20) {
-      const pan = (dx * Math.cos(yaw) - dz * Math.sin(yaw)) / Math.max(1, d),
-        front = -dx * Math.sin(yaw) - dz * Math.cos(yaw);
+      const pan =
+          (dx * Math.cos(cameraControls.pose.yaw) -
+            dz * Math.sin(cameraControls.pose.yaw)) /
+          Math.max(1, d),
+        front =
+          -dx * Math.sin(cameraControls.pose.yaw) -
+          dz * Math.cos(cameraControls.pose.yaw);
       cue =
         pan < -0.35
           ? "◂ Footsteps to your left"

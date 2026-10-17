@@ -14,11 +14,11 @@ npm run build
 npm run preview
 ```
 
-Open the URL printed by Vite. Click Begin Expedition, then click the game to capture the mouse. Escape releases the mouse and pauses. Desktop keyboard/mouse and WebGL2 are required. Audio begins after a user gesture.
+Open the URL printed by Vite. Click Begin Expedition. Hold either mouse button and drag over the game to look around, or use the arrow keys. Scroll to zoom. The optional Capture Mouse button enables free mouse look when supported; embedded browsers can always use dragging. Escape pauses. Desktop keyboard/mouse and WebGL2 are required. Audio begins after a user gesture.
 
 ## Controls
 
-WASD move, mouse look, Shift sprint, C/Ctrl crouch, E interact or relight, Q chalk, F flame burst, 1/2/3 torch modes, Tab journal, Escape pause. Settings include sensitivity, volume, visual sound cues, and graphics quality.
+WASD move relative to the view, drag mouse or arrow keys to look horizontally and vertically, wheel to zoom, Shift sprint, C/Ctrl crouch, E interact or relight, Q chalk, F flame burst, 1/2/3 torch modes, Tab journal, Escape pause. Settings include sensitivity, volume, visual sound cues, and graphics quality.
 
 Reach the far golden sanctuary with artifacts to bank discoveries. Fuel depletion starts the Hunt; it does not kill you. Use a match to relight, break sight and quiet your footsteps, or reach sanctuary. Death loses carried artifacts. Progress saves to this browser and origin.
 
@@ -27,6 +27,8 @@ Reach the far golden sanctuary with artifacts to bank discoveries. Fuel depletio
 - `src/simulation.ts`: seeded walkable world, fixed-step gameplay, collision, pathfinding, perception, torch and Hunt state machines, expedition and save state. No rendering dependencies.
 - `src/scene.ts`: original dungeon geometry, character and creature models, lighting, particles, camera collision, and Three.js lifecycle.
 - `src/audio.ts`: synthesized atmospheric and gameplay audio.
+- `src/controls.ts`: pointer-lock-independent drag look, optional mouse capture, arrow-key look, zoom and input cleanup.
+- `src/controls.test.ts`: camera input regressions, including rejected capture and paused input.
 - `src/main.ts`: input, fixed-step accumulator, menus, HUD and integration.
 - `src/simulation.test.ts`: deterministic rules and scenario regression tests.
 
@@ -34,8 +36,7 @@ The simulation advances at 60 Hz. World grid cells represent two metres. Gamepla
 
 ## Deployment
 
-pm run build`creates`dist/`. Serve this directory from any static host. The included `render.yaml` configures a Render static site with 
-pm ci && npm run build`. The game does not require server routes. Optional Google Fonts have system font fallbacks.
+`npm run build` creates `dist/`. Serve this directory from any static host. The included `render.yaml` configures a Render static site with `npm ci && npm run build`. The game does not require server routes. Optional Google Fonts have system font fallbacks.
 
 ## Developer mode
 

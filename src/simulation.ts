@@ -136,6 +136,7 @@ export function findPath(w: World, a: Point, b: Point): Point[] {
 export class Game {
   world: World;
   player = { x: 0, z: 0, yaw: 0, stamina: 1, crouched: false };
+  cameraYaw = 0;
   fuel = 720;
   maxFuel = 720;
   mode = 1;
@@ -185,7 +186,14 @@ export class Game {
   }
   reset(seed = this.world.seed) {
     this.world = generateWorld(seed);
-    this.player = { ...this.start, yaw: 0, stamina: 1, crouched: false };
+    this.player = {
+      ...this.start,
+      z: this.start.z + 2.4,
+      yaw: 0,
+      stamina: 1,
+      crouched: false,
+    };
+    this.cameraYaw = 0;
     this.fuel = this.maxFuel;
     this.mode = 1;
     this.phase = "EXPLORING";
@@ -316,9 +324,11 @@ export class Game {
     this.cooldown -= dt;
     this.messageTime -= dt;
     if (this.messageTime <= 0) this.message = "";
-    this.player.yaw = input.yaw;
+    this.cameraYaw = input.yaw;
     this.player.crouched = input.crouch;
     const moving = Math.hypot(input.forward, input.strafe) > 0;
+    if (moving)
+      this.player.yaw = input.yaw - Math.atan2(input.strafe, input.forward);
     if (this.player.stamina < 0.01) this.exhausted = true;
     if (this.player.stamina > 0.25) this.exhausted = false;
     const sprint = input.sprint && !this.exhausted && !input.crouch;
@@ -345,6 +355,8 @@ export class Game {
     this.vx += (wantX - this.vx) * Math.min(1, dt * 18);
     this.vz += (wantZ - this.vz) * Math.min(1, dt * 18);
     const clear = (x: number, z: number) =>
+      dist({ x, z }, this.start) > 0.85 &&
+      dist({ x, z }, this.destination) > 0.85 &&
       [
         [-0.3, -0.3],
         [0.3, -0.3],
@@ -424,8 +436,8 @@ export class Game {
   }
   private spawnHunter() {
     const direction = {
-      x: -Math.sin(this.player.yaw),
-      z: -Math.cos(this.player.yaw),
+      x: -Math.sin(this.cameraYaw),
+      z: -Math.cos(this.cameraYaw),
     };
     const candidates = this.world.cells
       .map((c) => ({ x: c.x * 2, z: c.z * 2 }))
@@ -577,6 +589,8 @@ export class Game {
       if (!["DEAD", "SANCTUARY"].includes(d.phase)) {
         if (d.player && walkable(this.world, d.player.x, d.player.z))
           this.player = { ...this.player, ...d.player };
+        if (dist(this.player, this.start) < 0.9)
+          this.player.z = this.start.z + 2.4;
         this.fuel = Math.max(0, Math.min(this.maxFuel, Number(d.fuel) || 0));
         this.matches = Math.max(0, Number(d.matches) || 0);
         this.setMode(d.mode);

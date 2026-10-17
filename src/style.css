@@ -362,3 +362,25 @@ body[data-quality="low"] canvas {
     font-size: 8px;
   }
 }
+#scene {
+  touch-action: none;
+  outline: none;
+  cursor: grab;
+}
+#scene:active {
+  cursor: grabbing;
+}
+.view-controls {
+  pointer-events: auto;
+  text-align: right;
+}
+.view-controls button {
+  margin-left: 8px;
+  padding: 9px 12px;
+}
+#lookHint {
+  color: #b3bfc7;
+  font-size: 9px;
+  margin-top: 10px;
+  letter-spacing: 0.6px;
+}

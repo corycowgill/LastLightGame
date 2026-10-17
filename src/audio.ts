@@ -169,7 +169,7 @@ export class GameAudio {
         dz = h.z - player.z,
         d = Math.hypot(dx, dz),
         volume = 0.13 * Math.max(0, 1 - d / 28),
-        yaw = player.yaw ?? 0,
+        yaw = game.cameraYaw ?? player.yaw ?? 0,
         pan = (dx * Math.cos(yaw) - dz * Math.sin(yaw)) / Math.max(1, d);
       this.tone(65, 0.25, volume, 28, pan);
       this.air(0.2, volume * 0.4, 280, pan);

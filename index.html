@@ -8,7 +8,11 @@
     <title>The Last Light</title>
   </head>
   <body>
-    <div id="scene"></div>
+    <div
+      id="scene"
+      tabindex="0"
+      aria-label="Game viewport. Drag to look, use WASD to move, arrows to look, scroll to zoom."
+    ></div>
     <div id="vignette"></div>
     <div id="hud" hidden>
       <header>
@@ -16,7 +20,11 @@
           THE LAST LIGHT<span>THE FORGOTTEN CATACOMBS</span>
         </div>
         <div id="bearing"></div>
-        <button id="pauseButton">ESC · PAUSE</button>
+        <div class="view-controls">
+          <button id="captureMouse">CAPTURE MOUSE</button
+          ><button id="pauseButton">ESC · PAUSE</button>
+          <div id="lookHint">Drag: look · Arrows: look · Wheel: zoom</div>
+        </div>
       </header>
       <div id="notice"></div>
       <div id="phase"></div>
@@ -32,8 +40,9 @@
         </section>
         <section id="inventory"></section>
         <section class="hint">
-          WASD Move · SHIFT Sprint · C Crouch<br />E Interact / Relight · Q
-          Chalk · F Flame burst · TAB Journal
+          WASD Move · Drag / Arrows Look · Wheel Zoom<br />SHIFT Sprint · C
+          Crouch<br />E Interact / Relight · Q Chalk · F Flame burst · TAB
+          Journal
         </section>
       </footer>
       <div id="prompt"></div>

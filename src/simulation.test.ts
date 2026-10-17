@@ -67,7 +67,7 @@ test("camera yaw and movement agree on the forward direction", () => {
   const g = new Game();
   advance(g, 0.5, { ...idle, forward: 1, yaw: Math.PI / 2 });
   assert.ok(g.player.x < -0.5);
-  assert.ok(Math.abs(g.player.z) < 0.01);
+  assert.ok(Math.abs(g.player.z - 2.4) < 0.01);
 });
 test("fuel modes consume exact deterministic amounts", () => {
   for (const [mode, rate] of [
@@ -333,4 +333,27 @@ test("Hunter traverses multiple navigation cells and catches an exposed stationa
   advance(g, 2.3);
   assert.equal(g.phase, "DEAD");
   assert.ok(g.hunter.x > 26);
+});
+
+test("camera orbit does not turn an idle character; strafing faces the movement direction", () => {
+  const g = new Game();
+  const facing = g.player.yaw;
+  g.step(1 / 60, { ...idle, yaw: 1 });
+  assert.equal(g.player.yaw, facing);
+  assert.equal(g.cameraYaw, 1);
+  g.step(1 / 60, { ...idle, strafe: 1, yaw: 0 });
+  assert.ok(Math.abs(g.player.yaw + Math.PI / 2) < 0.001);
+});
+test("initial spawn is in sanctuary and clear of the brazier", () => {
+  const g = new Game();
+  assert.ok(Math.hypot(g.player.x - g.start.x, g.player.z - g.start.z) > 2);
+  assert.ok(Math.hypot(g.player.x - g.start.x, g.player.z - g.start.z) < 3);
+  assert.ok(walkable(g.world, g.player.x, g.player.z));
+});
+
+test("movement cannot pass through the starting sanctuary brazier", () => {
+  const g = new Game();
+  advance(g, 2, { ...idle, forward: 1 });
+  assert.ok(g.player.z >= 0.85);
+  assert.ok(g.player.z < 1);
 });

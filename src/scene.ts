@@ -443,7 +443,7 @@ export class GameScene {
     this.renderer.shadowMap.enabled = !low;
     this.resize();
   }
-  update(game: Game, dt: number, yaw: number, pitch: number) {
+  update(game: Game, dt: number, yaw: number, pitch: number, distance = 3.7) {
     this.elapsed += dt;
     const previous = this.player.position.clone();
     this.player.position.set(game.player.x, 0, game.player.z);
@@ -566,17 +566,19 @@ export class GameScene {
     particles.needsUpdate = true;
     this.particles.visible = burning;
     const anchor = new THREE.Vector3(game.player.x, 1.25, game.player.z),
-      elevation = THREE.MathUtils.clamp(pitch || 0, -0.15, 0.9),
+      elevation = THREE.MathUtils.clamp(pitch, -0.35, 1.05),
+      arm = THREE.MathUtils.clamp(distance, 1.6, 6.5),
       offset = new THREE.Vector3(
-        Math.sin(yaw) * 3.7,
-        Math.min(2.3, 1.4 + elevation * 3),
-        Math.cos(yaw) * 3.7,
+        Math.sin(yaw) * Math.cos(elevation) * arm,
+        Math.sin(elevation) * arm,
+        Math.cos(yaw) * Math.cos(elevation) * arm,
       );
     this.ray.set(anchor, offset.clone().normalize());
     this.ray.far = offset.length();
     const hit = this.ray.intersectObjects(this.walls, false)[0];
     if (hit) offset.setLength(Math.max(0.4, hit.distance - 0.25));
     const desired = anchor.clone().add(offset);
+    desired.y = THREE.MathUtils.clamp(desired.y, 0.35, 3.7);
     if (!this.initialized) {
       this.camera.position.copy(desired);
       this.initialized = true;
@@ -586,7 +588,7 @@ export class GameScene {
       constrainCamera(anchor, this.camera.position, this.walls),
     );
     this.target.copy(anchor);
-    this.target.y += 0.15;
+    this.target.y += 0.05;
     this.camera.lookAt(this.target);
     this.renderer.render(this.scene, this.camera);
   }
