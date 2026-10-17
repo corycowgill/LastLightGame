@@ -1,6 +1,6 @@
 # The Last Light
 
-A browser survival horror expedition built with TypeScript, Three.js, Vite, and synthesized Web Audio. All artwork is original procedural geometry. No backend or API keys.
+A browser survival horror expedition built with TypeScript, Three.js, Vite, and synthesized Web Audio. Runtime artwork uses original authored and procedural geometry. No backend or API keys.
 
 ## Run
 
@@ -108,4 +108,10 @@ This is the playable Catacombs checkpoint toward the complete vertical slice. Th
 
 ## Generated character assets
 
-See [the Hugging Face / Blender asset pipeline](docs/AI_ASSET_PIPELINE.md) for the local hardware audit, selected mesh/rig/motion models, exact clip requirements and current encoder-access blocker. Downloaded AI weights remain ignored in `.asset-tools/`; the game still uses its original procedural characters.
+See [the Hugging Face / Blender asset pipeline](docs/AI_ASSET_PIPELINE.md) for the local hardware audit, selected mesh/rig/motion models, exact clip requirements and current encoder-access blocker. Downloaded AI weights remain ignored in `.asset-tools/`; the game now includes original Blender-authored skinned Torchbearer and Hunter characters based on the recovered design references. These are not neural model outputs.
+
+## Recovered art direction
+
+The art bible and concept board from **Create stylized game art design** are preserved in `docs/art-direction/`; character references are in `art-source/`. The current implementation follows the ochre hood, satchel, charcoal clothing, ragged Hunter silhouette, cold masonry and warm fire palette. It is an initial low-poly interpretation, not a claim of matching the concept image fidelity.
+
+`tools/assets/build_characters.py` rebuilds both skinned GLBs with installed Blender. Torchbearer has 14 named authored clips; Hunter has five. Runtime blends locomotion/crouch, interaction, relight, burst, death and Hunter states, and attaches torch hardware/fire to a hand socket. Simulation retains ownership of movement and collision. `public/models/manifest.json` records triangle counts, hashes, axes, provenance and clip names. Neural reconstruction, polished motion retargeting and Stalker replacement remain future asset work.

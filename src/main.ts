@@ -18,6 +18,7 @@ let game = new Game(104729),
   view: GameScene,
   audio = new GameAudio();
 let draw = true;
+let endingAnimation = 0;
 let started = false;
 let running = false,
   accumulator = 0,
@@ -321,6 +322,7 @@ function journal() {
 function ended() {
   updateHUD();
   screen = "ended";
+  endingAnimation = 2.1;
   keys.clear();
   audio.setVolume(0);
   running = false;
@@ -485,10 +487,12 @@ function frame(now: number) {
     updateHUD();
     if (game.phase === "DEAD" || game.completed) ended();
   }
-  if (running || draw) {
+  const ending = screen === "ended" && endingAnimation > 0;
+  if (ending) endingAnimation = Math.max(0, endingAnimation - dt);
+  if (running || draw || ending) {
     view?.update(
       game,
-      running ? dt : 0,
+      running || ending ? dt : 0,
       cameraControls.pose.yaw,
       cameraControls.pose.pitch,
       cameraControls.pose.distance,

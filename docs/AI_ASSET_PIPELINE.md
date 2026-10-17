@@ -1,6 +1,6 @@
 # Generated character pipeline
 
-Research/checkpoint: 2026-10-17. No new generated characters are in the game yet.
+Research/checkpoint: 2026-10-17. Original Blender-authored skinned characters are now integrated from the recovered art references; no neural-generated characters are integrated yet.
 
 ## Selected components
 
@@ -22,7 +22,8 @@ Primary implementation references: [TripoSR](https://github.com/VAST-AI-Research
 - Official sources cloned into ignored `.asset-tools/TripoSR` and `.asset-tools/kimodo`.
 - Source commits inspected: TripoSR `107cefdc244c39106fa830359024f6a2f1c78871`; Kimodo `e1c219c99b4b94ba48be1fb6a1cbc64ecee4c954`.
 - TripoSR config and 1,677,246,742-byte checkpoint downloaded with the user's local `hf`. Model revision: `5b521936b01fbe1890f6f9baed0254ab6351c04a`. NVIDIA checkpoint download status is recorded in BUILD_STATUS.md. Downloads are not successful inference or accepted assets.
-- **Kimodo encoder access blocked:** existing account received HTTP 403 for `meta-llama/Meta-Llama-3-8B-Instruct/config.json`. The account owner must obtain access on the [official gated model page](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct). Do not paste tokens into the repository or chat. The official encoder is an 8B model; access alone will not establish that its memory requirements fit this PC. Use a measured sequential/offload strategy or separately authorized larger hardware. No cloud job was launched.
+- **Kimodo encoder access resolved:** a subsequent authenticated metadata check succeeded after the user obtained access. The official encoder is still an 8B model; memory requirements and isolated inference environments remain to be validated on this 8 GB GPU / 16 GB RAM machine. No cloud job was launched.
+
 - Keep TripoSR and Kimodo in separate Python environments: upstream currently requires incompatible Transformers versions (4.35.0 vs 5.1.0). Do not replace the user's global Python packages.
 
 ## Production sequence
@@ -63,3 +64,7 @@ Primary implementation references: [TripoSR](https://github.com/VAST-AI-Research
 - Stalker: idle, investigate, recoil.
 
 Smoke and disappearance remain runtime effects. A skeletal clip alone cannot implement banishment. Model generations and all motion drafts require visual review before replacing the existing assets.
+
+## Existing art-session pipeline recovered
+
+The session "Create stylized game art design" already established a shared asset library at `C:/Users/coryc/Documents/Codex/2026-10-17/cre/outputs/last-light-asset-library`, with a working serial ComfyUI/TRELLIS low-memory workflow. Prefer that existing, measured workflow for future neural reconstruction instead of setting up a duplicate TripoSR installation. Its AGENTS.md, queue status/doctor checks and draft/approval rules apply when operating that library. No jobs were started there and no source assets were modified during the current game integration. TripoSR is retained as an alternative; it is not the pipeline used to build the current characters.

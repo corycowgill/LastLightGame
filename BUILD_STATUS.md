@@ -32,7 +32,7 @@ Updated 2026-10-17. Version 0.1: playable Catacombs checkpoint for review. The f
 
 ## Validation
 
-- `npm test`: **44 passed, 0 failed**.
+- `npm test`: **46 passed, 0 failed**.
 
 - Connectivity and deterministic generation checked across 100 seeds.
 
@@ -152,3 +152,16 @@ Used the installed authenticated `hf` CLI to find official TripoSR (local mesh b
 Added character-specific prompts for nine Torchbearer, five Hunter and three Stalker clips. Added a structural GLB release gate and three passing Python tests for rig/clip presence, embedded resources, bone limits and truncated files. This does not establish valid deformation, animation quality or full glTF conformance. Runtime/gameplay code is unchanged.
 
 Blockers: current HF account receives HTTP 403 for the required gated Llama text encoder. Its access and memory/offload plan must be resolved before claiming working Kimodo inference. Isolated TripoSR/UniRig/Kimodo environments and first original reference/mesh generation still remain. Generated rigs require SOMA retargeting and Blender cleanup. No generated GLBs or AI animation clips have been accepted or integrated yet. No paid hardware was launched.
+
+
+## Recovered design art and playable character build - 2026-10-17
+
+Recovered the art bible, concept board, Torchbearer and Hunter A-pose references from the session "Create stylized game art design". Preserved the selected references in docs/art-direction and art-source. Existing external library prop meshes remain drafts; none was silently promoted to approved content or overwritten.
+
+Built original low-poly Blender interpretations rather than neural reconstructions: ochre hood/mantle, charcoal clothing, wrapped boots, belt, satchel and flask for the Torchbearer; elongated arms, dark cloth, pale eyes and torn lower silhouette for the Hunter. Shipped GLBs have 16-joint skins: Torchbearer 2,740 triangles / 246 KB / 14 named clips; Hunter 2,332 triangles / 170 KB / five named clips. The generator is editable source, and public/models/manifest.json records hashes, axes and provenance. These are an initial stylized iteration, not concept-image fidelity or final motion polish.
+
+Integrated GLTFLoader and AnimationMixer, crossfaded locomotion/crouch, short interaction/chalk/refill gestures, relighting, flame burst, death and Hunter search/pursuit/capture/banishment. Torch basket/fire/particles follow the right-hand socket. A short render-only ending window allows death/banishment to finish without advancing simulation. Late GLB loads are discarded and resources disposed when expeditions change; fallback characters remain until the asset loads. Replaced flat wall bands with instanced beveled staggered masonry, beveled slabs and segmented arch stones using the supplied palette; gameplay navigation and collision remain simulation-owned.
+
+Validation: 46 game tests pass. New tests load the actual GLBs with Three.js, verify normalized skin weights, skeletons, clip presence and animated socket displacement. Both structural GLB gates pass. Production build passes. Browser play reviewed the loaded explorer and camera movement, corrected the hood back closure and crouch translation, and reported PASS for extinction, active Hunt, navigated escape and sanctuary banking with no captured console warnings/errors. Physical iPhone/controller performance and broader visual/motion acceptance remain open. Stalker replacement and neural asset production are still outstanding. The formerly gated encoder metadata is now accessible after the user's permission update; inference is not yet validated.
+
+Browser touch CROUCH selected the actual crouch_idle mixer clip; the rigged load flag was present. The gameplay capture is docs/art-direction/gameplay-checkpoint.png. The recovered art library already has a validated serial local TRELLIS workflow; prefer it for future neural reconstruction rather than duplicating the model environment. Its source assets and queue were left unchanged.

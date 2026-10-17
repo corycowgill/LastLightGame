@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "cha_torchbearer",
+      "file": "torchbearer.glb",
+      "sha256": "17ead1682045da6d21f78a47cdcb8a5db56f39719f630b5def301ecc03d6ddbd",
+      "bytes": 245988,
+      "triangles": 2740,
+      "skin_joints": 16,
+      "clips": [
+        "idle",
+        "walk",
+        "sprint",
+        "crouch_idle",
+        "crouch_walk",
+        "interact",
+        "relight",
+        "burst",
+        "death",
+        "quick_turn",
+        "chalk",
+        "refill",
+        "extinguish",
+        "fear"
+      ],
+      "source": "tools/assets/build_characters.py",
+      "method": "original authored Blender geometry and keyframes",
+      "reference": "art-source/TORCHBEARER_A_POSE.png",
+      "units": "meters",
+      "up_axis": "Y",
+      "forward_axis": "-Z",
+      "pivot": "feet_center",
+      "root_motion": false,
+      "license": "project-original",
+      "status": "playable art iteration; further visual and hardware review required"
+    },
+    {
+      "id": "cha_hunter",
+      "file": "hunter.glb",
+      "sha256": "5f26891ad2830ca14abc0d488400543d255428dbda4c24d1d4aaa23438182522",
+      "bytes": 169544,
+      "triangles": 2332,
+      "skin_joints": 16,
+      "clips": [
+        "idle",
+        "search",
+        "pursue",
+        "capture",
+        "banish"
+      ],
+      "source": "tools/assets/build_characters.py",
+      "method": "original authored Blender geometry and keyframes",
+      "reference": "art-source/HUNTER_A_POSE.png",
+      "units": "meters",
+      "up_axis": "Y",
+      "forward_axis": "-Z",
+      "pivot": "feet_center",
+      "root_motion": false,
+      "license": "project-original",
+      "status": "playable art iteration; further visual and hardware review required"
+    }
+  ]
+}

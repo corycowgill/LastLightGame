@@ -1,3 +1,5 @@
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { AnimatedCharacter, movementClip } from "./character";
 import * as THREE from "three";
 import type { World, Game } from "./simulation";
 export function constrainCamera(
@@ -27,6 +29,7 @@ export class GameScene {
   private stalker = new THREE.Group();
   private torch = new THREE.PointLight(0xffa347, 28, 18, 1.5);
   private flame: THREE.Mesh;
+  private torchBasket = new THREE.Group();
   private walls: THREE.Object3D[] = [];
   private boxes: THREE.Mesh[] = [];
   private items = new Map<string, THREE.Object3D>();
@@ -34,6 +37,15 @@ export class GameScene {
   private particles: THREE.Points;
   private ray = new THREE.Raycaster();
   private target = new THREE.Vector3();
+  private actor?: AnimatedCharacter;
+  private hunterActor?: AnimatedCharacter;
+  private lastHunterState = "DORMANT";
+  private banishTime = 0;
+  private lastMessage = "";
+  private gesture = "";
+  private gestureTime = 0;
+  private stick?: THREE.Mesh;
+  private socketPoint = new THREE.Vector3();
   private initialized = false;
   private elapsed = 0;
   private lastFuel = 720;
@@ -46,18 +58,18 @@ export class GameScene {
     this.renderer.setClearColor(0x070d17);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.35;
+    this.renderer.toneMappingExposure = 1.12;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
     this.scene.fog = new THREE.FogExp2(0x101a2a, 0.038);
     this.scene.add(this.ambient);
     const stone = new THREE.MeshStandardMaterial({
-        color: 0x454d59,
+        color: 0x59636b,
         roughness: 0.96,
       }),
       trim = new THREE.MeshStandardMaterial({
-        color: 0x626875,
+        color: 0x92958c,
         roughness: 0.9,
       }),
       floor = new THREE.MeshStandardMaterial({ color: 0x303944, roughness: 1 }),
@@ -76,12 +88,14 @@ export class GameScene {
     floor.bumpScale = 0.025;
     const occupied = new Set(world.cells.map((c) => `${c.x},${c.z}`)),
       dummy = new THREE.Object3D();
+    const blockMatrices: THREE.Matrix4[] = [];
     const floors = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(1.98, 0.18, 1.98),
+      new RoundedBoxGeometry(1.98, 0.18, 1.98, 1, 0.035),
       floor,
       world.cells.length,
     );
     world.cells.forEach((c, i) => {
+      dummy.scale.set(1, 1, 1);
       dummy.position.set(c.x * 2, -0.12, c.z * 2);
       dummy.rotation.set(0, 0, 0);
       dummy.updateMatrix();
@@ -109,17 +123,29 @@ export class GameScene {
         );
         if (dz) wall.rotation.y = Math.PI / 2;
         this.walls.push(wall);
-        for (const y of [0.1, 1.15, 2.2, 3.35]) {
-          const band = this.box(
-            0.35,
-            y === 3.35 ? 0.22 : 0.07,
-            2.05,
-            trim,
-            c.x * 2 + dx,
-            c.z * 2 + dz,
-            y,
-          );
-          if (dz) band.rotation.y = Math.PI / 2;
+        for (let row = 0; row < 4; row++) {
+          const course =
+            row % 2
+              ? [
+                  [-0.75, 0.44],
+                  [0, 0.94],
+                  [0.75, 0.44],
+                ]
+              : [
+                  [-0.49, 0.94],
+                  [0.49, 0.94],
+                ];
+          for (const [along, width] of course) {
+            dummy.position.set(
+              c.x * 2 + dx + (dz ? along : 0),
+              row * 0.98 + 0.46,
+              c.z * 2 + dz + (dx ? along : 0),
+            );
+            dummy.scale.set(1, 1, width / 0.94);
+            dummy.rotation.set(0, dz ? Math.PI / 2 : 0, 0);
+            dummy.updateMatrix();
+            blockMatrices.push(dummy.matrix.clone());
+          }
         }
         if (((c.x * 17 + c.z * 31 + world.seed) >>> 0) % 5 === 0) {
           const tomb = this.box(
@@ -138,6 +164,28 @@ export class GameScene {
         this.roomDetails(c.x * 2, c.z * 2, c.kind, stone, trim, bronze);
       }
     });
+    const blockMaterial = new THREE.MeshStandardMaterial({
+      color: 0x59636b,
+      roughness: 0.92,
+      bumpMap: slabs,
+      bumpScale: 0.06,
+    });
+    const blocks = new THREE.InstancedMesh(
+      new RoundedBoxGeometry(0.31, 0.94, 0.94, 1, 0.045),
+      blockMaterial,
+      blockMatrices.length,
+    );
+    blockMatrices.forEach((matrix, i) => {
+      blocks.setMatrixAt(i, matrix);
+      blocks.setColorAt(
+        i,
+        new THREE.Color().setScalar(0.63 + ((i * 17 + world.seed) % 23) / 65),
+      );
+    });
+    blocks.castShadow = blocks.receiveShadow = true;
+    blocks.computeBoundingSphere();
+    this.scene.add(blocks);
+    dummy.scale.set(1, 1, 1);
     floors.receiveShadow = true;
     this.scene.add(floors);
     const ceiling = new THREE.InstancedMesh(
@@ -168,7 +216,7 @@ export class GameScene {
       fire.position.set(x, 1, z);
       fire.scale.y = 2;
       this.scene.add(fire);
-      const light = new THREE.PointLight(0xffa24e, 65, 21, 1.6);
+      const light = new THREE.PointLight(0xffb85b, 36, 21, 1.6);
       light.position.set(x, 1.6, z);
       this.scene.add(light);
       const ring = new THREE.Mesh(
@@ -180,7 +228,7 @@ export class GameScene {
       this.scene.add(ring);
     }
     const cloak = new THREE.MeshStandardMaterial({
-      color: 0x314c50,
+      color: 0x96703d,
       roughness: 0.95,
     });
     const body = new THREE.Mesh(new THREE.ConeGeometry(0.34, 1.05, 9), cloak);
@@ -216,6 +264,7 @@ export class GameScene {
       new THREE.CylinderGeometry(0.035, 0.045, 0.7, 6),
       bronze,
     );
+    this.stick = stick;
     stick.position.set(0.43, 1.17, -0.18);
     stick.rotation.z = -0.15;
     this.player.add(stick);
@@ -223,6 +272,33 @@ export class GameScene {
       new THREE.IcosahedronGeometry(0.105, 1),
       new THREE.MeshBasicMaterial({ color: 0xffd58a }),
     );
+    const iron = new THREE.MeshStandardMaterial({
+      color: 0x292a2b,
+      metalness: 0.8,
+      roughness: 0.7,
+    });
+    for (const y of [-0.17, -0.025]) {
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(0.095, 0.012, 5, 12),
+        iron,
+      );
+      rim.rotation.x = Math.PI / 2;
+      rim.position.y = y;
+      this.torchBasket.add(rim);
+    }
+    for (let i = 0; i < 5; i++) {
+      const bar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.009, 0.009, 0.18, 5),
+        iron,
+      );
+      bar.position.set(
+        Math.cos((i * Math.PI * 2) / 5) * 0.09,
+        -0.09,
+        Math.sin((i * Math.PI * 2) / 5) * 0.09,
+      );
+      this.torchBasket.add(bar);
+    }
+    this.player.add(this.torchBasket);
     this.flame.position.set(0.48, 1.58, -0.18);
     this.flame.scale.y = 2.2;
     this.player.add(this.flame);
@@ -292,6 +368,24 @@ export class GameScene {
       }),
     );
     this.player.add(this.particles);
+    const playerFallback = this.player.children.filter(
+      (c) =>
+        c !== this.flame &&
+        c !== this.torch &&
+        c !== this.particles &&
+        c !== this.torchBasket &&
+        c !== this.stick,
+    );
+    this.actor = new AnimatedCharacter("/models/torchbearer.glb", () => {
+      playerFallback.forEach((c) => (c.visible = false));
+      this.container.dataset.character = "rigged";
+    });
+    this.player.add(this.actor.root);
+    const hunterFallback = [...this.hunter.children];
+    this.hunterActor = new AnimatedCharacter("/models/hunter.glb", () =>
+      hunterFallback.forEach((c) => (c.visible = false)),
+    );
+    this.hunter.add(this.hunterActor.root);
     this.resize();
   }
   private texture(seed: number, slabs: boolean) {
@@ -350,7 +444,11 @@ export class GameScene {
     z: number,
     y: number,
   ) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+    const mesh = new THREE.Mesh(
+      new RoundedBoxGeometry(w, h, d, 1, Math.min(0.045, w / 5, h / 5, d / 5)),
+      material,
+    );
+    mesh.userData.batchKey = `${w},${h},${d}`;
     mesh.position.set(x, y, z);
     this.scene.add(mesh);
     this.boxes.push(mesh);
@@ -359,8 +457,7 @@ export class GameScene {
   private batchBoxes() {
     const groups = new Map<string, THREE.Mesh[]>();
     for (const box of this.boxes) {
-      const p = (box.geometry as THREE.BoxGeometry).parameters,
-        k = `${p.width},${p.height},${p.depth},${(box.material as THREE.Material).uuid}`;
+      const k = `${box.userData.batchKey},${(box.material as THREE.Material).uuid}`;
       const list = groups.get(k) || [];
       list.push(box);
       groups.set(k, list);
@@ -403,12 +500,19 @@ export class GameScene {
         this.box(1, 0.2, 1, stone, x + sx * 7.8, z + sz * 7.8, 3.6);
       }
     for (const side of [-1, 1]) {
-      const a = new THREE.Mesh(
-        new THREE.TorusGeometry(2.1, 0.24, 6, 18, Math.PI),
-        trim,
-      );
-      a.position.set(x, 1.7, z + side * 7.7);
-      this.scene.add(a);
+      for (let i = 0; i < 13; i++) {
+        const angle = ((i + 0.5) * Math.PI) / 13;
+        const voussoir = this.box(
+          0.49,
+          0.45,
+          0.62,
+          trim,
+          x + Math.cos(angle) * 2.1,
+          z + side * 7.7,
+          1.7 + Math.sin(angle) * 2.1,
+        );
+        voussoir.rotation.z = angle - Math.PI / 2;
+      }
       for (const sx of [-1, 1])
         this.box(0.48, 1.8, 0.5, trim, x + sx * 2.1, z + side * 7.7, 0.8);
     }
@@ -449,7 +553,57 @@ export class GameScene {
     this.player.position.set(game.player.x, 0, game.player.z);
     const moving = previous.distanceTo(this.player.position) > 0.001;
     this.player.rotation.y = game.player.yaw || 0;
-    this.player.scale.y = game.player.crouched ? 0.72 : 1;
+    this.player.scale.y = this.actor?.ready
+      ? 1
+      : game.player.crouched
+        ? 0.72
+        : 1;
+    const speed = dt > 0 ? previous.distanceTo(this.player.position) / dt : 0;
+    this.gestureTime = Math.max(0, this.gestureTime - dt);
+    if (game.message !== this.lastMessage) {
+      this.lastMessage = game.message;
+      const clip = game.message.startsWith("Chalk remembers")
+        ? "chalk"
+        : game.message.startsWith("Oil recovered")
+          ? "refill"
+          : game.message.startsWith("An ancient relic") ||
+              game.message.startsWith("A dry match")
+            ? "interact"
+            : "";
+      if (clip) {
+        this.gesture = clip;
+        this.gestureTime = 0.85;
+      }
+    }
+    if (this.lastFuel - game.fuel > 35) {
+      this.gesture = "burst";
+      this.gestureTime = 0.7;
+    }
+    this.actor?.update(
+      game.phase === "DEAD"
+        ? "death"
+        : game.phase === "RELIGHTING"
+          ? "relight"
+          : game.phase === "EXTINGUISHING"
+            ? "extinguish"
+            : this.gestureTime > 0
+              ? this.gesture
+              : movementClip(game.player.crouched, speed),
+      dt,
+    );
+    this.container.dataset.animation = this.actor?.clip ?? "fallback";
+    this.player.updateMatrixWorld(true);
+    if (this.actor?.ready && this.actor.socket) {
+      this.actor.socket.getWorldPosition(this.socketPoint);
+      this.player.worldToLocal(this.socketPoint);
+      this.flame.position
+        .copy(this.socketPoint)
+        .add(new THREE.Vector3(0, 0.46, 0));
+      this.torch.position.copy(this.flame.position);
+      this.stick?.position
+        .copy(this.socketPoint)
+        .add(new THREE.Vector3(0, 0.12, 0));
+    }
     this.player.children
       .filter((c) => c.name === "leg")
       .forEach((c, i) => {
@@ -457,6 +611,7 @@ export class GameScene {
           ? Math.sin(this.elapsed * 12 + i * Math.PI) * 0.5
           : 0;
       });
+    this.torchBasket.position.copy(this.flame.position);
     const burning =
       game.fuel > 0 && ["EXPLORING", "SANCTUARY"].includes(game.phase);
     if (this.lastFuel - game.fuel > 35) this.burst = 1;
@@ -475,7 +630,7 @@ export class GameScene {
       dt,
     );
     const radius = [3, 9, 20][game.mode] || 9,
-      intensity = [12, 35, 80][game.mode] || 35;
+      intensity = [10, 26, 64][game.mode] || 35;
     this.torch.intensity = THREE.MathUtils.damp(
       this.torch.intensity,
       burning
@@ -497,8 +652,29 @@ export class GameScene {
       1,
     );
     this.flame.rotation.y = this.elapsed * 2;
+    if (
+      game.hunter.state === "BANISHED" &&
+      !["BANISHED", "DORMANT"].includes(this.lastHunterState)
+    )
+      this.banishTime = 1.2;
+    this.lastHunterState = game.hunter.state;
+    this.banishTime = Math.max(0, this.banishTime - dt);
     this.hunter.visible =
-      !!game.hunter && !["DORMANT", "BANISHED"].includes(game.hunter.state);
+      !["DORMANT", "BANISHED"].includes(game.hunter.state) ||
+      this.banishTime > 0;
+    this.hunter.scale.setScalar(
+      this.banishTime > 0 ? Math.min(1, this.banishTime / 0.8) : 1,
+    );
+    this.hunterActor?.update(
+      game.phase === "DEAD"
+        ? "capture"
+        : this.banishTime > 0
+          ? "banish"
+          : game.hunter.state === "PURSUING"
+            ? "pursue"
+            : "search",
+      dt,
+    );
     if (this.hunter.visible) {
       this.hunter.position.set(
         game.hunter.x,
@@ -558,9 +734,9 @@ export class GameScene {
       const t = (this.elapsed * (0.4 + (i % 3) * 0.1) + i * 0.137) % 1;
       particles.setXYZ(
         i,
-        0.48 + Math.sin(i * 7 + t * 5) * t * 0.35,
-        1.58 + t * 1.4,
-        -0.18 + Math.cos(i * 11 + t * 5) * t * 0.35,
+        this.flame.position.x + Math.sin(i * 7 + t * 5) * t * 0.35,
+        this.flame.position.y + t * 1.4,
+        this.flame.position.z + Math.cos(i * 11 + t * 5) * t * 0.35,
       );
     }
     particles.needsUpdate = true;
@@ -601,6 +777,8 @@ export class GameScene {
     this.camera.updateProjectionMatrix();
   }
   dispose() {
+    this.actor?.dispose();
+    this.hunterActor?.dispose();
     const geometries = new Set<THREE.BufferGeometry>(),
       materials = new Set<THREE.Material>();
     this.scene.traverse((o) => {
