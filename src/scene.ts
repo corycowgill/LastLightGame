@@ -667,7 +667,47 @@ export class GameScene {
         upright.userData.archShell = true;
       }
     }
-    if (kind === "archive") {
+    if (kind === "sanctuary") {
+      // Recessed landmark beside the fire; never put an unvalidated arch over a route.
+      this.catalog.add(
+        "lan_sanctuary_arch_hero",
+        this.scene,
+        x + 8.2,
+        0,
+        z,
+        1,
+        -Math.PI / 2,
+      );
+      this.catalog.add(
+        "lan_processional_statue",
+        this.scene,
+        x - 7.8,
+        0,
+        z - 5.5,
+        1,
+        Math.PI / 2,
+      );
+    } else if (kind === "flooded") {
+      this.catalog.add("lan_fallen_bell", this.scene, x + 7.7, 0, z - 5.8);
+      this.catalog.add(
+        "lan_split_pillar_relief",
+        this.scene,
+        x - 7.8,
+        0,
+        z - 5.5,
+        1,
+        Math.PI / 2,
+      );
+    } else if (kind === "archive") {
+      this.catalog.add(
+        "lan_sealed_sun_door",
+        this.scene,
+        x + 8.3,
+        0,
+        z - 4.5,
+        1,
+        -Math.PI / 2,
+      );
       for (const side of [-1, 1]) {
         this.catalog.add(
           "pro_crypt_door",
@@ -697,7 +737,7 @@ export class GameScene {
           coffin.position.set(x + side * 8, 0.4, z + i * 2.7);
           this.scene.add(coffin);
           this.catalog.add(
-            "pro_sarcophagus",
+            i === 0 ? "lan_hiding_tomb" : "pro_sarcophagus",
             this.scene,
             x + side * 8,
             0,
@@ -714,7 +754,7 @@ export class GameScene {
       obelisk.position.set(x + 7.8, 1.5, z);
       this.scene.add(obelisk);
       this.catalog.add(
-        "pro_memorial",
+        "lan_processional_statue",
         this.scene,
         x + 7.8,
         0,
@@ -724,6 +764,29 @@ export class GameScene {
         () => {
           obelisk.visible = false;
         },
+      );
+      this.catalog.add(
+        "lan_split_pillar_relief",
+        this.scene,
+        x - 7.8,
+        0,
+        z + 5,
+        1,
+        Math.PI / 2,
+      );
+      this.catalog.add(
+        "lan_broken_processional_dais",
+        this.scene,
+        x - 7.7,
+        0,
+        z - 5.5,
+      );
+      this.catalog.add(
+        "lan_artifact_pedestal",
+        this.scene,
+        x - 7.7,
+        0.55,
+        z - 5.5,
       );
       const rune = new THREE.Mesh(
         new THREE.TorusGeometry(0.35, 0.025, 4, 24),

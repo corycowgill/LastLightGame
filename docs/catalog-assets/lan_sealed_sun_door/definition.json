@@ -1,0 +1,25 @@
+{
+  "id": "lan_sealed_sun_door",
+  "name": "Sealed Sun Door",
+  "category": "landmarks",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 3.3,
+  "scale_axis": "y",
+  "triangle_budget": 5000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original The Last Light stylized dark fantasy game asset. One complete freestanding sealed stone doorway with a CLOSED heavy stone door inset in its rectangular frame, a large restrained carved sun disk in the center. Broad worn stone blocks, muted brass ring handle, solid closed central panel. Single isolated complete 3D object, three-quarter studio view showing front, side and top, matte painterly materials. Plain solid light gray background, even neutral diffuse light, full silhouette with margin. No text, no scenery, no smoke, no fire, no additional views.",
+  "seed": 1974717245,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ]
+}

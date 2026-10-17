@@ -1,0 +1,39 @@
+{
+  "asset_id": "lan_split_pillar_relief",
+  "job_id": "962fd0b94d8a46ce977a03799e7146fb",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 1418932043,
+  "file": "generated/lan_split_pillar_relief/962fd0b94d8a46ce977a03799e7146fb/source.glb",
+  "sha256": "160802626345b7d7f6142f169d5f9dc55e859179030c873f0c1a1a687ecc1ea4",
+  "reference_sha256": "0a17ffc8498ebf62a2b011844b613e7b35cffa26d6e866426f6182f43cfe3a07",
+  "metrics": {
+    "triangles": 98012,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.2216075211763382,
+        -0.5019091367721558,
+        -0.22180964052677155
+      ],
+      [
+        0.22167780995368958,
+        0.5019042491912842,
+        0.22225627303123474
+      ]
+    ],
+    "extents": [
+      0.44328533113002777,
+      1.00381338596344,
+      0.4440659135580063
+    ],
+    "surface_area_m2": 3.714594107461784,
+    "surface_area_ratio": 3.6864249772651494,
+    "file_bytes": 3499696
+  },
+  "target_size_m": 2.6,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792275345.7738614
+}

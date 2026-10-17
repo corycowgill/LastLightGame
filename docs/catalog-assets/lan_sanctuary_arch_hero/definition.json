@@ -1,0 +1,25 @@
+{
+  "id": "lan_sanctuary_arch_hero",
+  "name": "Sanctuary Arch Hero",
+  "category": "landmarks",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 4.0,
+  "scale_axis": "y",
+  "triangle_budget": 5000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original The Last Light stylized dark fantasy game asset. One complete freestanding broad stone sanctuary archway, two narrow upright columns and a rounded arch with a small carved sun crest. The LARGE central doorway is completely EMPTY, open air visible through it. No door or wall in the opening, no interior scene. Single isolated complete 3D object, three-quarter studio view showing front, side and top, matte painterly materials. Plain solid light gray background, even neutral diffuse light, full silhouette with margin. No text, no scenery, no smoke, no fire, no additional views.",
+  "seed": 2041254004,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ]
+}

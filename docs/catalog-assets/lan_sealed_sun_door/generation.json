@@ -1,0 +1,39 @@
+{
+  "asset_id": "lan_sealed_sun_door",
+  "job_id": "a7b2f68086f44a9f8c5ea4d7cd7d87d4",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 1974717245,
+  "file": "generated/lan_sealed_sun_door/a7b2f68086f44a9f8c5ea4d7cd7d87d4/source.glb",
+  "sha256": "f4add9d0335d53e8ab0f5d3b2ff95b566368361f01f2e559c6d543a2ff40d0bb",
+  "reference_sha256": "29fa8dc303c96b3a62b94799cb1121acee1c82b0d60120ef3352803b7ecac6f6",
+  "metrics": {
+    "triangles": 99663,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.3996235132217407,
+        -0.5017228126525879,
+        -0.19877023994922638
+      ],
+      [
+        0.4007872939109802,
+        0.5016199946403503,
+        0.19736969470977783
+      ]
+    ],
+    "extents": [
+      0.800410807132721,
+      1.0033428072929382,
+      0.3961399346590042
+    ],
+    "surface_area_m2": 10.542175346439617,
+    "surface_area_ratio": 10.472046262780065,
+    "file_bytes": 4722376
+  },
+  "target_size_m": 3.3,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792275490.4029047
+}

@@ -1,0 +1,69 @@
+{
+  "asset_id": "lan_artifact_pedestal",
+  "version": "v001",
+  "file": "assets/lan_artifact_pedestal/v001/model.glb",
+  "sha256": "65d0f94bf3069a5369ae6c3ba0ad9c44e4dde43c4d390bafe3b27464e8a0b83d",
+  "source": "generated/lan_artifact_pedestal/a50e9ff120584e6f8fe4d90b50cae595/source.glb",
+  "source_sha256": "21bbe21409ede34dc7ace64f7f6bf1aef202074eac02a8b3e738dea6af2a414a",
+  "metrics": {
+    "triangles": 4999,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.32371123810318114,
+        0.0,
+        -0.2818318160578853
+      ],
+      [
+        0.32371123810318114,
+        0.9000000000000001,
+        0.2818318160578853
+      ]
+    ],
+    "extents": [
+      0.6474224762063623,
+      0.9000000000000001,
+      0.5636636321157706
+    ],
+    "surface_area_m2": 3.4732401780248834,
+    "surface_area_ratio": 4.287950837067756,
+    "file_bytes": 1246100
+  },
+  "scale_factor": 0.8969576435290181,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/lan_artifact_pedestal/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/lan_artifact_pedestal/v001/lod1.glb",
+      "triangles": 2500
+    },
+    {
+      "file": "assets/lan_artifact_pedestal/v001/lod2.glb",
+      "triangles": 1000
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/lan_artifact_pedestal/v001/previews/view_0.png",
+    "assets/lan_artifact_pedestal/v001/previews/view_1.png",
+    "assets/lan_artifact_pedestal/v001/previews/view_2.png",
+    "assets/lan_artifact_pedestal/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 97039,
+    "lod0_triangles": 4999,
+    "lod1_triangles": 2500,
+    "lod2_triangles": 1000,
+    "method": "Blender decimate; requires visual review"
+  }
+}

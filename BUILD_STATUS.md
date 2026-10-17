@@ -184,3 +184,11 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Actual browser viewer decoded all 24 GLBs without observed warnings/errors. Final seed 104729 expedition check passed extinction, active Hunt, navigated escape and sanctuary. Starting view observed about 60 FPS / 138 draws on this desktop, not a sustained performance guarantee. No physical iPhone/Xbox test.
 - 48 TypeScript tests, eight Python asset tests and production build pass; shared asset-pipeline suite has 18 passing tests. Screenshots and exact provenance are in docs/catalog-assets. No library asset was falsely marked production-approved; no GPU job remains active/uncertain.
 - Review `/asset-review.html`; see docs/CATALOG_ASSETS.md for reproduction and remaining work. Most of the 221 catalog definitions are still planned, not completed art.
+
+## Resumed ComfyUI / landmark work — 2026-10-17
+
+- Generated eight ComfyUI references and eight TRELLIS.2 landmark meshes through the serial shared-library worker. Finished and imported all eight with exact provenance. Runtime set now has 32 GLB roles from 31 neural reconstructions.
+- Added statues, cracked relief pillars, sun doors, bell, tomb, dais/pedestal and recessed sanctuary arches to room dressing. Clear central routes and simulation navigation are retained. Closed tomb is decorative, not a new hiding mechanic.
+- All eight new GLBs decoded in the actual production browser viewer without observed console warnings/errors. Seed 104729 browser scenario passed extinction, active Hunt, navigated escape and sanctuary in 0:59; recovery view 60 FPS / 56 draws on this desktop.
+- 48 TypeScript tests, eight Python asset tests and production build pass. Existing large Three.js chunk warning remains.
+- NVIDIA hosted Kimodo v1 generated-session UI returned, but BVH export stalled and session expired. No motion file verified or promoted; authored runtime clips remain. Next animation work: obtain a verified motion artifact, retarget to the existing skeleton, then review feet, torch contacts and cloak deformation before replacement.

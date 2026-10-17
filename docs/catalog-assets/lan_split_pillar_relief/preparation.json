@@ -1,0 +1,69 @@
+{
+  "asset_id": "lan_split_pillar_relief",
+  "version": "v001",
+  "file": "assets/lan_split_pillar_relief/v001/model.glb",
+  "sha256": "7b321fdc5e55ce0adab226d9bdaad5188643c9c5b681fdeb2e2b7a11829db1e8",
+  "source": "generated/lan_split_pillar_relief/962fd0b94d8a46ce977a03799e7146fb/source.glb",
+  "source_sha256": "160802626345b7d7f6142f169d5f9dc55e859179030c873f0c1a1a687ecc1ea4",
+  "metrics": {
+    "triangles": 5000,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.5740817352380122,
+        0.0,
+        -0.5750926374341392
+      ],
+      [
+        0.5740817352380122,
+        2.6,
+        0.5750926374341392
+      ]
+    ],
+    "extents": [
+      1.1481634704760244,
+      2.6,
+      1.1501852748682784
+    ],
+    "surface_area_m2": 24.92023284631241,
+    "surface_area_ratio": 3.686424977265149,
+    "file_bytes": 2185904
+  },
+  "scale_factor": 2.590122861835093,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/lan_split_pillar_relief/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/lan_split_pillar_relief/v001/lod1.glb",
+      "triangles": 2500
+    },
+    {
+      "file": "assets/lan_split_pillar_relief/v001/lod2.glb",
+      "triangles": 999
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/lan_split_pillar_relief/v001/previews/view_0.png",
+    "assets/lan_split_pillar_relief/v001/previews/view_1.png",
+    "assets/lan_split_pillar_relief/v001/previews/view_2.png",
+    "assets/lan_split_pillar_relief/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 98012,
+    "lod0_triangles": 5000,
+    "lod1_triangles": 2500,
+    "lod2_triangles": 999,
+    "method": "Blender decimate; requires visual review"
+  }
+}

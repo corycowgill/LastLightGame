@@ -47,6 +47,7 @@ export class CatalogAssets {
               mesh.castShadow = mesh.receiveShadow = true;
               if (
                 id.startsWith("arc_") ||
+                (id.startsWith("lan_") && id !== "lan_fallen_bell") ||
                 [
                   "pro_pillar",
                   "pro_sarcophagus",

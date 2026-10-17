@@ -1,0 +1,25 @@
+{
+  "id": "lan_fallen_bell",
+  "name": "Fallen Bell",
+  "category": "landmarks",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 1.2,
+  "scale_axis": "y",
+  "triangle_budget": 5000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original The Last Light stylized dark fantasy game asset. One large fallen dark bronze cathedral bell resting on its side with a broken hanging crown, hollow open mouth and thick rim clearly visible. Restrained green patina, weathered matte bronze, heavy readable silhouette. No rope, no wooden stand. Single isolated complete 3D object, three-quarter studio view showing front, side and top, matte painterly materials. Plain solid light gray background, even neutral diffuse light, full silhouette with margin. No text, no scenery, no smoke, no fire, no additional views.",
+  "seed": 244913284,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ]
+}

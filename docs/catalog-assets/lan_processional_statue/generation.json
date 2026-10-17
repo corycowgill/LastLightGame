@@ -1,0 +1,39 @@
+{
+  "asset_id": "lan_processional_statue",
+  "job_id": "75e6445df09c498b99dc655dab8e2699",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 2031967423,
+  "file": "generated/lan_processional_statue/75e6445df09c498b99dc655dab8e2699/source.glb",
+  "sha256": "a30c63a6d382dd1932e41838dce9213b046395afff313dd20f486e282c7bb30e",
+  "reference_sha256": "9cbbc5615d52ed735d08ec74c7056090836bfdaec14a35ac20751fa2b370437f",
+  "metrics": {
+    "triangles": 99674,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.26126277446746826,
+        -0.5019398927688599,
+        -0.26189810037612915
+      ],
+      [
+        0.2604444622993469,
+        0.5018755197525024,
+        0.2622964382171631
+      ]
+    ],
+    "extents": [
+      0.5217072367668152,
+      1.0038154125213623,
+      0.5241945385932922
+    ],
+    "surface_area_m2": 4.0008627528799545,
+    "surface_area_ratio": 3.9705067106936593,
+    "file_bytes": 3363972
+  },
+  "target_size_m": 2.5,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792275433.2009146
+}

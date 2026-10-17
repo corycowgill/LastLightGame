@@ -1,0 +1,39 @@
+{
+  "asset_id": "lan_hiding_tomb",
+  "job_id": "544497b2c95e4693b48309c65ad0be7a",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 2045469732,
+  "file": "generated/lan_hiding_tomb/544497b2c95e4693b48309c65ad0be7a/source.glb",
+  "sha256": "ec75d9ee297ea6fdee5c5506ed0a350f6ef656186c075111e0e2cda8f6299ef4",
+  "reference_sha256": "e56d53feacde4c5ca79476a8349e030a83e3add6d966f0451bb706e6ab7394ce",
+  "metrics": {
+    "triangles": 98677,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.4971942901611328,
+        -0.5017064809799194,
+        -0.40421056747436523
+      ],
+      [
+        0.49781885743141174,
+        0.5013034343719482,
+        0.4044398069381714
+      ]
+    ],
+    "extents": [
+      0.9950131475925446,
+      1.0030099153518677,
+      0.8086503744125366
+    ],
+    "surface_area_m2": 15.261982439097274,
+    "surface_area_ratio": 15.170521032089548,
+    "file_bytes": 3839884
+  },
+  "target_size_m": 1.6,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792275676.4105887
+}

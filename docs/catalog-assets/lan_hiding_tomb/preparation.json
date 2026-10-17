@@ -1,0 +1,69 @@
+{
+  "asset_id": "lan_hiding_tomb",
+  "version": "v001",
+  "file": "assets/lan_hiding_tomb/v001/model.glb",
+  "sha256": "d6b4771bf416135294e2d9192a43f8f0c6b39c30b02a7914263b60470f51e95a",
+  "source": "generated/lan_hiding_tomb/544497b2c95e4693b48309c65ad0be7a/source.glb",
+  "source_sha256": "ec75d9ee297ea6fdee5c5506ed0a350f6ef656186c075111e0e2cda8f6299ef4",
+  "metrics": {
+    "triangles": 5000,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.7936217836837494,
+        0.0,
+        -0.6449789674343169
+      ],
+      [
+        0.7936217836837494,
+        1.6,
+        0.6449789674343169
+      ]
+    ],
+    "extents": [
+      1.5872435673674987,
+      1.6,
+      1.2899579348686339
+    ],
+    "surface_area_m2": 38.836533842149244,
+    "surface_area_ratio": 15.170521032089546,
+    "file_bytes": 1736592
+  },
+  "scale_factor": 1.5951985872828598,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/lan_hiding_tomb/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/lan_hiding_tomb/v001/lod1.glb",
+      "triangles": 2500
+    },
+    {
+      "file": "assets/lan_hiding_tomb/v001/lod2.glb",
+      "triangles": 999
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/lan_hiding_tomb/v001/previews/view_0.png",
+    "assets/lan_hiding_tomb/v001/previews/view_1.png",
+    "assets/lan_hiding_tomb/v001/previews/view_2.png",
+    "assets/lan_hiding_tomb/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 98677,
+    "lod0_triangles": 5000,
+    "lod1_triangles": 2500,
+    "lod2_triangles": 999,
+    "method": "Blender decimate; requires visual review"
+  }
+}

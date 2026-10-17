@@ -1,0 +1,39 @@
+{
+  "asset_id": "lan_fallen_bell",
+  "job_id": "bdf56be984b542599ced750ab8386add",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 244913284,
+  "file": "generated/lan_fallen_bell/bdf56be984b542599ced750ab8386add/source.glb",
+  "sha256": "7786891995506eadfffc0e321009d79628c5ae77d329bbe3ea34855748181a8c",
+  "reference_sha256": "4d1cd78e73b66e58d082f1e6ade2ac3f796d0b6b25267fda0983ce588bfebdd6",
+  "metrics": {
+    "triangles": 93183,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.47293972969055176,
+        -0.5012471675872803,
+        -0.4729521870613098
+      ],
+      [
+        0.4731222987174988,
+        0.5011211037635803,
+        0.47284096479415894
+      ]
+    ],
+    "extents": [
+      0.9460620284080505,
+      1.0023682713508606,
+      0.9457931518554688
+    ],
+    "surface_area_m2": 7.091217820179071,
+    "surface_area_ratio": 7.057748906245453,
+    "file_bytes": 3291352
+  },
+  "target_size_m": 1.2,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792275390.6424382
+}

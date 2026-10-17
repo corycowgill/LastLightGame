@@ -1,0 +1,69 @@
+{
+  "asset_id": "lan_processional_statue",
+  "version": "v001",
+  "file": "assets/lan_processional_statue/v001/model.glb",
+  "sha256": "769b2f976173a74774392a22018c340224e5b8f4919677f109306e3ca66bdff8",
+  "source": "generated/lan_processional_statue/75e6445df09c498b99dc655dab8e2699/source.glb",
+  "source_sha256": "a30c63a6d382dd1932e41838dce9213b046395afff313dd20f486e282c7bb30e",
+  "metrics": {
+    "triangles": 4999,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.6496553428289196,
+        0.0,
+        -0.6527526525975422
+      ],
+      [
+        0.6496553428289196,
+        2.5,
+        0.6527526525975422
+      ]
+    ],
+    "extents": [
+      1.2993106856578391,
+      2.5,
+      1.3055053051950845
+    ],
+    "surface_area_m2": 24.815666941835374,
+    "surface_area_ratio": 3.97050671069366,
+    "file_bytes": 1185048
+  },
+  "scale_factor": 2.4904977238001886,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/lan_processional_statue/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/lan_processional_statue/v001/lod1.glb",
+      "triangles": 2500
+    },
+    {
+      "file": "assets/lan_processional_statue/v001/lod2.glb",
+      "triangles": 999
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/lan_processional_statue/v001/previews/view_0.png",
+    "assets/lan_processional_statue/v001/previews/view_1.png",
+    "assets/lan_processional_statue/v001/previews/view_2.png",
+    "assets/lan_processional_statue/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 99674,
+    "lod0_triangles": 4999,
+    "lod1_triangles": 2500,
+    "lod2_triangles": 999,
+    "method": "Blender decimate; requires visual review"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "asset_id": "lan_artifact_pedestal",
+  "job_id": "a50e9ff120584e6f8fe4d90b50cae595",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 291715989,
+  "file": "generated/lan_artifact_pedestal/a50e9ff120584e6f8fe4d90b50cae595/source.glb",
+  "sha256": "21bbe21409ede34dc7ace64f7f6bf1aef202074eac02a8b3e738dea6af2a414a",
+  "reference_sha256": "48b3a0e57c3ab26479a9534f72206b44ca73c453b40dbf4b47e752627f388ffd",
+  "metrics": {
+    "triangles": 97039,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.3608510494232178,
+        -0.501455545425415,
+        -0.3142678737640381
+      ],
+      [
+        0.36094722151756287,
+        0.5019363164901733,
+        0.3141493499279022
+      ]
+    ],
+    "extents": [
+      0.7217982709407806,
+      1.0033918619155884,
+      0.6284172236919403
+    ],
+    "surface_area_m2": 4.317088443052948,
+    "surface_area_ratio": 4.287950837067757,
+    "file_bytes": 3556128
+  },
+  "target_size_m": 0.9,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792275625.3357337
+}

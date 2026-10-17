@@ -1,0 +1,25 @@
+{
+  "id": "lan_artifact_pedestal",
+  "name": "Artifact Pedestal",
+  "category": "landmarks",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 0.9,
+  "scale_axis": "y",
+  "triangle_budget": 5000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original The Last Light stylized dark fantasy game asset. One short ancient octagonal stone artifact pedestal with a broad flat top, a tapering carved stem and a low stable base. Large worn sculpted planes, restrained gothic carved trim. Empty top, no artifact, no lamp, no fire. Single isolated complete 3D object, three-quarter studio view showing front, side and top, matte painterly materials. Plain solid light gray background, even neutral diffuse light, full silhouette with margin. No text, no scenery, no smoke, no fire, no additional views.",
+  "seed": 291715989,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ]
+}

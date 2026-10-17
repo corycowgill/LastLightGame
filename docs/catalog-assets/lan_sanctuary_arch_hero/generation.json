@@ -1,0 +1,39 @@
+{
+  "asset_id": "lan_sanctuary_arch_hero",
+  "job_id": "2adbc46866a14086aea48438a656e627",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 2041254004,
+  "file": "generated/lan_sanctuary_arch_hero/2adbc46866a14086aea48438a656e627/source.glb",
+  "sha256": "256f2cdea47cacd05f63ece8cd095f02a4910ecd0049a9bf63b946a5e84fb6d1",
+  "reference_sha256": "8c859f035a0aad16adaf951b4377a21cd57c5392cf954dfcb232ace041221761",
+  "metrics": {
+    "triangles": 96394,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.5019101500511169,
+        -0.48655566573143005,
+        -0.17796264588832855
+      ],
+      [
+        0.5019896030426025,
+        0.4567013382911682,
+        0.17864184081554413
+      ]
+    ],
+    "extents": [
+      1.0038997530937195,
+      0.9432570040225983,
+      0.3566044867038727
+    ],
+    "surface_area_m2": 6.78797687657798,
+    "surface_area_ratio": 6.7353421025918925,
+    "file_bytes": 3501732
+  },
+  "target_size_m": 4.0,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792275580.4179187
+}

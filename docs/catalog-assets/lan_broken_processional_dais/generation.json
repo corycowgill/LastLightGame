@@ -1,0 +1,39 @@
+{
+  "asset_id": "lan_broken_processional_dais",
+  "job_id": "b6b903225115477b9c2162b3b82ec3c3",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 1990531233,
+  "file": "generated/lan_broken_processional_dais/b6b903225115477b9c2162b3b82ec3c3/source.glb",
+  "sha256": "92aad3343be9bf36c23c25b9b9228b74c7f80556e9fddcd6dcd475a1cfa1bc78",
+  "reference_sha256": "8af5b01ced0b93ea9bb6d1daa96601d002856a0cb877376185c9098384a1e907",
+  "metrics": {
+    "triangles": 92951,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.4708670675754547,
+        -0.2282821387052536,
+        -0.5017073750495911
+      ],
+      [
+        0.47109854221343994,
+        0.22924485802650452,
+        0.5017505288124084
+      ]
+    ],
+    "extents": [
+      0.9419656097888947,
+      0.4575269967317581,
+      1.0034579038619995
+    ],
+    "surface_area_m2": 5.038660295161874,
+    "surface_area_ratio": 5.003993802918912,
+    "file_bytes": 3238676
+  },
+  "target_size_m": 0.55,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792275537.5332923
+}

@@ -1,0 +1,69 @@
+{
+  "asset_id": "lan_broken_processional_dais",
+  "version": "v001",
+  "file": "assets/lan_broken_processional_dais/v001/model.glb",
+  "sha256": "fe72afadb61674d597bb0d955a91b5381effb1e45d5787c7a509e6e024cf5605",
+  "source": "generated/lan_broken_processional_dais/b6b903225115477b9c2162b3b82ec3c3/source.glb",
+  "source_sha256": "92aad3343be9bf36c23c25b9b9228b74c7f80556e9fddcd6dcd475a1cfa1bc78",
+  "metrics": {
+    "triangles": 5000,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.5661754268979629,
+        0.0,
+        -0.6031358270293199
+      ],
+      [
+        0.5661754268979629,
+        0.55,
+        0.6031358270293199
+      ]
+    ],
+    "extents": [
+      1.1323508537959257,
+      0.55,
+      1.2062716540586398
+    ],
+    "surface_area_m2": 7.2812678648215785,
+    "surface_area_ratio": 5.003993802918912,
+    "file_bytes": 1614912
+  },
+  "scale_factor": 1.2021148564539408,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/lan_broken_processional_dais/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/lan_broken_processional_dais/v001/lod1.glb",
+      "triangles": 2500
+    },
+    {
+      "file": "assets/lan_broken_processional_dais/v001/lod2.glb",
+      "triangles": 1090
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/lan_broken_processional_dais/v001/previews/view_0.png",
+    "assets/lan_broken_processional_dais/v001/previews/view_1.png",
+    "assets/lan_broken_processional_dais/v001/previews/view_2.png",
+    "assets/lan_broken_processional_dais/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 92951,
+    "lod0_triangles": 5000,
+    "lod1_triangles": 2500,
+    "lod2_triangles": 1090,
+    "method": "Blender decimate; requires visual review"
+  }
+}

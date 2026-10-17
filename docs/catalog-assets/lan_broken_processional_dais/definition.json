@@ -1,0 +1,25 @@
+{
+  "id": "lan_broken_processional_dais",
+  "name": "Broken Processional Dais",
+  "category": "landmarks",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 0.55,
+  "scale_axis": "y",
+  "triangle_budget": 5000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original The Last Light stylized dark fantasy game asset. One low wide ancient stone ceremonial dais, a solid raised square slab with two shallow front steps and a chipped corner. Three quarter isometric view clearly shows the flat top and two vertical side faces. Low platform, no pillars, no wall, no statue. Single isolated complete 3D object, three-quarter studio view showing front, side and top, matte painterly materials. Plain solid light gray background, even neutral diffuse light, full silhouette with margin. No text, no scenery, no smoke, no fire, no additional views.",
+  "seed": 1990531233,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ]
+}

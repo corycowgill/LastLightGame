@@ -1,6 +1,6 @@
 # Catalog-derived neural assets — 17 October 2026
 
-The runtime replacement set contains **24 GLB roles from 23 accepted neural reconstructions**. All 21 original individual prop/character references from the shared asset library have generated meshes. Two additional accepted reconstructions provide the catalog wall and arch. Paving/ceiling geometry reuses the neural wall mesh with a documented rotation and fit; the separate slab attempt was rejected. No new runtime replacement mesh was built from primitive or manually authored geometry.
+The runtime replacement set contains **32 GLB roles from 31 accepted neural reconstructions**. All 21 original individual prop/character references from the shared asset library have generated meshes. Two additional accepted reconstructions provide the catalog wall and arch. Paving/ceiling geometry reuses the neural wall mesh with a documented rotation and fit; the separate slab attempt was rejected. No new runtime replacement mesh was built from primitive or manually authored geometry.
 
 Source library: `C:/Users/coryc/Documents/Codex/2026-10-17/cre/outputs/last-light-asset-library`. Its live catalog has 221 definitions, most still planned. This pass does **not** claim all 221 definitions are finished. The separate experimental urn reference was not reconstructed. Stable catalog IDs, original references, seeds and provider runs are preserved.
 
@@ -37,7 +37,17 @@ Raw model sources, editable Blender binding files, LODs and original references 
 - 48 TypeScript tests: simulation/input, character load/weights/socket motion, sampled deformation bounds, catalog hashes, embedded resources and rigid scale checks.
 - Eight Python asset tests, including actual triangle ray tests for an open arch, opaque wall and visible floor support.
 - Shared pipeline: 18 tests, including authored-source rejection under neural override.
-- Production Vite build passes. All 24 GLBs decoded through the actual Three.js browser viewer with no warnings/errors observed.
+- Production Vite build passes. All 32 GLBs decoded through the actual Three.js browser viewer with no warnings/errors observed.
 - In-game Hunt recovery and screenshot evidence are recorded in BUILD_STATUS.md after the final browser run.
 
 These remain reviewable integration drafts, not certified production assets. Physical iPhone/Xbox testing, sustained device performance profiling, full deformation/art review and expansion enemy rigging remain pending. No approved library release was created.
+
+## Resumed landmark batch
+
+Eight new references were generated serially with the installed ComfyUI SDXL workflow, reviewed, then reconstructed through the official TRELLIS.2 Space: split pillar relief, bell, processional statue, sun door, broken dais, sanctuary arch, pedestal and tomb. Each runtime mesh has about 5,000 triangles and embedded 512px textures. Their IDs, input hashes and generation/preparation records are preserved alongside the earlier batch.
+
+These dress room boundaries and sanctuary recesses. The upright bell and closed tomb differ from their initial concepts; the tomb is decorative and provides no new hiding mechanic. The sanctuary arch is recessed scenery rather than an unvalidated passage collider. Existing navigation remains authoritative. The statue reference reconstructed with a bronze/brown finish; it is a reviewable draft rather than an approved stone sculpt.
+
+All eight new GLBs decoded in the production browser viewer without observed warnings/errors. Seed 104729 again passed extinction, active Hunt, navigated escape and sanctuary recovery in 0:59. The recovery view observed 60 FPS and 56 draws on this desktop; this is not sustained device profiling. See `catalog-assets/landmark-meshes.jpg` for actual rendered meshes.
+
+The official hosted NVIDIA Kimodo demo accepted a six-second cautious torch-carrying walk prompt using Kimodo-SOMA-RP-v1. Generation returned to its idle UI, but the BVH export stalled and the five-minute session expired. No downloaded motion was verified or integrated. Current runtime clips remain the authored donors; local Kimodo inference and motion retargeting remain pending. No paid Space or new hardware was provisioned.

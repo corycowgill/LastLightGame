@@ -1,0 +1,69 @@
+{
+  "asset_id": "lan_sealed_sun_door",
+  "version": "v001",
+  "file": "assets/lan_sealed_sun_door/v001/model.glb",
+  "sha256": "0e853e119009656d169593b2c27172f121d51ad149fa866d9af47f8afa3c3312",
+  "source": "generated/lan_sealed_sun_door/a7b2f68086f44a9f8c5ea4d7cd7d87d4/source.glb",
+  "source_sha256": "f4add9d0335d53e8ab0f5d3b2ff95b566368361f01f2e559c6d543a2ff40d0bb",
+  "metrics": {
+    "triangles": 5000,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -1.316277768843766,
+        0.0,
+        -0.6514532096471404
+      ],
+      [
+        1.316277768843766,
+        3.3,
+        0.6514532096471404
+      ]
+    ],
+    "extents": [
+      2.632555537687532,
+      3.3,
+      1.3029064192942807
+    ],
+    "surface_area_m2": 114.04058380167487,
+    "surface_area_ratio": 10.472046262780063,
+    "file_bytes": 1912008
+  },
+  "scale_factor": 3.2890054884666395,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/lan_sealed_sun_door/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/lan_sealed_sun_door/v001/lod1.glb",
+      "triangles": 2500
+    },
+    {
+      "file": "assets/lan_sealed_sun_door/v001/lod2.glb",
+      "triangles": 1286
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/lan_sealed_sun_door/v001/previews/view_0.png",
+    "assets/lan_sealed_sun_door/v001/previews/view_1.png",
+    "assets/lan_sealed_sun_door/v001/previews/view_2.png",
+    "assets/lan_sealed_sun_door/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 99663,
+    "lod0_triangles": 5000,
+    "lod1_triangles": 2500,
+    "lod2_triangles": 1286,
+    "method": "Blender decimate; requires visual review"
+  }
+}
