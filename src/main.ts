@@ -13,6 +13,7 @@ let check: ExpeditionCheck | undefined;
 import { Game } from "./simulation";
 import { GameScene } from "./scene";
 import { GameAudio } from "./audio";
+import { dungeonDressing } from "./dungeon-dressing";
 const $ = (id: string) => document.getElementById(id)!;
 let game = new Game(104729),
   view: GameScene,
@@ -240,6 +241,21 @@ function begin(load: boolean) {
     );
   if (load) cameraControls.pose.yaw = game.player.yaw;
   else game.player.yaw = cameraControls.pose.yaw;
+  // Reproducible art-review position using the real world, light and game renderer.
+  const query = new URLSearchParams(location.search);
+  if (!load && query.has("debug") && query.has("dressing")) {
+    const remains = dungeonDressing(game.world).find(
+      (d) => d.id === "dre_small_bone_pile",
+    );
+    if (remains) {
+      const side = Math.sign(remains.x - Math.round(remains.x / 28) * 28);
+      game.player.x = remains.x - side * 3.4;
+      game.player.z = remains.z;
+      game.player.yaw = cameraControls.pose.yaw = (-side * Math.PI) / 2;
+      cameraControls.pose.yaw += 0.35;
+      cameraControls.pose.pitch = 0.24;
+    }
+  }
   rebuild();
   audio.start();
   audio.setVolume(settings.volume);

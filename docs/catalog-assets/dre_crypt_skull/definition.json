@@ -1,0 +1,25 @@
+{
+  "id": "dre_crypt_skull",
+  "name": "Crypt Skull",
+  "category": "dressing",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 0.23,
+  "scale_axis": "y",
+  "triangle_budget": 2500,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original dark fantasy survival horror game prop. One anatomically recognizable weathered human skull with lower jaw, empty deep eye sockets, cracked old ivory bone, earthy crevices, no flesh, no gore, no base. Single isolated object, three quarter view, complete silhouette with margin. Plain light gray background, neutral studio illumination, realistic aged material, no text, no scenery, no dramatic lighting.",
+  "seed": 562452861,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ]
+}

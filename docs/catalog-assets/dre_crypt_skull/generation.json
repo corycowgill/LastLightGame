@@ -1,0 +1,39 @@
+{
+  "asset_id": "dre_crypt_skull",
+  "job_id": "30274f0a29034cd1b17ab08762fbd0ea",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 562452861,
+  "file": "generated/dre_crypt_skull/30274f0a29034cd1b17ab08762fbd0ea/source.glb",
+  "sha256": "c04004bf6febae1a1ef0199e67b2b6892c29c3337607e4b26d06889075270be7",
+  "reference_sha256": "4adc4c4f282cbd7d1af7ab61eef43f3ff842b0986ad48a4ec2e31df76758b03c",
+  "metrics": {
+    "triangles": 97034,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.3304020166397095,
+        -0.3770279586315155,
+        -0.5012465715408325
+      ],
+      [
+        0.330829381942749,
+        0.38187888264656067,
+        0.5013606548309326
+      ]
+    ],
+    "extents": [
+      0.6612313985824585,
+      0.7589068412780762,
+      1.0026072263717651
+    ],
+    "surface_area_m2": 9.164287786568607,
+    "surface_area_ratio": 9.116687279709955,
+    "file_bytes": 4190100
+  },
+  "target_size_m": 0.23,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792280462.6824322
+}

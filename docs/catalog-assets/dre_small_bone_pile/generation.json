@@ -1,0 +1,39 @@
+{
+  "asset_id": "dre_small_bone_pile",
+  "job_id": "4642b10460e4425d975e2c48f397b00d",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 484036829,
+  "file": "generated/dre_small_bone_pile/4642b10460e4425d975e2c48f397b00d/source.glb",
+  "sha256": "c63234dbb79f0cacb7d76a1afc3a5151a8dc6bb95f6da5eb65cc594a091ab614",
+  "reference_sha256": "fc23dfcd90947786d14d1ddb6c49ed7a2e9088b2b568a98c76aaaf380151e179",
+  "metrics": {
+    "triangles": 98026,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.333415150642395,
+        -0.5009444952011108,
+        -0.20428252220153809
+      ],
+      [
+        0.33358046412467957,
+        0.5015963315963745,
+        0.2051132619380951
+      ]
+    ],
+    "extents": [
+      0.6669956147670746,
+      1.0025408267974854,
+      0.4093957841396332
+    ],
+    "surface_area_m2": 3.0077858319756205,
+    "surface_area_ratio": 2.992559362565505,
+    "file_bytes": 4171064
+  },
+  "target_size_m": 0.75,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792280421.152113
+}

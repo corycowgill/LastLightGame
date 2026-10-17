@@ -48,6 +48,7 @@ export class CatalogAssets {
               if (
                 id.startsWith("arc_") ||
                 (id.startsWith("lan_") && id !== "lan_fallen_bell") ||
+                id.startsWith("dre_") ||
                 [
                   "pro_pillar",
                   "pro_sarcophagus",
@@ -125,12 +126,25 @@ export class CatalogAssets {
             mesh.material,
             region.length,
           );
-          region.forEach((matrix, index) =>
+          region.forEach((matrix, index) => {
             instances.setMatrixAt(
               index,
               matrix.clone().multiply(fit).multiply(mesh.matrixWorld),
-            ),
-          );
+            );
+            if (id.startsWith("arc_")) {
+              const position = new THREE.Vector3().setFromMatrixPosition(
+                matrix,
+              );
+              const shade =
+                0.66 +
+                (Math.abs(Math.round(position.x * 17 + position.z * 31)) % 13) *
+                  0.018;
+              instances.setColorAt(
+                index,
+                new THREE.Color(shade * 0.91, shade * 0.97, shade),
+              );
+            }
+          });
           instances.castShadow = instances.receiveShadow = true;
           instances.name = id;
           instances.computeBoundingSphere();

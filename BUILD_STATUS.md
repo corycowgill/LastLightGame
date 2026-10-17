@@ -192,3 +192,12 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - All eight new GLBs decoded in the actual production browser viewer without observed console warnings/errors. Seed 104729 browser scenario passed extinction, active Hunt, navigated escape and sanctuary in 0:59; recovery view 60 FPS / 56 draws on this desktop.
 - 48 TypeScript tests, eight Python asset tests and production build pass. Existing large Three.js chunk warning remains.
 - NVIDIA hosted Kimodo v1 generated-session UI returned, but BVH export stalled and session expired. No motion file verified or promoted; authored runtime clips remain. Next animation work: obtain a verified motion artifact, retarget to the existing skeleton, then review feet, torch contacts and cloak deformation before replacement.
+
+## Creepy dungeon dressing — 2026-10-17
+
+- Reviewed graphics catalog/art bible. Generated and integrated catalog skeletal torso remains, crypt skull and rusty chain via serial ComfyUI references / TRELLIS. Skeleton uses 12k triangles to preserve thin ribs; skull and chain about 2.5k each. Two lit candle references were rejected and omitted.
+- Added generated transparent dusty web texture, overhead web placements, damp/grime material overlays, cooler varied masonry, and seeded clustered remains outside central walking lanes. Sanctuary safety and AI/nav rules unchanged.
+- Added deterministic placement/clearance regression check and repeatable debug art-review position. Fixed finishing helper to select mesh-stage manifests only.
+- See docs/DUNGEON_ATMOSPHERE.md for prompt, texture path, review procedure and limitations.
+- Verified all three new GLBs in the browser viewer; in-game scene loaded 27 shared templates with no observed warnings/errors. Screenshot: docs/catalog-assets/creepy-dungeon-gameplay.png. Browser Hunt scenario passed extinction, active Hunt, navigated escape and sanctuary in 0:59. Art-review view observed 60 FPS / 115 draws on this desktop.
+- 49 TypeScript tests, eight Python asset tests and production build pass. Runtime now includes 35 GLB roles from 34 neural reconstructions plus the generated web texture. Visual drafts remain subject to art refinement; physical iPhone/Xbox testing remains pending.

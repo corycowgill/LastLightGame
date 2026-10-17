@@ -1,0 +1,69 @@
+{
+  "asset_id": "dre_crypt_skull",
+  "version": "v001",
+  "file": "assets/dre_crypt_skull/v001/model.glb",
+  "sha256": "57d3b430a372db0eee11bcc5234a98248b67a5702f83ea179c8c207bbc363141",
+  "source": "generated/dre_crypt_skull/30274f0a29034cd1b17ab08762fbd0ea/source.glb",
+  "source_sha256": "c04004bf6febae1a1ef0199e67b2b6892c29c3337607e4b26d06889075270be7",
+  "metrics": {
+    "triangles": 2500,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.100198873828731,
+        0.0,
+        -0.15192883337113733
+      ],
+      [
+        0.100198873828731,
+        0.23000000000000004,
+        0.15192883337113733
+      ]
+    ],
+    "extents": [
+      0.200397747657462,
+      0.23000000000000004,
+      0.30385766674227466
+    ],
+    "surface_area_m2": 0.8417390107919087,
+    "surface_area_ratio": 9.116687279709955,
+    "file_bytes": 1716876
+  },
+  "scale_factor": 0.3030675011608232,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/dre_crypt_skull/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/dre_crypt_skull/v001/lod1.glb",
+      "triangles": 1250
+    },
+    {
+      "file": "assets/dre_crypt_skull/v001/lod2.glb",
+      "triangles": 943
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/dre_crypt_skull/v001/previews/view_0.png",
+    "assets/dre_crypt_skull/v001/previews/view_1.png",
+    "assets/dre_crypt_skull/v001/previews/view_2.png",
+    "assets/dre_crypt_skull/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 97034,
+    "lod0_triangles": 2500,
+    "lod1_triangles": 1250,
+    "lod2_triangles": 943,
+    "method": "Blender decimate; requires visual review"
+  }
+}

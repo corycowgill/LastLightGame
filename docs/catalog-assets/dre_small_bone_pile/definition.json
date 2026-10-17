@@ -1,0 +1,25 @@
+{
+  "id": "dre_small_bone_pile",
+  "name": "Small Bone Pile",
+  "category": "dressing",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 0.75,
+  "scale_axis": "y",
+  "triangle_budget": 12000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original dark fantasy survival horror game prop. A compact low heap of ancient dry human skeletal remains, recognizable ribcage, pelvis and long limb bones tangled together, aged ivory bone with dirt in cavities, no flesh, no gore, no base plate. Single isolated object, three quarter view, complete silhouette with margin. Plain light gray background, neutral studio illumination, realistic aged material, no text, no scenery, no dramatic lighting.",
+  "seed": 484036829,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "asset_id": "dre_chain_short",
+  "job_id": "0e18fd0072af4504a9d1063e8d71a82a",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 1626440091,
+  "file": "generated/dre_chain_short/0e18fd0072af4504a9d1063e8d71a82a/source.glb",
+  "sha256": "8e0470db8885bdba28854abb2633848caa98a0d8404520c05d3c53030426c841",
+  "reference_sha256": "7f898f84b980e242ea93881512d60c8104bb25331c8de312d2c35a4e3e548df9",
+  "metrics": {
+    "triangles": 94020,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.08593888580799103,
+        -0.5011520981788635,
+        -0.07962466776371002
+      ],
+      [
+        0.0824633315205574,
+        0.49411293864250183,
+        0.07835997641086578
+      ]
+    ],
+    "extents": [
+      0.16840221732854843,
+      0.9952650368213654,
+      0.1579846441745758
+    ],
+    "surface_area_m2": 0.6847397199861677,
+    "surface_area_ratio": 0.6912705025390057,
+    "file_bytes": 3350736
+  },
+  "target_size_m": 1.5,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792280499.5352058
+}

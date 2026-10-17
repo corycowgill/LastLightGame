@@ -1,6 +1,7 @@
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { AnimatedCharacter, movementClip } from "./character";
 import { CatalogAssets } from "./catalog-assets";
+import { dressDungeon } from "./dungeon-dressing";
 import * as THREE from "three";
 import type { World, Game } from "./simulation";
 export function constrainCamera(
@@ -506,6 +507,7 @@ export class GameScene {
         });
       },
     );
+    dressDungeon(this.scene, this.catalog, world);
     this.resize();
   }
   private texture(seed: number, slabs: boolean) {

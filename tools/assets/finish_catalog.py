@@ -16,7 +16,7 @@ for asset in args.ids:
     source = None
     for run in runs:
         data = json.loads(run.read_text(encoding='utf-8'))
-        if data.get('backend') in ('hf','comfy') and data.get('qa_status') != 'rejected': source = data['file']; break
+        if data.get('stage') == 'mesh' and data.get('backend') in ('hf','comfy') and data.get('qa_status') != 'rejected': source = data['file']; break
     if source is None: raise RuntimeError('No completed neural source: '+asset)
     version = 1
     while True:

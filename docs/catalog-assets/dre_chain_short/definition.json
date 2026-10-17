@@ -1,0 +1,25 @@
+{
+  "id": "dre_chain_short",
+  "name": "Chain Short",
+  "category": "dressing",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 1.5,
+  "scale_axis": "y",
+  "triangle_budget": 2500,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original dark fantasy survival horror game prop. One heavy rusty iron chain hanging vertically, eight large thick interlocked oval links, complete contiguous silhouette, matte corroded iron, no support stand. Single isolated object, three quarter view, complete silhouette with margin. Plain light gray background, neutral studio illumination, realistic aged material, no text, no scenery, no dramatic lighting.",
+  "seed": 1626440091,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ]
+}
