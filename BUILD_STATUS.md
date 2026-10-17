@@ -143,3 +143,12 @@ The navigation upgrade costs three banked relics, is limited to one purchase and
 Validation: 44 tests pass and production build passes. Added locked/purchased/capped compass checks, camera-relative angle and normalization checks, and persistent ownership across resets. Existing save migration tests now cover compass ownership. Hardware mobile performance and human navigation playtests remain open.
 
 Browser validation: three automated physical expeditions banked three relics and each reported Hunt/escape PASS. Buying the compass deducted three relics and marked it mastered. Descending again retained ownership; camera rotation changed its text from right to left. Screenshot: docs/sanctuary-compass.png. Also moved the HUD clear of touch buttons when touch controls are enabled on a wide desktop viewport. Normalized legacy mixed document line endings.
+
+
+## Hugging Face character asset pipeline - 2026-10-17
+
+Used the installed authenticated `hf` CLI to find official TripoSR (local mesh baseline), UniRig (automatic skeleton/skinning) and NVIDIA Kimodo-SOMA-RP-v1.2 (motion generation). Audited RTX 4060 8 GB, 16 GB RAM, CUDA PyTorch and installed Blender. Downloaded TripoSR config and its 1.7 GB checkpoint; downloaded NVIDIA configuration/license/stats and the complete 1,133,177,724-byte checkpoint. Hugging Face checksum verification passed for the downloaded TripoSR and Kimodo files. Sources are in ignored .asset-tools, with source/model revisions recorded in docs/AI_ASSET_PIPELINE.md and the repeatable download script. No weights are committed to Git.
+
+Added character-specific prompts for nine Torchbearer, five Hunter and three Stalker clips. Added a structural GLB release gate and three passing Python tests for rig/clip presence, embedded resources, bone limits and truncated files. This does not establish valid deformation, animation quality or full glTF conformance. Runtime/gameplay code is unchanged.
+
+Blockers: current HF account receives HTTP 403 for the required gated Llama text encoder. Its access and memory/offload plan must be resolved before claiming working Kimodo inference. Isolated TripoSR/UniRig/Kimodo environments and first original reference/mesh generation still remain. Generated rigs require SOMA retargeting and Blender cleanup. No generated GLBs or AI animation clips have been accepted or integrated yet. No paid hardware was launched.

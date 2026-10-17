@@ -1,0 +1,29 @@
+{
+  "model": "nvidia/Kimodo-SOMA-RP-v1.2",
+  "seed": 104729,
+  "characters": {
+    "torchbearer": {
+      "idle": "A person stands still, breathing cautiously, holding their right hand raised at shoulder height as if carrying a torch.",
+      "walk": "A person walks forward carefully, keeping their right hand raised at shoulder height as if carrying a torch.",
+      "sprint": "A person runs forward urgently, keeping their right hand raised as if carrying a torch.",
+      "crouch_idle": "A person stays crouched and still, looking cautiously around, right hand held forward.",
+      "crouch_walk": "A person walks slowly forward in a low crouch, right hand held forward.",
+      "interact": "A standing person reaches forward with the left hand, takes a small object, then returns to standing.",
+      "relight": "A person brings both hands together near their chest, strikes a match, then raises their right hand.",
+      "burst": "A person briefly thrusts their raised right hand forward, recoils from a flash, then returns to standing.",
+      "death": "A frightened person stumbles, falls to their knees, then collapses to the ground."
+    },
+    "hunter": {
+      "idle": "A tall person stands hunched forward, arms hanging low, breathing slowly.",
+      "search": "A person walks slowly forward with a hunched back and long hanging arms, pausing to look around.",
+      "pursue": "A person runs forward aggressively, leaning forward with long swinging arms.",
+      "capture": "A person lunges forward and reaches out with both hands, then stops.",
+      "banish": "A person recoils backward, shielding their face with both arms, then crouches down."
+    },
+    "stalker": {
+      "idle": "A hunched person stands very still and tilts their head as if listening.",
+      "investigate": "A hunched person creeps forward carefully, stopping to listen.",
+      "recoil": "A person recoils from a bright light, covers their face and steps backward."
+    }
+  }
+}

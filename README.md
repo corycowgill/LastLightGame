@@ -105,3 +105,7 @@ This is the playable Catacombs checkpoint toward the complete vertical slice. Th
 ## Current-state demo
 
 [Watch the v1 gameplay demo](docs/demos/README.md) — 71 seconds with original game audio, demonstrating torch modes, the Hunt, relighting, and sanctuary banking.
+
+## Generated character assets
+
+See [the Hugging Face / Blender asset pipeline](docs/AI_ASSET_PIPELINE.md) for the local hardware audit, selected mesh/rig/motion models, exact clip requirements and current encoder-access blocker. Downloaded AI weights remain ignored in `.asset-tools/`; the game still uses its original procedural characters.
