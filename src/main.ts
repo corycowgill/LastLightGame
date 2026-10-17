@@ -1,5 +1,12 @@
 import "./style.css";
-import { CameraControls } from "./controls";
+import { CameraControls, orbit, zoom } from "./controls";
+import {
+  ControllerInput,
+  TouchInput,
+  combineMovement,
+  type PlatformAction,
+  type PadSnapshot,
+} from "./platform-input";
 import { ExpeditionCheck } from "./qa";
 let check: ExpeditionCheck | undefined;
 import { Game } from "./simulation";
@@ -16,7 +23,15 @@ let running = false,
   last = performance.now(),
   fps = 60;
 const keys = new Set<string>();
-const defaults = { sensitivity: 1, volume: 0.45, cues: true, quality: "high" };
+const coarse =
+  matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+const defaults = {
+  sensitivity: 1,
+  volume: 0.45,
+  cues: true,
+  quality: coarse ? "low" : "high",
+  touchControls: coarse || new URLSearchParams(location.search).has("touch"),
+};
 let settings = { ...defaults };
 try {
   settings = {
@@ -44,8 +59,128 @@ const cameraControls = new CameraControls(
   },
 );
 $("captureMouse").onclick = () => void cameraControls.capture();
-const intro = `<div class="eyebrow">AN EXPEDITION INTO THE FORGOTTEN CATACOMBS</div><h1>THE LAST<br><em>LIGHT</em></h1><p class="tagline">When the flame dies, the hunt begins.</p><div class="divider"></div><p class="description">Carry a fragile flame into a labyrinth that remembers.<br>Find the reliquaries. Follow the golden fires home.<br>And if your light goes out — keep moving.</p>`;
+let inputSource = coarse ? "touch" : "keyboard";
+function selectInput(source: string) {
+  inputSource = source;
+  document.body.dataset.input = source;
+  const hint = $("hud").querySelector<HTMLElement>(".hint");
+  if (hint && hint.dataset.source !== source) {
+    hint.dataset.source = source;
+    hint.innerHTML =
+      source === "gamepad"
+        ? "LS Move · RS Look · A Use<br>RT Run · LT/B Crouch · X Burst · Y Chalk<br>LB/RB Flame · View Journal · Menu Pause"
+        : "WASD Move · Drag / Arrows Look · Wheel Zoom<br>SHIFT Sprint · C Crouch<br>E Use · Q Chalk · F Burst · TAB Journal";
+  }
+}
+if (new URLSearchParams(location.search).has("touch"))
+  settings.touchControls = true;
+inputSource = settings.touchControls ? "touch" : "keyboard";
+selectInput(inputSource);
+document.body.dataset.touch = String(settings.touchControls);
+const controller = new ControllerInput(platformAction);
+const touchInput = new TouchInput(
+  $("touchControls"),
+  () => running,
+  platformAction,
+  (delta) => zoom(cameraControls.pose, delta),
+  () => selectInput("touch"),
+);
+$("touchControls").addEventListener("flamemode", (e) =>
+  game.setMode((e as CustomEvent<number>).detail),
+);
+$("audioUnlock").onclick = () => audio.start();
+window.addEventListener(
+  "pointerdown",
+  (e) => {
+    selectInput(
+      settings.touchControls ||
+        e.pointerType === "touch" ||
+        (e.target as Element).closest?.("#touchControls")
+        ? "touch"
+        : "keyboard",
+    );
+    if (audio.needsGesture) audio.start();
+  },
+  { passive: true },
+);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    touchInput.reset();
+    controller.reset();
+    pause();
+  }
+});
+function platformAction(action: PlatformAction) {
+  if (action === "pause") {
+    if (running) pause();
+    else if (screen === "settings")
+      $("overlay").querySelector<HTMLButtonElement>("#back")?.click();
+    else if (started && ["pause", "journal", "settings"].includes(screen))
+      resume();
+    return;
+  }
+  if (action.startsWith("menu")) {
+    const controls = [
+      ...$("overlay").querySelectorAll<HTMLElement>(
+        "button:not(:disabled),input,select",
+      ),
+    ];
+    const focused = document.activeElement as HTMLElement,
+      index = controls.indexOf(focused);
+    if (action === "menuAccept") {
+      const item = controls[index < 0 ? 0 : index];
+      if (
+        item instanceof HTMLButtonElement ||
+        (item instanceof HTMLInputElement && item.type === "checkbox")
+      )
+        item.click();
+      else item?.focus();
+    }
+    if (action === "menuBack") {
+      const back = $("overlay").querySelector<HTMLButtonElement>("#back");
+      if (back) back.click();
+      else if (["pause", "journal"].includes(screen)) resume();
+      else if (screen !== "menu") menu();
+    }
+    if (action === "menuUp" || action === "menuDown")
+      controls[
+        (index + (action === "menuUp" ? -1 : 1) + controls.length) %
+          controls.length
+      ]?.focus();
+    if (action === "menuLeft" || action === "menuRight") {
+      const direction = action === "menuRight" ? 1 : -1;
+      if (focused instanceof HTMLInputElement) {
+        if (focused.type === "checkbox") focused.checked = !focused.checked;
+        else if (focused.type === "range") {
+          direction > 0 ? focused.stepUp() : focused.stepDown();
+        }
+      } else if (focused instanceof HTMLSelectElement)
+        focused.selectedIndex = Math.max(
+          0,
+          Math.min(
+            focused.options.length - 1,
+            focused.selectedIndex + direction,
+          ),
+        );
+    }
+    return;
+  }
+  if (!running) return;
+  if (action === "interact") game.interact();
+  if (action === "burst") game.burst();
+  if (action === "chalk") game.mark();
+  if (action === "journal") journal();
+  if (action === "previousMode") game.setMode((game.mode + 2) % 3);
+  if (action === "nextMode") game.setMode((game.mode + 1) % 3);
+  if (action === "recenter") {
+    cameraControls.pose.yaw = game.player.yaw;
+    cameraControls.pose.pitch = 0.25;
+  }
+}
+const intro = `<div class="eyebrow">AN EXPEDITION INTO THE FORGOTTEN CATACOMBS</div><h1>THE LAST<br><em>LIGHT</em></h1><p class="tagline">When the flame dies, the hunt begins.</p><div id="inputStatus" class="input-status">Xbox: press a button to connect · Touch: landscape recommended</div><div class="divider"></div><p class="description">Carry a fragile flame into a labyrinth that remembers.<br>Find the reliquaries. Follow the golden fires home.<br>And if your light goes out — keep moving.</p>`;
 function panel(content: string) {
+  touchInput.reset();
+  document.body.dataset.playing = "false";
   $("overlay").innerHTML = `<main class="panel">${content}</main>`;
   $("overlay").hidden = false;
 }
@@ -110,6 +245,7 @@ function begin(load: boolean) {
 function resume() {
   if (game.phase === "DEAD" || game.completed) return;
   screen = "playing";
+  document.body.dataset.playing = "true";
   audio.setVolume(settings.volume);
   running = true;
   keys.clear();
@@ -138,22 +274,27 @@ function pause() {
 function controls() {
   screen = "guide";
   panel(
-    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Drag mouse / arrow keys · Look &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C / CTRL · Crouch<br>E · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps. Break sight around corners to lose the Hunter. A match restores a reserve of fuel after a two second relight. Golden sanctuary fires banish the Hunt.</p><div id="actions"></div>',
+    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Drag mouse / arrow keys · Look &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C / CTRL · Crouch<br>E · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Xbox: LS Move · RS Look · A Use · B Toggle Crouch · X Burst · Y Chalk · LB/RB Flame · LT Crouch · RT/LS Sprint · D-pad Up/Down Zoom · RS Click Recenter · View Journal · Menu Pause. Menus: D-pad Navigate · A Select · B Back.</p><p>Touch: Left pad Move · Drag view Look · RUN Hold Sprint · CROUCH Toggle · USE Interact/Relight · BURST, CHALK and JOURNAL actions · Flame buttons · +/− Zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps. Break sight around corners to lose the Hunter. A match restores a reserve of fuel after a two second relight. Golden sanctuary fires banish the Hunt.</p><div id="actions"></div>',
   );
   button("back", "BACK", menu);
 }
 function showSettings() {
+  const previousScreen = screen;
   screen = "settings";
   const was = running;
+  touchInput.reset();
+  keys.clear();
   if (was) {
     running = false;
     cameraControls.release();
   }
   panel(
-    `<div class="eyebrow">SETTINGS</div><h2>Shape your experience.</h2><label>Mouse sensitivity <input id="sensitivity" type="range" min="0.2" max="2" step="0.1" value="${settings.sensitivity}"></label><label>Audio volume <input id="volume" type="range" min="0" max="1" step="0.05" value="${settings.volume}"></label><label>Visual sound cues <input id="cues" type="checkbox" ${settings.cues ? "checked" : ""}></label><label>Graphics <select id="quality"><option value="high">High</option><option value="low">Low</option></select></label><div id="actions"></div>`,
+    `<div class="eyebrow">SETTINGS</div><h2>Shape your experience.</h2><label>Look sensitivity <input id="sensitivity" type="range" min="0.2" max="2" step="0.1" value="${settings.sensitivity}"></label><label>Audio volume <input id="volume" type="range" min="0" max="1" step="0.05" value="${settings.volume}"></label><label>Visual sound cues <input id="cues" type="checkbox" ${settings.cues ? "checked" : ""}></label><label>Show touch controls <input id="touchSetting" type="checkbox" ${settings.touchControls ? "checked" : ""}></label><label>Graphics <select id="quality"><option value="high">High</option><option value="low">Low</option></select></label><div id="actions"></div>`,
   );
   ($("quality") as HTMLSelectElement).value = settings.quality;
   button("back", "SAVE & RETURN", () => {
+    settings.touchControls = ($("touchSetting") as HTMLInputElement).checked;
+    document.body.dataset.touch = String(settings.touchControls);
     settings.sensitivity = +($("sensitivity") as HTMLInputElement).value;
     settings.volume = +($("volume") as HTMLInputElement).value;
     settings.cues = ($("cues") as HTMLInputElement).checked;
@@ -162,7 +303,7 @@ function showSettings() {
     audio.setVolume(settings.volume);
     document.body.dataset.quality = settings.quality;
     view.setQuality(settings.quality === "low");
-    started ? resume() : menu();
+    previousScreen === "menu" ? menu() : started ? resume() : menu();
   });
 }
 function journal() {
@@ -215,9 +356,12 @@ window.addEventListener("keydown", (e) => {
     ].includes(e.code)
   )
     e.preventDefault();
+  selectInput("keyboard");
   if (e.repeat) return;
   if (e.code === "Escape") {
     if (running) pause();
+    else if (screen === "settings")
+      $("overlay").querySelector<HTMLButtonElement>("#back")?.click();
     else if (started && ["pause", "journal", "settings"].includes(screen))
       resume();
     else if (["guide", "settings"].includes(screen)) menu();
@@ -247,14 +391,64 @@ window.addEventListener("resize", () => {
   view?.resize();
   draw = true;
 });
+new ResizeObserver(() => {
+  view?.resize();
+  draw = true;
+}).observe($("scene"));
+window.visualViewport?.addEventListener("resize", () => {
+  view?.resize();
+  draw = true;
+});
 let saveTimer = 0;
 function frame(now: number) {
   const rawDt = (now - last) / 1000;
   const dt = Math.min(rawDt, 0.1);
   last = now;
   fps = fps * 0.95 + (1 / Math.max(rawDt, 0.001)) * 0.05;
+  let pad: PadSnapshot | null = null;
+  try {
+    pad =
+      [...(navigator.getGamepads?.() ?? [])].find(
+        (p) => p?.connected && p.mapping === "standard",
+      ) ?? null;
+  } catch {}
+  controller.update(document.hidden ? null : pad, dt, running);
+  if (controller.used) selectInput("gamepad");
+  const inputStatus = document.getElementById("inputStatus");
+  if (inputStatus)
+    inputStatus.textContent = controller.connected
+      ? "Xbox connected · A select · B back · D-pad / left stick navigate"
+      : settings.touchControls
+        ? "Touch controls ready · Landscape recommended"
+        : "Keyboard & mouse · Connect Xbox and press a button";
+
   if (running) {
     cameraControls.keyboard(keys, dt);
+    orbit(
+      cameraControls.pose,
+      controller.look.x * 800 * dt,
+      controller.look.y * 600 * dt,
+      settings.sensitivity,
+    );
+    if (pad && controller.connected)
+      zoom(
+        cameraControls.pose,
+        ((pad.buttons[13]?.pressed ? 1 : 0) -
+          (pad.buttons[12]?.pressed ? 1 : 0)) *
+          dt *
+          180,
+      );
+    const movement = combineMovement(
+      {
+        forward: Number(keys.has("KeyW")) - Number(keys.has("KeyS")),
+        strafe: Number(keys.has("KeyD")) - Number(keys.has("KeyA")),
+        sprint: keys.has("ShiftLeft") || keys.has("ShiftRight"),
+        crouch: keys.has("KeyC") || keys.has("ControlLeft"),
+      },
+      controller.movement,
+      touchInput.movement,
+    );
+
     accumulator += dt * (check ? 8 : 1);
     while (accumulator >= 1 / 60) {
       game.step(
@@ -262,10 +456,7 @@ function frame(now: number) {
         check
           ? check.input(game)
           : {
-              forward: Number(keys.has("KeyW")) - Number(keys.has("KeyS")),
-              strafe: Number(keys.has("KeyD")) - Number(keys.has("KeyA")),
-              sprint: keys.has("ShiftLeft") || keys.has("ShiftRight"),
-              crouch: keys.has("KeyC") || keys.has("ControlLeft"),
+              ...movement,
               yaw: cameraControls.pose.yaw,
             },
       );
@@ -293,6 +484,18 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 function updateHUD() {
+  $("audioUnlock").hidden = !audio.needsGesture;
+  if (inputSource === "gamepad")
+    $("lookHint").textContent = "LS Move · RS Look · A Use · Menu Pause";
+  else if (inputSource === "touch")
+    $("lookHint").textContent = "Left pad: move · Drag view: look";
+  for (const button of document.querySelectorAll<HTMLElement>(
+    "[data-touch-mode]",
+  ))
+    button.setAttribute(
+      "aria-pressed",
+      String(Number(button.dataset.touchMode) === game.mode),
+    );
   const pct = Math.max(0, game.fuel / game.maxFuel);
   $("fuelBar").style.width = `${pct * 100}%`;
   $("staminaBar").style.width = `${game.player.stamina * 100}%`;
@@ -301,7 +504,18 @@ function updateHUD() {
     ["EMBER", "STEADY FLAME", "BLAZE"][game.mode] || "FLAME";
   $("inventory").innerHTML =
     `<b>${game.matches}</b> MATCHES &nbsp; <b>${game.artifacts}</b> RELICS<br><small>${game.chalk.length} CHALK MARKS · ${game.banked} BANKED</small>`;
-  $("notice").textContent = game.message || "";
+  const useLabel =
+    inputSource === "gamepad" ? "A" : inputSource === "touch" ? "USE" : "E";
+  $("pauseButton").textContent =
+    inputSource === "gamepad"
+      ? "MENU · PAUSE"
+      : inputSource === "touch"
+        ? "PAUSE"
+        : "ESC · PAUSE";
+  $("notice").textContent = (game.message || "").replace(
+    /\bE to\b/g,
+    inputSource === "touch" ? "Tap USE to" : `${useLabel} to`,
+  );
   const hunt = game.phase.includes("HUNT");
   $("phase").textContent = hunt
     ? "THE HUNT"
@@ -315,10 +529,10 @@ function updateHUD() {
       !i.taken && Math.hypot(i.x - game.player.x, i.z - game.player.z) < 2.5,
   );
   $("prompt").textContent = nearby
-    ? `E · COLLECT ${nearby.kind.toUpperCase()}`
+    ? `${useLabel} · COLLECT ${nearby.kind.toUpperCase()}`
     : game.fuel <= 0
       ? game.matches > 0
-        ? "E · STRIKE A MATCH"
+        ? `${useLabel} · STRIKE A MATCH`
         : "NO MATCHES · FIND GOLDEN FIRE"
       : "";
   $("bearing").textContent = new URLSearchParams(location.search).has("debug")

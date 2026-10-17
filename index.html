@@ -2,7 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#070c12" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>The Last Light</title>
@@ -23,6 +27,7 @@
         <div class="view-controls">
           <button id="captureMouse">CAPTURE MOUSE</button
           ><button id="pauseButton">ESC · PAUSE</button>
+          <button id="audioUnlock" hidden>TAP FOR SOUND</button>
           <div id="lookHint">Drag: look · Arrows: look · Wheel: zoom</div>
         </div>
       </header>
@@ -46,6 +51,48 @@
         </section>
       </footer>
       <div id="prompt"></div>
+    </div>
+    <div id="touchControls" aria-label="Touch game controls">
+      <div id="movePad" role="group" aria-label="Movement joystick">
+        <div id="moveKnob"></div>
+        <span>MOVE</span>
+      </div>
+      <div class="touch-look-label">DRAG THE VIEW TO LOOK</div>
+      <div class="touch-actions">
+        <button
+          data-touch-action="interact"
+          class="touch-primary"
+          aria-label="Interact or relight"
+        >
+          USE
+        </button>
+        <button id="touchSprint" aria-label="Hold to sprint">RUN</button>
+        <button
+          id="touchCrouch"
+          aria-label="Toggle crouch"
+          aria-pressed="false"
+        >
+          CROUCH
+        </button>
+        <button data-touch-action="burst" aria-label="Flame Burst">
+          BURST
+        </button>
+        <button data-touch-action="chalk" aria-label="Place chalk">
+          CHALK
+        </button>
+        <button data-touch-action="journal" aria-label="Open journal">
+          JOURNAL
+        </button>
+      </div>
+      <div class="touch-modes" aria-label="Torch modes">
+        <button data-touch-mode="0" aria-label="Ember mode">EMBER</button
+        ><button data-touch-mode="1" aria-label="Steady mode">STEADY</button
+        ><button data-touch-mode="2" aria-label="Blaze mode">BLAZE</button>
+      </div>
+      <div class="touch-zoom">
+        <button data-touch-zoom="-140" aria-label="Zoom in">＋</button
+        ><button data-touch-zoom="140" aria-label="Zoom out">−</button>
+      </div>
     </div>
     <div id="overlay"></div>
     <script type="module" src="/src/main.ts"></script>

@@ -28,6 +28,7 @@ export function zoom(pose: CameraPose, delta: number) {
 export class CameraControls {
   readonly pose: CameraPose = { yaw: -Math.PI / 2, pitch: 0.25, distance: 3.7 };
   private dragging = false;
+  private dragPointer: number | undefined;
   private x = 0;
   private y = 0;
   private disposers: (() => void)[] = [];
@@ -41,6 +42,8 @@ export class CameraControls {
     const doc = element.ownerDocument;
     this.listen(element, "pointerdown", (e: PointerEvent) => {
       if (!this.active() || ![0, 2].includes(e.button)) return;
+      if (this.dragging && e.pointerId !== this.dragPointer) return;
+      this.dragPointer = e.pointerId;
       e.preventDefault();
       element.focus({ preventScroll: true });
       if (doc.pointerLockElement === element) return;
@@ -55,6 +58,7 @@ export class CameraControls {
       if (
         !this.active() ||
         !this.dragging ||
+        (e.pointerId !== undefined && e.pointerId !== this.dragPointer) ||
         doc.pointerLockElement === element
       )
         return;
@@ -74,14 +78,17 @@ export class CameraControls {
         this.changed();
       }
     });
-    this.listen(doc, "pointerup", () => {
-      this.dragging = false;
+    this.listen(doc, "pointerup", (e: PointerEvent) => {
+      if (e.pointerId === undefined || e.pointerId === this.dragPointer)
+        this.dragging = false;
     });
-    this.listen(element, "lostpointercapture", () => {
-      this.dragging = false;
+    this.listen(element, "lostpointercapture", (e: PointerEvent) => {
+      if (e.pointerId === undefined || e.pointerId === this.dragPointer)
+        this.dragging = false;
     });
-    this.listen(doc, "pointercancel", () => {
-      this.dragging = false;
+    this.listen(doc, "pointercancel", (e: PointerEvent) => {
+      if (e.pointerId === undefined || e.pointerId === this.dragPointer)
+        this.dragging = false;
     });
     this.listen(element, "contextmenu", (e: Event) => {
       if (this.active()) e.preventDefault();

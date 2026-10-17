@@ -37,6 +37,9 @@ export class GameAudio {
     for (let i = 0; i < values.length; i++) values[i] = Math.random() * 2 - 1;
     if (c instanceof AudioContext) void c.resume();
   }
+  get needsGesture() {
+    return this.ctx instanceof AudioContext && this.ctx.state === "suspended";
+  }
   set volume(v: number) {
     this.setVolume(v);
   }

@@ -384,3 +384,396 @@ body[data-quality="low"] canvas {
   margin-top: 10px;
   letter-spacing: 0.6px;
 }
+/* Safe-area-aware phone and controller presentation. */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overscroll-behavior: none;
+}
+body {
+  -webkit-text-size-adjust: 100%;
+}
+button {
+  min-height: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+button:focus-visible,
+body[data-input="gamepad"] #overlay :focus {
+  outline: 2px solid #e6bf73;
+  outline-offset: 3px;
+  background: #ac8e5050;
+}
+#overlay {
+  overscroll-behavior: contain;
+}
+.panel {
+  padding-top: max(30px, env(safe-area-inset-top));
+  padding-bottom: max(30px, env(safe-area-inset-bottom));
+}
+header {
+  padding-top: max(24px, env(safe-area-inset-top));
+  padding-left: max(24px, env(safe-area-inset-left));
+  padding-right: max(24px, env(safe-area-inset-right));
+}
+.input-status {
+  margin-top: 16px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #aab9c1;
+  letter-spacing: 0.5px;
+}
+#touchControls {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+body[data-touch="true"][data-playing="true"]:not([data-input="gamepad"])
+  #touchControls {
+  display: block;
+}
+#touchControls button,
+#movePad {
+  pointer-events: auto;
+  touch-action: none;
+}
+#touchControls button {
+  min-width: 46px;
+  min-height: 46px;
+  padding: 7px 5px;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  border-radius: 10px;
+  background: #0c1927c9;
+  border-color: #b49a6680;
+  color: #e4d4b5;
+}
+#touchControls button[aria-pressed="true"] {
+  background: #ac81475e;
+  border-color: #e7b86d;
+}
+#movePad {
+  position: absolute;
+  left: max(18px, env(safe-area-inset-left));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  width: 126px;
+  height: 126px;
+  border: 1px solid #c1ad8066;
+  border-radius: 50%;
+  background: #0b152375;
+  display: grid;
+  place-items: center;
+}
+#moveKnob {
+  width: 52px;
+  height: 52px;
+  border: 1px solid #dcc29290;
+  border-radius: 50%;
+  background: #a28b564f;
+  pointer-events: none;
+}
+#movePad span {
+  position: absolute;
+  bottom: 7px;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: #c5bb9d;
+  pointer-events: none;
+}
+.touch-actions {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(3, 52px);
+  gap: 7px;
+}
+#touchControls .touch-primary {
+  background: #805f307a;
+  border-color: #e1ba72;
+  font-weight: 600;
+}
+.touch-modes,
+.touch-zoom {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+}
+.touch-modes {
+  bottom: max(18px, env(safe-area-inset-bottom));
+}
+.touch-zoom {
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 54px);
+}
+.touch-look-label {
+  position: absolute;
+  right: 24px;
+  bottom: 145px;
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: #c0c5c8;
+}
+body[data-touch="true"] #captureMouse {
+  display: none;
+}
+body[data-input="gamepad"] #captureMouse {
+  display: none;
+}
+@media (max-width: 950px), (pointer: coarse) {
+  header {
+    padding: max(12px, env(safe-area-inset-top))
+      max(14px, env(safe-area-inset-right)) 8px
+      max(14px, env(safe-area-inset-left));
+  }
+  .brand {
+    font-size: 12px;
+    letter-spacing: 3px;
+  }
+  .brand span {
+    font-size: 7px;
+    letter-spacing: 1px;
+    margin-top: 6px;
+  }
+  #bearing,
+  .hint {
+    display: none;
+  }
+  .view-controls button {
+    padding: 8px;
+    min-width: 44px;
+    font-size: 9px;
+    margin-left: 4px;
+  }
+  #lookHint {
+    font-size: 8px;
+    max-width: 180px;
+    margin-top: 5px;
+  }
+  footer {
+    top: calc(max(12px, env(safe-area-inset-top)) + 68px);
+    bottom: auto;
+    left: max(14px, env(safe-area-inset-left));
+    right: max(14px, env(safe-area-inset-right));
+    align-items: start;
+    gap: 12px;
+  }
+  .fuel {
+    width: 160px;
+  }
+  .modes {
+    display: none;
+  }
+  .stamina {
+    margin-top: 8px;
+  }
+  #inventory {
+    font-size: 8px;
+    line-height: 1.4;
+    text-align: right;
+  }
+  #inventory b {
+    font-size: 15px;
+  }
+  #notice {
+    top: 28%;
+    font-size: 15px;
+    padding: 0 22px;
+  }
+  #phase {
+    top: 36%;
+    font-size: 11px;
+  }
+  #direction {
+    top: 43%;
+    font-size: 9px;
+  }
+  #prompt {
+    bottom: 160px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 0 18px;
+    pointer-events: none;
+  }
+  .panel {
+    width: 100%;
+    max-width: 650px;
+    padding-left: max(22px, env(safe-area-inset-left));
+    padding-right: max(22px, env(safe-area-inset-right));
+  }
+  h1 {
+    font-size: clamp(52px, 12vw, 82px);
+    margin: 23px 0 18px;
+  }
+  h2 {
+    font-size: 32px;
+  }
+  .eyebrow {
+    font-size: 8px;
+    letter-spacing: 1.5px;
+  }
+  .description,
+  p {
+    font-size: 12px;
+  }
+  #actions {
+    margin-top: 18px;
+    gap: 8px;
+  }
+  #actions button {
+    min-width: min(270px, 100%);
+    padding: 13px 18px;
+  }
+  .version {
+    margin-top: 20px;
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+  label {
+    gap: 12px;
+  }
+  input[type="range"] {
+    max-width: 42vw;
+  }
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  #movePad {
+    width: 116px;
+    height: 116px;
+  }
+  .touch-modes {
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + 185px);
+  }
+  .touch-zoom {
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + 132px);
+  }
+  .touch-look-label {
+    bottom: 148px;
+    font-size: 7px;
+    right: 18px;
+  }
+  #prompt {
+    bottom: 265px;
+  }
+  .brand {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+  .brand span {
+    max-width: 145px;
+    line-height: 1.4;
+  }
+  #lookHint {
+    max-width: 135px;
+    font-size: 7px;
+  }
+  .fuel {
+    width: 145px;
+  }
+  .stats {
+    gap: 25px;
+  }
+  .stats span {
+    font-size: 28px;
+  }
+}
+@media (max-height: 500px) {
+  #overlay {
+    align-items: flex-start;
+  }
+  .panel {
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: 24px;
+  }
+  h1 {
+    font-size: 50px;
+    line-height: 0.9;
+    margin: 14px 0;
+  }
+  h1 br {
+    display: none;
+  }
+  h1 em {
+    letter-spacing: 7px;
+  }
+  .tagline {
+    margin: 8px 0;
+  }
+  .divider {
+    margin: 12px 0;
+  }
+  .description {
+    line-height: 1.6;
+  }
+  .version {
+    margin-top: 14px;
+  }
+  #actions {
+    margin-top: 14px;
+    gap: 6px;
+  }
+  #actions button {
+    padding: 11px 18px;
+    min-height: 44px;
+  }
+  .touch-actions {
+    grid-template-columns: repeat(3, 48px);
+    gap: 5px;
+  }
+  #movePad {
+    width: 108px;
+    height: 108px;
+  }
+  #notice {
+    top: 33%;
+    font-size: 13px;
+  }
+  #phase {
+    top: 43%;
+  }
+  #direction {
+    top: 50%;
+  }
+  .touch-look-label {
+    bottom: 135px;
+  }
+  #prompt {
+    bottom: 140px;
+  }
+}
+@media (max-width: 600px) {
+  #overlay {
+    align-items: flex-start;
+  }
+  .panel {
+    min-height: 100%;
+    padding-top: max(28px, env(safe-area-inset-top));
+  }
+}
+body[data-touch="true"] #lookHint {
+  display: none;
+}
+.panel label {
+  min-height: 44px;
+}
+.panel select,
+.panel input[type="range"] {
+  min-height: 44px;
+}
+@media (max-width: 950px), (pointer: coarse) {
+  .panel select {
+    font-size: 16px;
+  }
+  .panel input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+  }
+}

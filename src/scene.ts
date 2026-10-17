@@ -597,6 +597,7 @@ export class GameScene {
       h = Math.max(1, this.container.clientHeight);
     this.renderer.setSize(w, h);
     this.camera.aspect = w / h;
+    this.camera.fov = w < h ? 76 : 57;
     this.camera.updateProjectionMatrix();
   }
   dispose() {
