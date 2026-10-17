@@ -1,3 +1,5 @@
+> Superseded runtime checkpoint: see [CATALOG_ASSETS.md](CATALOG_ASSETS.md). Neural catalog meshes now replace the authored character meshes described below; this page retains the earlier research history.
+
 # Generated character pipeline
 
 Research/checkpoint: 2026-10-17. Original Blender-authored skinned characters are now integrated from the recovered art references; no neural-generated characters are integrated yet.

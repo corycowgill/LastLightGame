@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_rubble",
+  "job_id": "aeeb563b9b174b109d25bc719f432067",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 1990220309,
+  "file": "generated/pro_rubble/aeeb563b9b174b109d25bc719f432067/source.glb",
+  "sha256": "fabe0a8a13a3e1faec9fce1c24f8cbf16d25b4c698b5b0ce2e144b0203c65f94",
+  "reference_sha256": "a6497548f971ca1437bf1482d039aac280e0409f21437f2689ec18b281a8802b",
+  "metrics": {
+    "triangles": 99488,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.4996328353881836,
+        -0.2504025101661682,
+        -0.4311048090457916
+      ],
+      [
+        0.49659040570259094,
+        0.24456162750720978,
+        0.4267786145210266
+      ]
+    ],
+    "extents": [
+      0.9962232410907745,
+      0.494964137673378,
+      0.8578834235668182
+    ],
+    "surface_area_m2": 13.497229092912615,
+    "surface_area_ratio": 13.599761145310522,
+    "file_bytes": 4250572
+  },
+  "target_size_m": 1.2,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273776.0414371
+}

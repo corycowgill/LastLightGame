@@ -1,0 +1,25 @@
+{
+  "id": "pro_fuel_flask",
+  "name": "Player fuel flask",
+  "category": "props",
+  "biome": "shared",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 0.22,
+  "scale_axis": "y",
+  "triangle_budget": 2500,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": "references/props/fuel_flask.png",
+  "prompt": "Original The Last Light stylized dark fantasy game asset, broad sculpted forms, intentional chunky bevels, matte painterly materials, restrained wear, cold gray stone, brown leather, dark iron and muted brass as appropriate. Player fuel flask. Single isolated object, three-quarter orthographic-looking view showing front, side and top. Plain solid light gray background, even neutral diffuse studio light, complete silhouette with margin, no text, no additional views, no environment, no smoke, no fire, no floating parts.",
+  "seed": 303256081,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ]
+}

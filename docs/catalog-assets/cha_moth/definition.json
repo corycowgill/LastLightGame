@@ -1,0 +1,40 @@
+{
+  "id": "cha_moth",
+  "name": "Moth",
+  "category": "characters",
+  "biome": "shared",
+  "priority": "expansion",
+  "method": "image_to_3d",
+  "target_size_m": 1.8,
+  "scale_axis": "x",
+  "triangle_budget": 20000,
+  "pivot": "feet_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": "references/characters/MOTH_SPREAD_POSE.png",
+  "prompt": "Original The Last Light stylized dark fantasy game asset, broad sculpted forms, intentional chunky bevels, matte painterly materials, restrained wear, cold gray stone, brown leather, dark iron and muted brass as appropriate. Moth with fully spread opaque wings and separate limbs. Single full-body neutral A pose, separated straight arms and legs, open empty hands, front orthographic-looking view. Plain solid light gray background, even neutral diffuse studio light, complete silhouette with margin, no text, no additional views, no environment, no smoke, no fire, no floating parts.",
+  "seed": 1547379438,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "skinned_animated_GLB",
+    "editable_rig_BLEND",
+    "clip_manifest",
+    "rig_validation_report",
+    "deformation_review",
+    "collision",
+    "skinned_LODs",
+    "preview"
+  ],
+  "rig_contract": "config/rig_contracts.json#cha_moth",
+  "required_clips": [
+    "Idle",
+    "Flight",
+    "BankLeft",
+    "BankRight",
+    "Attract",
+    "Repelled"
+  ],
+  "rig_status": "not_started",
+  "animation_status": "not_started"
+}

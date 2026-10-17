@@ -1,0 +1,39 @@
+{
+  "asset_id": "arc_arch_3m",
+  "job_id": "60cdcd3fb2f140c8b952bd5769effa49",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 437424567,
+  "file": "generated/arc_arch_3m/60cdcd3fb2f140c8b952bd5769effa49/source.glb",
+  "sha256": "ab138ddea890e69ff24009b5e16c2eb849917ef7d328900ee1a841a38183e16d",
+  "reference_sha256": "5c6d26a5ffc350990baabba5839e5febca818fd00d60a04223c41e1a4e1ce3b1",
+  "metrics": {
+    "triangles": 95722,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.46985167264938354,
+        -0.501975417137146,
+        -0.15847399830818176
+      ],
+      [
+        0.4699300229549408,
+        0.5019766688346863,
+        0.15855050086975098
+      ]
+    ],
+    "extents": [
+      0.9397816956043243,
+      1.0039520859718323,
+      0.31702449917793274
+    ],
+    "surface_area_m2": 4.315828858626291,
+    "surface_area_ratio": 4.281916971444847,
+    "file_bytes": 3187804
+  },
+  "target_size_m": 4.0,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792274185.814667
+}

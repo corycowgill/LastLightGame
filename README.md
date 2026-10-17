@@ -1,6 +1,6 @@
 # The Last Light
 
-A browser survival horror expedition built with TypeScript, Three.js, Vite, and a hybrid generated/procedural Web Audio soundscape. Runtime artwork uses original authored and procedural geometry. No backend or API keys.
+A browser survival horror expedition built with TypeScript, Three.js, Vite, and a hybrid generated/procedural Web Audio soundscape. Runtime meshes use catalog-derived neural GLBs, with procedural level assembly and effects. No backend or API keys.
 
 ## Run
 
@@ -119,3 +119,7 @@ The art bible and concept board from **Create stylized game art design** are pre
 ## Generated soundtrack and effects
 
 Nine creepy atmospheric clips are included. Listen at `/audio/listen.html`; see [audio provenance and reproduction](docs/AUDIO.md). Settings include an independent soundtrack level.
+
+## Catalog-generated 3D art
+
+Open `/asset-review.html` to inspect the 24 runtime GLB roles. See [catalog sources, neural pipeline, verification and remaining work](docs/CATALOG_ASSETS.md). Active characters and visible dungeon/prop replacements use generated meshes; existing authored motion clips are retained through automatic binding.

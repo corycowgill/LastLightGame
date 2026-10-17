@@ -1,0 +1,67 @@
+{
+  "asset_id": "pro_supply_crate",
+  "version": "v001",
+  "file": "assets/pro_supply_crate/v001/model.glb",
+  "sha256": "619f70e1675d04364f136231439d339d04cf49d795c788cfbbb9bb07d24f871d",
+  "source": "generated/pro_supply_crate/8c9cc8244109456487d2a18bf70d250d/source.glb",
+  "source_sha256": "1186725f9e60af8428ed8327b6568b7833a3e6c5567ccd92366aadb09a50b4a9",
+  "metrics": {
+    "triangles": 2500,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.325,
+        0.0,
+        -0.3252301879698087
+      ],
+      [
+        0.325,
+        0.5771003196487359,
+        0.3252301879698087
+      ]
+    ],
+    "extents": [
+      0.65,
+      0.5771003196487359,
+      0.6504603759396174
+    ],
+    "file_bytes": 2326456
+  },
+  "scale_factor": 0.6479720285371288,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/pro_supply_crate/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/pro_supply_crate/v001/lod1.glb",
+      "triangles": 1250
+    },
+    {
+      "file": "assets/pro_supply_crate/v001/lod2.glb",
+      "triangles": 936
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/pro_supply_crate/v001/previews/view_0.png",
+    "assets/pro_supply_crate/v001/previews/view_1.png",
+    "assets/pro_supply_crate/v001/previews/view_2.png",
+    "assets/pro_supply_crate/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 99680,
+    "lod0_triangles": 2500,
+    "lod1_triangles": 1250,
+    "lod2_triangles": 936,
+    "method": "Blender decimate; requires visual review"
+  }
+}

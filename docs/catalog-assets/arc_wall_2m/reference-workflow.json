@@ -1,0 +1,86 @@
+{
+  "1": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "juggernautXL_v9.safetensors"
+    }
+  },
+  "2": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "Original The Last Light stylized dark fantasy game asset. A single tall rectangular dungeon masonry wall panel, height twice its width, flat front and back, thickness one sixth its width, constructed from dark blue gray weathered stone blocks with carved gothic trim and restrained chips. Exact rectangular outer silhouette, seamless straight edges. No doorway, no opening, no floor or environment. Single isolated object, three-quarter orthographic view. Plain solid light gray background, neutral diffuse studio lighting, complete silhouette with margin. No text, no people, no fire, no smoke, no additional views.",
+      "clip": [
+        "1",
+        1
+      ]
+    }
+  },
+  "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "text, watermark, cropped, collage, multiple views, scenery, dramatic lighting, smoke, fire, floating pieces",
+      "clip": [
+        "1",
+        1
+      ]
+    }
+  },
+  "4": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 768,
+      "height": 768,
+      "batch_size": 1
+    }
+  },
+  "5": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "positive": [
+        "2",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "seed": 243759861,
+      "steps": 25,
+      "cfg": 6.0,
+      "sampler_name": "euler_ancestral",
+      "scheduler": "normal",
+      "denoise": 1.0
+    }
+  },
+  "6": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "5",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "7": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "6",
+        0
+      ],
+      "filename_prefix": "lastlight/8bdbdaf5b2e84f42b02e2ee4409a4901"
+    }
+  }
+}

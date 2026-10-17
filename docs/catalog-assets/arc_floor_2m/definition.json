@@ -1,0 +1,32 @@
+{
+  "id": "arc_floor_2m",
+  "name": "Floor 2M",
+  "category": "architecture",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 2.0,
+  "scale_axis": "x",
+  "triangle_budget": 5000,
+  "pivot": "walk_surface_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original The Last Light stylized dark fantasy game asset. A single square ancient dungeon paving tile slab, very thin, width and length equal, height less than one tenth the width. Large worn blue gray stone flagstones with shallow cracks and subtle bevels, flat walkable upper surface, straight rectangular outer edges. Show top and thin side. No pedestal, no building, no environment. Single isolated object, three-quarter orthographic view. Plain solid light gray background, neutral diffuse studio lighting, complete silhouette with margin. No text, no people, no fire, no smoke, no additional views.",
+  "seed": 1927589221,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ],
+  "dimensions_m": [
+    2.0,
+    0.18000000715255737,
+    2.0
+  ],
+  "original_catalog_method": "procedural",
+  "production_override": "User requested neural GLBs instead of authored/procedural meshes, 2026-10-17."
+}

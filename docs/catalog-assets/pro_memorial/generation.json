@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_memorial",
+  "job_id": "035631ac0d3f4d469ba20a7b8ca994ae",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 461236235,
+  "file": "generated/pro_memorial/035631ac0d3f4d469ba20a7b8ca994ae/source.glb",
+  "sha256": "8e2fea04c65deb642adf353c353c70d606d78bc78cf233b87782fd291a2b1b38",
+  "reference_sha256": "c696a514d680836fa87025569fbf6bf91c79a8c9ca2ab42aa9cd3259290b6d69",
+  "metrics": {
+    "triangles": 98306,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.35509800910949707,
+        -0.5018059015274048,
+        -0.1874992847442627
+      ],
+      [
+        0.35509738326072693,
+        0.5015990734100342,
+        0.1857801228761673
+      ]
+    ],
+    "extents": [
+      0.710195392370224,
+      1.003404974937439,
+      0.37327940762043
+    ],
+    "surface_area_m2": 3.3337882285610476,
+    "surface_area_ratio": 3.3112007279988362,
+    "file_bytes": 3565760
+  },
+  "target_size_m": 1.6,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273476.251724
+}

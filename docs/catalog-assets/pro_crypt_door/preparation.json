@@ -1,0 +1,69 @@
+{
+  "asset_id": "pro_crypt_door",
+  "version": "v001",
+  "file": "assets/pro_crypt_door/v001/model.glb",
+  "sha256": "aebe7d751328c7953ffb5abb28e7b2cfcebbbac2108efca375571c352c412705",
+  "source": "generated/pro_crypt_door/48a9d370a650493897317a86b3250db2/source.glb",
+  "source_sha256": "1c3dc7e5aaa5cb85badde9426cdf66c056fbbfd4b27890c8c1f3e84730a5d122",
+  "metrics": {
+    "triangles": 2499,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.9231505644071677,
+        0.0,
+        -0.16234952640168765
+      ],
+      [
+        0.9231505644071677,
+        2.8,
+        0.16234952640168765
+      ]
+    ],
+    "extents": [
+      1.8463011288143354,
+      2.8,
+      0.3246990528033753
+    ],
+    "surface_area_m2": 32.28553551238459,
+    "surface_area_ratio": 4.118052999028647,
+    "file_bytes": 2320540
+  },
+  "scale_factor": 2.7890522340017445,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/pro_crypt_door/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/pro_crypt_door/v001/lod1.glb",
+      "triangles": 1250
+    },
+    {
+      "file": "assets/pro_crypt_door/v001/lod2.glb",
+      "triangles": 766
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/pro_crypt_door/v001/previews/view_0.png",
+    "assets/pro_crypt_door/v001/previews/view_1.png",
+    "assets/pro_crypt_door/v001/previews/view_2.png",
+    "assets/pro_crypt_door/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 97652,
+    "lod0_triangles": 2499,
+    "lod1_triangles": 1250,
+    "lod2_triangles": 766,
+    "method": "Blender decimate; requires visual review"
+  }
+}

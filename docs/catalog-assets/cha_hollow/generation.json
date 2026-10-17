@@ -1,0 +1,39 @@
+{
+  "asset_id": "cha_hollow",
+  "job_id": "5bc0000488954fec9e43566458db5aad",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 134708588,
+  "file": "generated/cha_hollow/5bc0000488954fec9e43566458db5aad/source.glb",
+  "sha256": "1b165c3431a912da5e86f48e5b6fe59b212b32765e24b1f8490e868b0f535338",
+  "reference_sha256": "7faf1779cb204801d8ca21f239ef7f3cc125abcfac3936345dae411e52eb01f8",
+  "metrics": {
+    "triangles": 98653,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.3071426749229431,
+        -0.5018030405044556,
+        -0.10711359232664108
+      ],
+      [
+        0.30716580152511597,
+        0.5011609196662903,
+        0.10506584495306015
+      ]
+    ],
+    "extents": [
+      0.6143084764480591,
+      1.0029639601707458,
+      0.21217943727970123
+    ],
+    "surface_area_m2": 1.5038835535137787,
+    "surface_area_ratio": 1.495008130669319,
+    "file_bytes": 3868872
+  },
+  "target_size_m": 2.1,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273814.202713
+}

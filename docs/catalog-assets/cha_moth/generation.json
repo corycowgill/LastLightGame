@@ -1,0 +1,39 @@
+{
+  "asset_id": "cha_moth",
+  "job_id": "f3d139ea046747399154ace69af15c7b",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 1547379438,
+  "file": "generated/cha_moth/f3d139ea046747399154ace69af15c7b/source.glb",
+  "sha256": "03bd0e5465fcd8e739b6d699eafa34a0855b17f403aff6039214a6d945e8a448",
+  "reference_sha256": "e73bd7f99167b19ed901c7f54d0d0f720587e1faff19d5fc3d1174930a21b08f",
+  "metrics": {
+    "triangles": 95390,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.5019062161445618,
+        -0.31641602516174316,
+        -0.08723168075084686
+      ],
+      [
+        0.5018287301063538,
+        0.31511688232421875,
+        0.08749908208847046
+      ]
+    ],
+    "extents": [
+      1.0037349462509155,
+      0.6315329074859619,
+      0.17473076283931732
+    ],
+    "surface_area_m2": 0.9353526116833061,
+    "surface_area_ratio": 0.9284045782059002,
+    "file_bytes": 3561860
+  },
+  "target_size_m": 1.8,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273852.028188
+}

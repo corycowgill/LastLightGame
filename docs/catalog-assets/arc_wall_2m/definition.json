@@ -1,0 +1,32 @@
+{
+  "id": "arc_wall_2m",
+  "name": "Wall 2M",
+  "category": "architecture",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 2.0,
+  "scale_axis": "x",
+  "triangle_budget": 5000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original The Last Light stylized dark fantasy game asset. A single tall rectangular dungeon masonry wall panel, height twice its width, flat front and back, thickness one sixth its width, constructed from dark blue gray weathered stone blocks with carved gothic trim and restrained chips. Exact rectangular outer silhouette, seamless straight edges. No doorway, no opening, no floor or environment. Single isolated object, three-quarter orthographic view. Plain solid light gray background, neutral diffuse studio lighting, complete silhouette with margin. No text, no people, no fire, no smoke, no additional views.",
+  "seed": 243759861,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ],
+  "dimensions_m": [
+    2.0,
+    4.199999809265137,
+    0.6000000238418579
+  ],
+  "original_catalog_method": "procedural",
+  "production_override": "User requested neural GLBs instead of authored/procedural meshes, 2026-10-17."
+}

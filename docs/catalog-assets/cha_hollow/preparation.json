@@ -1,0 +1,70 @@
+{
+  "asset_id": "cha_hollow",
+  "version": "v001",
+  "file": "assets/cha_hollow/v001/model.glb",
+  "sha256": "39d10a0018f233a838de4cf1c90b97e4c61f20e8ba5360aaeaf7eedb546958ff",
+  "source": "generated/cha_hollow/5bc0000488954fec9e43566458db5aad/source.glb",
+  "source_sha256": "1b165c3431a912da5e86f48e5b6fe59b212b32765e24b1f8490e868b0f535338",
+  "metrics": {
+    "triangles": 20000,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.6431177249486137,
+        0.0,
+        -0.22213002459805087
+      ],
+      [
+        0.6431177249486137,
+        2.1000000000000005,
+        0.22213002459805087
+      ]
+    ],
+    "extents": [
+      1.2862354498972275,
+      2.1000000000000005,
+      0.44426004919610174
+    ],
+    "surface_area_m2": 6.592985856251698,
+    "surface_area_ratio": 1.4950081306693186,
+    "file_bytes": 2494400
+  },
+  "scale_factor": 2.093794077747812,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/cha_hollow/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/cha_hollow/v001/lod1.glb",
+      "triangles": 10000
+    },
+    {
+      "file": "assets/cha_hollow/v001/lod2.glb",
+      "triangles": 3999
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "rig_and_animation_required",
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/cha_hollow/v001/previews/view_0.png",
+    "assets/cha_hollow/v001/previews/view_1.png",
+    "assets/cha_hollow/v001/previews/view_2.png",
+    "assets/cha_hollow/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 98653,
+    "lod0_triangles": 20000,
+    "lod1_triangles": 10000,
+    "lod2_triangles": 3999,
+    "method": "Blender decimate; requires visual review"
+  }
+}

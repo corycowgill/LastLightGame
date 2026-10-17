@@ -1,0 +1,18 @@
+{
+  "asset_id": "arc_arch_3m",
+  "job_id": "efd8f84a44c94d34ab883787e77495f5",
+  "stage": "image",
+  "backend": "comfy",
+  "seed": 437424567,
+  "file": "generated/arc_arch_3m/efd8f84a44c94d34ab883787e77495f5/reference.png",
+  "sha256": "5c6d26a5ffc350990baabba5839e5febca818fd00d60a04223c41e1a4e1ce3b1",
+  "reference_sha256": null,
+  "metrics": {
+    "file_bytes": 528853
+  },
+  "target_size_m": 4.0,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273954.5799744
+}

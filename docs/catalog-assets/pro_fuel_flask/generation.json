@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_fuel_flask",
+  "job_id": "0f0bc6e3831b40189202033b70254126",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 303256081,
+  "file": "generated/pro_fuel_flask/0f0bc6e3831b40189202033b70254126/source.glb",
+  "sha256": "777a05ec74d0acc9714dcec97f1f11db695302d1c2ed49f732a01586eebb5293",
+  "reference_sha256": "f5cd5bceffd744ddff217d50d15ff48d484d13ef380493d91c62f53ac3680b88",
+  "metrics": {
+    "triangles": 95974,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.5010837316513062,
+        -0.4375448226928711,
+        -0.3039836883544922
+      ],
+      [
+        0.5007332563400269,
+        0.4358733296394348,
+        0.31027835607528687
+      ]
+    ],
+    "extents": [
+      1.001816987991333,
+      0.8734181523323059,
+      0.614262044429779
+    ],
+    "surface_area_m2": 8.884075115757673,
+    "surface_area_ratio": 8.851878378336512,
+    "file_bytes": 3738512
+  },
+  "target_size_m": 0.22,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273550.4210868
+}

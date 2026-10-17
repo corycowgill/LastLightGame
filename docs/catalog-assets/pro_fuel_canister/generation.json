@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_fuel_canister",
+  "job_id": "ce804d15974748c1911086f206e4fef7",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 2099325254,
+  "file": "generated/pro_fuel_canister/ce804d15974748c1911086f206e4fef7/source.glb",
+  "sha256": "a09dd94082275ddbe407ffc4cdc94b7249b8984478a4d0580c9c559969157d18",
+  "reference_sha256": "9333da62530f86d4b47cad8fcafc6bf83eae89042b7be59a9c8a1fed8bf1182b",
+  "metrics": {
+    "triangles": 98614,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.48022156953811646,
+        -0.5019106864929199,
+        -0.2604706287384033
+      ],
+      [
+        0.4860534369945526,
+        0.5019524097442627,
+        0.26039421558380127
+      ]
+    ],
+    "extents": [
+      0.9662750065326691,
+      1.0038630962371826,
+      0.5208648443222046
+    ],
+    "surface_area_m2": 6.507310561059585,
+    "surface_area_ratio": 6.457323669568481,
+    "file_bytes": 3426808
+  },
+  "target_size_m": 0.3,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273275.486167
+}

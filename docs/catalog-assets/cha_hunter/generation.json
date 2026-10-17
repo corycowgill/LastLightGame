@@ -1,0 +1,39 @@
+{
+  "asset_id": "cha_hunter",
+  "job_id": "cbbc006d61a449b2a7d99db1f571ee4d",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 2089960075,
+  "file": "generated/cha_hunter/cbbc006d61a449b2a7d99db1f571ee4d/source.glb",
+  "sha256": "55fffd7d70fc8c323cf70db6830a653543f50a08a38a031bbbb0b012e14a8f21",
+  "reference_sha256": "870ee22d33e9eb82a2197c730ae760e76db9af083bf783da7785ca1245aa822d",
+  "metrics": {
+    "triangles": 97978,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.2516323924064636,
+        -0.5007286667823792,
+        -0.10708064585924149
+      ],
+      [
+        0.25154879689216614,
+        0.5018665790557861,
+        0.10900115221738815
+      ]
+    ],
+    "extents": [
+      0.5031811892986298,
+      1.0025952458381653,
+      0.21608179807662964
+    ],
+    "surface_area_m2": 1.548266868421091,
+    "surface_area_ratio": 1.5402617783545365,
+    "file_bytes": 3702800
+  },
+  "target_size_m": 3.2,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273163.9803813
+}

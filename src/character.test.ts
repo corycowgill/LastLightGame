@@ -14,11 +14,16 @@ test("character locomotion selects idle, walk, sprint and crouch without false s
 });
 
 test("shipped GLBs load with bound skeletons, required clips and an animated hand socket", async () => {
-  for (const name of ["torchbearer", "hunter"]) {
+  for (const name of ["torchbearer", "hunter", "stalker"]) {
     const bytes = await readFile(
       new URL(`../public/models/${name}.glb`, import.meta.url),
     );
-    const gltf = await new GLTFLoader().parseAsync(
+    // Node has no image decoder; actual embedded texture decode is exercised in browser QA.
+    const loader = new GLTFLoader().register(() => ({
+      name: "HeadlessTexture",
+      loadTexture: async () => new THREE.Texture(),
+    }));
+    const gltf = await loader.parseAsync(
       bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
       "",
     );
@@ -47,7 +52,13 @@ test("shipped GLBs load with bound skeletons, required clips and an animated han
     assert.ok(socket);
     const mixer = new THREE.AnimationMixer(gltf.scene);
     const clip = gltf.animations.find(
-      (c) => c.name === (name === "torchbearer" ? "crouch_idle" : "pursue"),
+      (c) =>
+        c.name ===
+        (name === "torchbearer"
+          ? "crouch_idle"
+          : name === "stalker"
+            ? "investigate"
+            : "pursue"),
     )!;
     assert.ok(clip && clip.tracks.length > 0);
     gltf.scene.updateMatrixWorld(true);
@@ -59,5 +70,27 @@ test("shipped GLBs load with bound skeletons, required clips and an animated han
       before.distanceTo(socket.getWorldPosition(new THREE.Vector3())) > 0.005,
       "Clip must move the rig and socket",
     );
+    const target =
+      name === "torchbearer" ? 1.55 : name === "hunter" ? 3.2 : 1.65;
+    for (const time of [0.1, 0.3, 0.5, 0.8]) {
+      mixer.setTime(time);
+      gltf.scene.updateMatrixWorld(true);
+      gltf.scene.traverse((node) => {
+        const mesh = node as THREE.SkinnedMesh;
+        if (mesh.isSkinnedMesh) mesh.skeleton.update();
+      });
+      const bounds = new THREE.Box3().setFromObject(gltf.scene, true);
+      const size = bounds.getSize(new THREE.Vector3());
+      assert.ok(
+        Number.isFinite(size.length()) &&
+          size.y > target * 0.3 &&
+          size.y < target * 1.6,
+        `${name}: broken animated height ${size.toArray()} at ${time}`,
+      );
+      assert.ok(
+        size.x < target * 1.3 && size.z < target * 1.3,
+        `${name}: exploded skin`,
+      );
+    }
   }
 });

@@ -1,0 +1,18 @@
+{
+  "asset_id": "arc_wall_2m",
+  "job_id": "8bdbdaf5b2e84f42b02e2ee4409a4901",
+  "stage": "image",
+  "backend": "comfy",
+  "seed": 243759861,
+  "file": "generated/arc_wall_2m/8bdbdaf5b2e84f42b02e2ee4409a4901/reference.png",
+  "sha256": "674e8c28f4549a20a5e7e2c5aff348014624213b3dc12841f84950910403ad84",
+  "reference_sha256": null,
+  "metrics": {
+    "file_bytes": 635458
+  },
+  "target_size_m": 2.0,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273914.2534187
+}

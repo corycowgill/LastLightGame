@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_chalk",
+  "job_id": "cf52c80c44de4d528c30c37af944efec",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 1498737297,
+  "file": "generated/pro_chalk/cf52c80c44de4d528c30c37af944efec/source.glb",
+  "sha256": "aaeb336df605c2648885f9e0d1788bf57e6e647da20030dbfd3d10b00a8d9816",
+  "reference_sha256": "aaa663a1b8ab6c56328957f9361c2ca0ebb7f220f83a0ebc0e58d68469494bff",
+  "metrics": {
+    "triangles": 98962,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.5013185739517212,
+        -0.16796335577964783,
+        -0.1669686734676361
+      ],
+      [
+        0.5019024610519409,
+        0.1723509281873703,
+        0.1657453179359436
+      ]
+    ],
+    "extents": [
+      1.003221035003662,
+      0.3403142839670181,
+      0.3327139914035797
+    ],
+    "surface_area_m2": 2.307100639905302,
+    "surface_area_ratio": 2.292309637874729,
+    "file_bytes": 3144172
+  },
+  "target_size_m": 0.1,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273589.4262874
+}

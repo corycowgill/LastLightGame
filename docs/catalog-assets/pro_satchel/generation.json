@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_satchel",
+  "job_id": "6683547af9db44a19979bd62f10d81c4",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 817517594,
+  "file": "generated/pro_satchel/6683547af9db44a19979bd62f10d81c4/source.glb",
+  "sha256": "0bfec70c797c8582eb665f8a1a2cff51b4a703fc4593746f4ef8f78aefb6e028",
+  "reference_sha256": "d157d2f125b2eb69b642c3e9199bb2176c461ebb10a7e42371229a4915b58ca8",
+  "metrics": {
+    "triangles": 97125,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.5006238222122192,
+        -0.37880316376686096,
+        -0.3453396260738373
+      ],
+      [
+        0.5009558200836182,
+        0.37883222103118896,
+        0.34382346272468567
+      ]
+    ],
+    "extents": [
+      1.0015796422958374,
+      0.7576353847980499,
+      0.689163088798523
+    ],
+    "surface_area_m2": 14.81453317540515,
+    "surface_area_ratio": 14.767840514668654,
+    "file_bytes": 4219900
+  },
+  "target_size_m": 0.32,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273644.8364272
+}

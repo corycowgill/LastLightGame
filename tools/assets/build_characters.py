@@ -1,6 +1,6 @@
-"""Original Blender character build from recovered Last Light art direction.
+"""Legacy authored animation donors; not runtime character replacements.
 Run: blender --background --python tools/assets/build_characters.py
-Authored geometry and animation, not neural reconstruction or Kimodo output.
+Writes ignored .asset-tools/rigs. Runtime meshes come from the neural catalog.
 """
 import bpy
 import math
@@ -8,7 +8,7 @@ from pathlib import Path
 from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "public" / "models"
+OUT = ROOT / ".asset-tools" / "rigs"
 OUT.mkdir(parents=True, exist_ok=True)
 
 

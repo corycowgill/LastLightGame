@@ -1,0 +1,39 @@
+{
+  "asset_id": "cha_stalker",
+  "job_id": "7282fcc3ba884cb18f49bbe480d785fc",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 635683386,
+  "file": "generated/cha_stalker/7282fcc3ba884cb18f49bbe480d785fc/source.glb",
+  "sha256": "87b1bf6f53121a73eb4bb771423b5188d69e52d347d2adbcbcccb470a6c7f53d",
+  "reference_sha256": "3ff0b96190224b12b946d584514a3639a89ca22e9bbd19cad3b6567ff7b57e56",
+  "metrics": {
+    "triangles": 99926,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.40646684169769287,
+        -0.5013590455055237,
+        -0.16999919712543488
+      ],
+      [
+        0.40625834465026855,
+        0.5010982155799866,
+        0.1701957881450653
+      ]
+    ],
+    "extents": [
+      0.8127251863479614,
+      1.0024572610855103,
+      0.3401949852705002
+    ],
+    "surface_area_m2": 2.206475668522818,
+    "surface_area_ratio": 2.1956717333531235,
+    "file_bytes": 3537392
+  },
+  "target_size_m": 1.65,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273195.0667813
+}

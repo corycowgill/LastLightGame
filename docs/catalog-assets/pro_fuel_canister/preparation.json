@@ -1,0 +1,69 @@
+{
+  "asset_id": "pro_fuel_canister",
+  "version": "v001",
+  "file": "assets/pro_fuel_canister/v001/model.glb",
+  "sha256": "9a7b800de86448500de29d32c09b2488ad4e93ea9a89d5de23d6e2dac32e9090",
+  "source": "generated/pro_fuel_canister/ce804d15974748c1911086f206e4fef7/source.glb",
+  "source_sha256": "a09dd94082275ddbe407ffc4cdc94b7249b8984478a4d0580c9c559969157d18",
+  "metrics": {
+    "triangles": 2499,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.1443834836873564,
+        0.0,
+        -0.07782906547833787
+      ],
+      [
+        0.1443834836873564,
+        0.29999999999999993,
+        0.07782906547833787
+      ]
+    ],
+    "extents": [
+      0.2887669673747128,
+      0.29999999999999993,
+      0.15565813095667574
+    ],
+    "surface_area_m2": 0.5811591302611632,
+    "surface_area_ratio": 6.457323669568483,
+    "file_bytes": 2486132
+  },
+  "scale_factor": 0.29884553095387323,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/pro_fuel_canister/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/pro_fuel_canister/v001/lod1.glb",
+      "triangles": 1250
+    },
+    {
+      "file": "assets/pro_fuel_canister/v001/lod2.glb",
+      "triangles": 500
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/pro_fuel_canister/v001/previews/view_0.png",
+    "assets/pro_fuel_canister/v001/previews/view_1.png",
+    "assets/pro_fuel_canister/v001/previews/view_2.png",
+    "assets/pro_fuel_canister/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 98614,
+    "lod0_triangles": 2499,
+    "lod1_triangles": 1250,
+    "lod2_triangles": 500,
+    "method": "Blender decimate; requires visual review"
+  }
+}

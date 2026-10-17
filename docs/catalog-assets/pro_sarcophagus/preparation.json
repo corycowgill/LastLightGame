@@ -1,0 +1,69 @@
+{
+  "asset_id": "pro_sarcophagus",
+  "version": "v001",
+  "file": "assets/pro_sarcophagus/v001/model.glb",
+  "sha256": "ea1a1ea34e1a7a1a9d558e87caaa71144b16fd3cc8ab15102d33ab38dedcaa47",
+  "source": "generated/pro_sarcophagus/e9dd1fad14a742b283833fd11d7f62ea/source.glb",
+  "source_sha256": "b6b9e97a2052fe0e9c7b6ea314ba287af83b80d5a5ee2dc80c68bf8e4c5807dc",
+  "metrics": {
+    "triangles": 2499,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -1.1,
+        0.0,
+        -0.5364209219016558
+      ],
+      [
+        1.1,
+        0.9553450319155614,
+        0.5364209219016558
+      ]
+    ],
+    "extents": [
+      2.2,
+      0.9553450319155614,
+      1.0728418438033116
+    ],
+    "surface_area_m2": 22.839264905530328,
+    "surface_area_ratio": 4.71885638544015,
+    "file_bytes": 1983664
+  },
+  "scale_factor": 2.191606374526311,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/pro_sarcophagus/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/pro_sarcophagus/v001/lod1.glb",
+      "triangles": 1249
+    },
+    {
+      "file": "assets/pro_sarcophagus/v001/lod2.glb",
+      "triangles": 500
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/pro_sarcophagus/v001/previews/view_0.png",
+    "assets/pro_sarcophagus/v001/previews/view_1.png",
+    "assets/pro_sarcophagus/v001/previews/view_2.png",
+    "assets/pro_sarcophagus/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 96927,
+    "lod0_triangles": 2499,
+    "lod1_triangles": 1249,
+    "lod2_triangles": 500,
+    "method": "Blender decimate; requires visual review"
+  }
+}

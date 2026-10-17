@@ -1,0 +1,69 @@
+{
+  "asset_id": "pro_fuel_flask",
+  "version": "v001",
+  "file": "assets/pro_fuel_flask/v001/model.glb",
+  "sha256": "e56ae4675e4529e3ba426c06e637d1864f39c134d3aca3185ee493a0b9b2f6c2",
+  "source": "generated/pro_fuel_flask/0f0bc6e3831b40189202033b70254126/source.glb",
+  "source_sha256": "777a05ec74d0acc9714dcec97f1f11db695302d1c2ed49f732a01586eebb5293",
+  "metrics": {
+    "triangles": 2500,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.12617080190602603,
+        0.0,
+        -0.07736137004577398
+      ],
+      [
+        0.12617080190602603,
+        0.22,
+        0.07736137004577398
+      ]
+    ],
+    "extents": [
+      0.25234160381205206,
+      0.22,
+      0.15472274009154796
+    ],
+    "surface_area_m2": 0.5636547305321027,
+    "surface_area_ratio": 8.851878378336512,
+    "file_bytes": 2059468
+  },
+  "scale_factor": 0.25188393372925627,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/pro_fuel_flask/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/pro_fuel_flask/v001/lod1.glb",
+      "triangles": 1250
+    },
+    {
+      "file": "assets/pro_fuel_flask/v001/lod2.glb",
+      "triangles": 813
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/pro_fuel_flask/v001/previews/view_0.png",
+    "assets/pro_fuel_flask/v001/previews/view_1.png",
+    "assets/pro_fuel_flask/v001/previews/view_2.png",
+    "assets/pro_fuel_flask/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 95974,
+    "lod0_triangles": 2500,
+    "lod1_triangles": 1250,
+    "lod2_triangles": 813,
+    "method": "Blender decimate; requires visual review"
+  }
+}

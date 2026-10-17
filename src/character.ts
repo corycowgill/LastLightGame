@@ -71,6 +71,7 @@ export class AnimatedCharacter {
         "interact",
         "chalk",
         "refill",
+        "recoil",
       ].includes(name);
       action.setLoop(
         once ? THREE.LoopOnce : THREE.LoopRepeat,
@@ -84,6 +85,7 @@ export class AnimatedCharacter {
     this.mixer.update(Math.min(dt, 0.1));
   }
   private release(root: THREE.Object3D) {
+    const textures = new Set<THREE.Texture>();
     root.traverse((node) => {
       const mesh = node as THREE.Mesh;
       mesh.geometry?.dispose();
@@ -92,8 +94,15 @@ export class AnimatedCharacter {
       if (mesh.material)
         for (const material of Array.isArray(mesh.material)
           ? mesh.material
-          : [mesh.material])
+          : [mesh.material]) {
+          Object.values(material).forEach((value) => {
+            if (value instanceof THREE.Texture) textures.add(value);
+          });
           material.dispose();
+        }
+    });
+    textures.forEach((texture) => {
+      texture.dispose();
     });
   }
   dispose() {

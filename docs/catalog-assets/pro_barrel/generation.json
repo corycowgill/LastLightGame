@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_barrel",
+  "job_id": "3ace863c08f64e828b06c017ef2da137",
+  "stage": "mesh",
+  "backend": "comfy",
+  "seed": 1828185249,
+  "file": "generated/pro_barrel/3ace863c08f64e828b06c017ef2da137/source.glb",
+  "sha256": "8c4dd7725acf1a90d200bd54c8091cca3bfca000e0d4ac2adcef0c6dc31b6b63",
+  "reference_sha256": "f92152c2e6bef9823e61ba3cb9d86e175730bfcce90e56e502d2508e51b9110c",
+  "metrics": {
+    "triangles": 77095,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.4999440610408783,
+        -0.49235185980796814,
+        -0.49999499320983887
+      ],
+      [
+        0.4999440610408783,
+        0.49235185980796814,
+        0.49999499320983887
+      ]
+    ],
+    "extents": [
+      0.9998881220817566,
+      0.9847037196159363,
+      0.9999899864196777
+    ],
+    "surface_area_m2": 4.312092347384528,
+    "surface_area_ratio": 4.312178707647845,
+    "file_bytes": 5529520
+  },
+  "target_size_m": 0.85,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792241355.3551483
+}

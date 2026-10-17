@@ -1,0 +1,32 @@
+{
+  "id": "arc_arch_3m",
+  "name": "Arch 3M",
+  "category": "architecture",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 4.0,
+  "scale_axis": "x",
+  "triangle_budget": 5000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original The Last Light stylized dark fantasy game asset. A single freestanding complete gothic dungeon archway frame of heavy worn blue gray stone blocks, two straight narrow upright pillars and a broad semicircular arch. Large completely empty central doorway, clear opening two thirds of total width. No door, no backdrop, no floor, no building. Wide walking clearance, complete feet and arch visible. Single isolated object, three-quarter orthographic view. Plain solid light gray background, neutral diffuse studio lighting, complete silhouette with margin. No text, no people, no fire, no smoke, no additional views.",
+  "seed": 437424567,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ],
+  "dimensions_m": [
+    4.0,
+    4.382763862609863,
+    0.800000011920929
+  ],
+  "original_catalog_method": "procedural",
+  "production_override": "User requested neural GLBs instead of authored/procedural meshes, 2026-10-17."
+}

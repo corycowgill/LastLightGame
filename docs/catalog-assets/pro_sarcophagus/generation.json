@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_sarcophagus",
+  "job_id": "e9dd1fad14a742b283833fd11d7f62ea",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 1992128358,
+  "file": "generated/pro_sarcophagus/e9dd1fad14a742b283833fd11d7f62ea/source.glb",
+  "sha256": "b6b9e97a2052fe0e9c7b6ea314ba287af83b80d5a5ee2dc80c68bf8e4c5807dc",
+  "reference_sha256": "15dda370a3cf0762e1b09ac40c23dc9e5c134892e3e1e175a83e6c69e98a0878",
+  "metrics": {
+    "triangles": 96927,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.5019022226333618,
+        -0.21762719750404358,
+        -0.2448076605796814
+      ],
+      [
+        0.5019276738166809,
+        0.21828366816043854,
+        0.2447153925895691
+      ]
+    ],
+    "extents": [
+      1.0038298964500427,
+      0.4359108656644821,
+      0.4895230531692505
+    ],
+    "surface_area_m2": 4.755071064767386,
+    "surface_area_ratio": 4.718856385440148,
+    "file_bytes": 3529140
+  },
+  "target_size_m": 2.2,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273411.7821157
+}

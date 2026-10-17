@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_journal",
+  "job_id": "caf281115a6d40038bed99fa5249d627",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 1762598818,
+  "file": "generated/pro_journal/caf281115a6d40038bed99fa5249d627/source.glb",
+  "sha256": "56e7c02a269297f71c8c75c8451b49028005e7ea9d2dd39245cf4b07d8aea704",
+  "reference_sha256": "fb79dd32796518cee347e819b22928052090953eeac515dcc069f0d10c2fc0f9",
+  "metrics": {
+    "triangles": 99434,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.40586721897125244,
+        -0.14714889228343964,
+        -0.5020354986190796
+      ],
+      [
+        0.4039674401283264,
+        0.1453365683555603,
+        0.5020185112953186
+      ]
+    ],
+    "extents": [
+      0.8098346590995789,
+      0.29248546063899994,
+      1.0040540099143982
+    ],
+    "surface_area_m2": 7.7084962175861484,
+    "surface_area_ratio": 7.646373600690868,
+    "file_bytes": 3832540
+  },
+  "target_size_m": 0.24,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273689.5020103
+}

@@ -1,5 +1,6 @@
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { AnimatedCharacter, movementClip } from "./character";
+import { CatalogAssets } from "./catalog-assets";
 import * as THREE from "three";
 import type { World, Game } from "./simulation";
 export function constrainCamera(
@@ -20,6 +21,11 @@ export function constrainCamera(
     : desired.clone();
 }
 export class GameScene {
+  private catalog = new CatalogAssets();
+  private wallFallbacks: THREE.Object3D[] = [];
+  private archFallbacks: THREE.Object3D[] = [];
+  private rubbleFallbacks: THREE.Object3D[] = [];
+  private archPlacements: THREE.Matrix4[] = [];
   readonly renderer = new THREE.WebGLRenderer({ antialias: true });
   private scene = new THREE.Scene();
   private ambient = new THREE.HemisphereLight(0x8098bc, 0x182031, 0.65);
@@ -39,12 +45,17 @@ export class GameScene {
   private target = new THREE.Vector3();
   private actor?: AnimatedCharacter;
   private hunterActor?: AnimatedCharacter;
+  private stalkerActor?: AnimatedCharacter;
   private lastHunterState = "DORMANT";
   private banishTime = 0;
   private lastMessage = "";
   private gesture = "";
   private gestureTime = 0;
   private stick?: THREE.Mesh;
+  private torchHardware?: THREE.Group;
+  private kit: { root: THREE.Group; offset: THREE.Vector3 }[] = [];
+  private chalkStick?: THREE.Group;
+  private attachmentPoint = new THREE.Vector3();
   private socketPoint = new THREE.Vector3();
   private initialized = false;
   private elapsed = 0;
@@ -88,7 +99,11 @@ export class GameScene {
     floor.bumpScale = 0.025;
     const occupied = new Set(world.cells.map((c) => `${c.x},${c.z}`)),
       dummy = new THREE.Object3D();
-    const blockMatrices: THREE.Matrix4[] = [];
+    const blockMatrices: THREE.Matrix4[] = [],
+      wallPlacements: THREE.Matrix4[] = [],
+      floorPlacements: THREE.Matrix4[] = [],
+      ceilingPlacements: THREE.Matrix4[] = [],
+      rubblePlacements: THREE.Matrix4[] = [];
     const floors = new THREE.InstancedMesh(
       new RoundedBoxGeometry(1.98, 0.18, 1.98, 1, 0.035),
       floor,
@@ -100,6 +115,14 @@ export class GameScene {
       dummy.rotation.set(0, 0, 0);
       dummy.updateMatrix();
       floors.setMatrixAt(i, dummy.matrix);
+      floorPlacements.push(
+        new THREE.Matrix4().makeTranslation(c.x * 2, -0.14, c.z * 2),
+      );
+      ceilingPlacements.push(
+        new THREE.Matrix4()
+          .makeTranslation(c.x * 2, 4.05, c.z * 2)
+          .multiply(new THREE.Matrix4().makeRotationX(Math.PI)),
+      );
       const color = new THREE.Color(c.kind === "flooded" ? 0x425960 : 0x58616a);
       color.multiplyScalar(
         0.75 + (((c.x * 17 + c.z * 31 + world.seed) >>> 0) % 11) * 0.025,
@@ -122,7 +145,13 @@ export class GameScene {
           1.9,
         );
         if (dz) wall.rotation.y = Math.PI / 2;
+        wall.userData.wallShell = true;
         this.walls.push(wall);
+        wallPlacements.push(
+          new THREE.Matrix4()
+            .makeTranslation(c.x * 2 + dx, -0.1, c.z * 2 + dz)
+            .multiply(new THREE.Matrix4().makeRotationY(dx ? Math.PI / 2 : 0)),
+        );
         for (let row = 0; row < 4; row++) {
           const course =
             row % 2
@@ -158,6 +187,14 @@ export class GameScene {
             0.25,
           );
           tomb.rotation.y = (c.x + c.z) * 0.2;
+          tomb.userData.rubbleShell = true;
+          rubblePlacements.push(
+            new THREE.Matrix4().makeTranslation(
+              tomb.position.x,
+              0,
+              tomb.position.z,
+            ),
+          );
         }
       }
       if (c.x % 14 === 0 && c.z % 14 === 0) {
@@ -209,6 +246,9 @@ export class GameScene {
       );
       basin.position.set(x, 0.3, z);
       this.scene.add(basin);
+      this.catalog.add("pro_brazier", this.scene, x, 0, z, 1, 0, () => {
+        basin.visible = false;
+      });
       const fire = new THREE.Mesh(
         new THREE.IcosahedronGeometry(0.35, 1),
         new THREE.MeshBasicMaterial({ color: 0xffc677 }),
@@ -216,7 +256,7 @@ export class GameScene {
       fire.position.set(x, 1, z);
       fire.scale.y = 2;
       this.scene.add(fire);
-      const light = new THREE.PointLight(0xffb85b, 36, 21, 1.6);
+      const light = new THREE.PointLight(0xffb85b, 12, 21, 1.6);
       light.position.set(x, 1.6, z);
       this.scene.add(light);
       const ring = new THREE.Mesh(
@@ -386,6 +426,86 @@ export class GameScene {
       hunterFallback.forEach((c) => (c.visible = false)),
     );
     this.hunter.add(this.hunterActor.root);
+    const stalkerFallback = [...this.stalker.children];
+    this.stalkerActor = new AnimatedCharacter("/models/stalker.glb", () => {
+      stalkerFallback.forEach((c) => {
+        c.visible = false;
+      });
+    });
+    this.stalker.add(this.stalkerActor.root);
+    this.torchHardware = this.catalog.add(
+      "pro_torch",
+      this.player,
+      0.48,
+      0.93,
+      -0.18,
+      1,
+      0,
+      () => {
+        if (this.stick) this.stick.visible = false;
+        this.torchBasket.visible = false;
+      },
+    );
+    for (const [id, x, y, z] of [
+      ["pro_satchel", -0.24, -0.12, 0.12],
+      ["pro_fuel_flask", 0.22, -0.09, 0.1],
+    ] as const) {
+      const root = this.catalog.add(id, this.player);
+      this.kit.push({ root, offset: new THREE.Vector3(x, y, z) });
+    }
+    this.chalkStick = this.catalog.add("pro_chalk", this.player);
+    this.catalog.batch(
+      "arc_wall_2m",
+      this.scene,
+      wallPlacements,
+      [2, 4, 0.3],
+      () => {
+        blocks.visible = false;
+        this.wallFallbacks.forEach((o) => {
+          o.visible = false;
+        });
+      },
+    );
+    this.catalog.batch(
+      "arc_floor_2m",
+      this.scene,
+      floorPlacements,
+      [2, 0.12, 2],
+      () => {
+        floors.visible = false;
+      },
+    );
+    this.catalog.batch(
+      "arc_floor_2m",
+      this.scene,
+      ceilingPlacements,
+      [2, 0.12, 2],
+      () => {
+        ceiling.visible = false;
+      },
+    );
+    this.catalog.batch(
+      "arc_arch_3m",
+      this.scene,
+      this.archPlacements,
+      [5.2, 4.1, 0.55],
+      () => {
+        this.archFallbacks.forEach((o) => {
+          o.visible = false;
+        });
+      },
+    );
+    this.catalog.batch(
+      "pro_rubble",
+      this.scene,
+      rubblePlacements,
+      [0.6, 0.35, 1.1],
+      () => {
+        this.rubbleFallbacks.forEach((o) => {
+          o.visible = false;
+        });
+      },
+    );
     this.resize();
   }
   private texture(seed: number, slabs: boolean) {
@@ -473,6 +593,9 @@ export class GameScene {
         instance.setMatrixAt(i, mesh.matrixWorld);
         this.scene.remove(mesh);
       });
+      if (list[0].userData.wallShell) this.wallFallbacks.push(instance);
+      if (list[0].userData.archShell) this.archFallbacks.push(instance);
+      if (list[0].userData.rubbleShell) this.rubbleFallbacks.push(instance);
       instance.castShadow = instance.receiveShadow = true;
       instance.computeBoundingSphere();
       this.scene.add(instance);
@@ -487,6 +610,9 @@ export class GameScene {
     trim: THREE.Material,
     bronze: THREE.Material,
   ) {
+    // Dressing stays off the clear central route; simulation owns collision.
+    this.catalog.add("pro_barrel", this.scene, x - 6.8, 0, z + 5.8);
+    this.catalog.add("pro_supply_crate", this.scene, x - 6, 0, z + 5.8, 1, 0.3);
     // Decorative pillars stay against room boundaries, away from the navigation floor.
     for (const sx of [-1, 1])
       for (const sz of [-1, 1]) {
@@ -497,9 +623,23 @@ export class GameScene {
         p.position.set(x + sx * 7.8, 1.8, z + sz * 7.8);
         p.castShadow = true;
         this.scene.add(p);
-        this.box(1, 0.2, 1, stone, x + sx * 7.8, z + sz * 7.8, 3.6);
+        this.catalog.add(
+          "pro_pillar",
+          this.scene,
+          x + sx * 7.8,
+          0,
+          z + sz * 7.8,
+          1,
+          0,
+          () => {
+            p.visible = false;
+          },
+        );
       }
     for (const side of [-1, 1]) {
+      this.archPlacements.push(
+        new THREE.Matrix4().makeTranslation(x, 0, z + side * 7.7),
+      );
       for (let i = 0; i < 13; i++) {
         const angle = ((i + 0.5) * Math.PI) / 13;
         const voussoir = this.box(
@@ -512,27 +652,79 @@ export class GameScene {
           1.7 + Math.sin(angle) * 2.1,
         );
         voussoir.rotation.z = angle - Math.PI / 2;
+        voussoir.userData.archShell = true;
       }
-      for (const sx of [-1, 1])
-        this.box(0.48, 1.8, 0.5, trim, x + sx * 2.1, z + side * 7.7, 0.8);
+      for (const sx of [-1, 1]) {
+        const upright = this.box(
+          0.48,
+          1.8,
+          0.5,
+          trim,
+          x + sx * 2.1,
+          z + side * 7.7,
+          0.8,
+        );
+        upright.userData.archShell = true;
+      }
     }
     if (kind === "archive") {
-      for (const side of [-1, 1])
-        for (let i = -2; i <= 2; i++) {
-          this.box(0.4, 2.4, 1.5, bronze, x + side * 8.5, z + i * 2.7, 1.1);
-          for (let y = 0.3; y < 2.2; y += 0.5)
-            this.box(0.45, 0.08, 1.5, trim, x + side * 8.5, z + i * 2.7, y);
-        }
+      for (const side of [-1, 1]) {
+        this.catalog.add(
+          "pro_crypt_door",
+          this.scene,
+          x + side * 8.5,
+          0,
+          z,
+          1,
+          (side * Math.PI) / 2,
+        );
+        this.catalog.add(
+          "pro_journal",
+          this.scene,
+          x + side * 7.9,
+          0.1,
+          z + 2,
+          0.9,
+        );
+      }
     } else if (kind === "crypt") {
       for (const side of [-1, 1])
         for (let i = -2; i <= 2; i++) {
-          this.box(1, 0.7, 1.8, stone, x + side * 8, z + i * 2.7, 0.3);
-          this.box(1.12, 0.12, 1.9, trim, x + side * 8, z + i * 2.7, 0.7);
+          const coffin = new THREE.Mesh(
+            new RoundedBoxGeometry(1, 0.8, 1.9, 1, 0.04),
+            stone,
+          );
+          coffin.position.set(x + side * 8, 0.4, z + i * 2.7);
+          this.scene.add(coffin);
+          this.catalog.add(
+            "pro_sarcophagus",
+            this.scene,
+            x + side * 8,
+            0,
+            z + i * 2.7,
+            1,
+            Math.PI / 2,
+            () => {
+              coffin.visible = false;
+            },
+          );
         }
     } else if (kind === "landmark") {
       const obelisk = new THREE.Mesh(new THREE.ConeGeometry(0.6, 3, 4), trim);
       obelisk.position.set(x + 7.8, 1.5, z);
       this.scene.add(obelisk);
+      this.catalog.add(
+        "pro_memorial",
+        this.scene,
+        x + 7.8,
+        0,
+        z,
+        1,
+        -Math.PI / 2,
+        () => {
+          obelisk.visible = false;
+        },
+      );
       const rune = new THREE.Mesh(
         new THREE.TorusGeometry(0.35, 0.025, 4, 24),
         new THREE.MeshBasicMaterial({ color: 0x83a8b0 }),
@@ -548,6 +740,7 @@ export class GameScene {
     this.resize();
   }
   update(game: Game, dt: number, yaw: number, pitch: number, distance = 3.7) {
+    this.container.dataset.catalogModels = String(this.catalog.loaded);
     this.elapsed += dt;
     const previous = this.player.position.clone();
     this.player.position.set(game.player.x, 0, game.player.z);
@@ -593,6 +786,24 @@ export class GameScene {
     );
     this.container.dataset.animation = this.actor?.clip ?? "fallback";
     this.player.updateMatrixWorld(true);
+    const hips = this.actor?.root.getObjectByName("hips");
+    if (hips) {
+      hips.getWorldPosition(this.attachmentPoint);
+      this.player.worldToLocal(this.attachmentPoint);
+      this.kit.forEach((item) =>
+        item.root.position.copy(this.attachmentPoint).add(item.offset),
+      );
+    }
+    if (this.chalkStick) {
+      this.chalkStick.visible =
+        this.gesture === "chalk" && this.gestureTime > 0;
+      const hand = this.actor?.root.getObjectByName("hand_L");
+      if (hand) {
+        hand.getWorldPosition(this.attachmentPoint);
+        this.player.worldToLocal(this.attachmentPoint);
+        this.chalkStick.position.copy(this.attachmentPoint);
+      }
+    }
     if (this.actor?.ready && this.actor.socket) {
       this.actor.socket.getWorldPosition(this.socketPoint);
       this.player.worldToLocal(this.socketPoint);
@@ -612,6 +823,9 @@ export class GameScene {
           : 0;
       });
     this.torchBasket.position.copy(this.flame.position);
+    this.torchHardware?.position
+      .copy(this.flame.position)
+      .add(new THREE.Vector3(0, -0.65, 0));
     const burning =
       game.fuel > 0 && ["EXPLORING", "SANCTUARY"].includes(game.phase);
     if (this.lastFuel - game.fuel > 35) this.burst = 1;
@@ -687,14 +901,23 @@ export class GameScene {
     const e = game.enemies?.[0];
     this.stalker.visible = !!e;
     if (e) {
+      this.stalkerActor?.update(
+        e.state === "REPELLED"
+          ? "recoil"
+          : e.state === "LISTENING"
+            ? "idle"
+            : "investigate",
+        dt,
+      );
       this.stalker.position.set(e.x, Math.sin(this.elapsed * 4) * 0.02, e.z);
       this.stalker.lookAt(game.player.x, 0, game.player.z);
+      this.stalker.rotation.y += Math.PI;
     }
     for (const item of game.items || []) {
       let mesh = this.items.get(String(item.id));
       if (!mesh) {
         const artifact = item.kind === "artifact";
-        mesh = new THREE.Mesh(
+        const fallback = new THREE.Mesh(
           artifact
             ? new THREE.OctahedronGeometry(0.22)
             : new THREE.CylinderGeometry(0.12, 0.14, 0.33, 8),
@@ -706,6 +929,16 @@ export class GameScene {
             roughness: 0.35,
           }),
         );
+        mesh = new THREE.Group();
+        mesh.add(fallback);
+        const catalogId = artifact
+          ? "pro_artifact"
+          : item.kind === "fuel"
+            ? "pro_fuel_canister"
+            : "pro_match_case";
+        this.catalog.add(catalogId, mesh, 0, -0.15, 0, 1, 0, () => {
+          fallback.visible = false;
+        });
         this.items.set(String(item.id), mesh);
         this.scene.add(mesh);
       }
@@ -777,8 +1010,10 @@ export class GameScene {
     this.camera.updateProjectionMatrix();
   }
   dispose() {
+    this.catalog.dispose();
     this.actor?.dispose();
     this.hunterActor?.dispose();
+    this.stalkerActor?.dispose();
     const geometries = new Set<THREE.BufferGeometry>(),
       materials = new Set<THREE.Material>();
     this.scene.traverse((o) => {

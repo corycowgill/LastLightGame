@@ -1,0 +1,39 @@
+{
+  "asset_id": "arc_wall_2m",
+  "job_id": "aece7ae7caf543aa85f71166978d1aa2",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 243759861,
+  "file": "generated/arc_wall_2m/aece7ae7caf543aa85f71166978d1aa2/source.glb",
+  "sha256": "7246924b5fdac50921523cd0042c0516b6a3cb014fb67f2b5e90b4d0419c8ca9",
+  "reference_sha256": "674e8c28f4549a20a5e7e2c5aff348014624213b3dc12841f84950910403ad84",
+  "metrics": {
+    "triangles": 97461,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.30003196001052856,
+        -0.5014926195144653,
+        -0.11754540354013443
+      ],
+      [
+        0.3000640571117401,
+        0.5019539594650269,
+        0.10751507431268692
+      ]
+    ],
+    "extents": [
+      0.6000960171222687,
+      1.0034465789794922,
+      0.22506047785282135
+    ],
+    "surface_area_m2": 4.565986809927633,
+    "surface_area_ratio": 4.534674713854752,
+    "file_bytes": 3405392
+  },
+  "target_size_m": 2.0,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792274100.8720434
+}

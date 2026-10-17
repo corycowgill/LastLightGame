@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_crypt_door",
+  "job_id": "48a9d370a650493897317a86b3250db2",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 462813613,
+  "file": "generated/pro_crypt_door/48a9d370a650493897317a86b3250db2/source.glb",
+  "sha256": "1c3dc7e5aaa5cb85badde9426cdf66c056fbbfd4b27890c8c1f3e84730a5d122",
+  "reference_sha256": "76a074d93830b98d96f4b7f3a9d7758dff5d0dc0816656ce531539e48cdcc2be",
+  "metrics": {
+    "triangles": 97652,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.32898813486099243,
+        -0.501976490020752,
+        -0.05406507849693298
+      ],
+      [
+        0.33299341797828674,
+        0.5019487738609314,
+        0.062354058027267456
+      ]
+    ],
+    "extents": [
+      0.6619815528392792,
+      1.0039252638816833,
+      0.11641913652420044
+    ],
+    "surface_area_m2": 4.150445338139485,
+    "surface_area_ratio": 4.118052999028647,
+    "file_bytes": 3680944
+  },
+  "target_size_m": 2.8,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273733.6689055
+}

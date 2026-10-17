@@ -1,0 +1,28 @@
+{
+  "id": "pro_torch",
+  "name": "Hand torch",
+  "category": "props",
+  "biome": "shared",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 0.65,
+  "scale_axis": "y",
+  "triangle_budget": 2500,
+  "pivot": "ground_center",
+  "sockets": [
+    "grip",
+    "flame"
+  ],
+  "dependencies": [],
+  "reference": "references/props/torch.png",
+  "prompt": "Original The Last Light stylized dark fantasy game asset, broad sculpted forms, intentional chunky bevels, matte painterly materials, restrained wear, cold gray stone, brown leather, dark iron and muted brass as appropriate. Hand torch. Single isolated object, three-quarter orthographic-looking view showing front, side and top. Plain solid light gray background, even neutral diffuse studio light, complete silhouette with margin, no text, no additional views, no environment, no smoke, no fire, no floating parts.",
+  "seed": 2139944678,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ]
+}

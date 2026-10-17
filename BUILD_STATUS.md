@@ -174,3 +174,13 @@ Browser touch CROUCH selected the actual crouch_idle mixer clip; the rigged load
 - Validation: 47 TypeScript tests and five Python asset tests pass; production build passes.
 
 Browser verification: all nine audio buffers decoded; listening-page playback advanced without media errors; automated expedition passed extinction, active Hunt, navigated escape and sanctuary recovery. No browser console warnings/errors observed in that run.
+
+## Neural catalog integration — 2026-10-17
+
+- Reconstructed all 21 original individual character/prop references with the existing serial TRELLIS pipeline; reused the earlier crate/barrel pilots. Added neural catalog wall/arch modules. Runtime has 24 GLB roles from 23 accepted reconstructions, including an explicitly documented neural masonry derivative for paving/ceilings.
+- Replaced active character meshes, torch, pickups, sanctuary and room dressing, plus visible wall/floor/ceiling/arch shell. Generated meshes are used rather than newly authored/procedural mesh replacements. Layout generation, collision and fire effects remain simulation/rendering systems.
+- Automatic character skinning retains existing authored motion clips with carrying-pose offsets; no NVIDIA-generated animation claim. Hollow/Moth are unrigged expansion previews only. Character contacts and deformation still need art polish.
+- Shared loader, region-instanced masonry, embedded 512px textures, exact prop scale/orientation correction, material tuning and texture disposal. Camera/nav rules retained. Low wall LOD was rejected because it introduced holes. Separate floor reconstruction was rejected as fragmented; a second attempt returned a terminal provider error. Raw failures are preserved, not retried or disguised.
+- Actual browser viewer decoded all 24 GLBs without observed warnings/errors. Final seed 104729 expedition check passed extinction, active Hunt, navigated escape and sanctuary. Starting view observed about 60 FPS / 138 draws on this desktop, not a sustained performance guarantee. No physical iPhone/Xbox test.
+- 48 TypeScript tests, eight Python asset tests and production build pass; shared asset-pipeline suite has 18 passing tests. Screenshots and exact provenance are in docs/catalog-assets. No library asset was falsely marked production-approved; no GPU job remains active/uncertain.
+- Review `/asset-review.html`; see docs/CATALOG_ASSETS.md for reproduction and remaining work. Most of the 221 catalog definitions are still planned, not completed art.

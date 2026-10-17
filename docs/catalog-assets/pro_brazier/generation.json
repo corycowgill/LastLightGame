@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_brazier",
+  "job_id": "23440d091eaf4a268d60e0c60ce6d535",
+  "stage": "mesh",
+  "backend": "comfy",
+  "seed": 740559045,
+  "file": "generated/pro_brazier/23440d091eaf4a268d60e0c60ce6d535/source.glb",
+  "sha256": "6b4442f7c642998434f84161f5899863aeb9b52ab45e22170807ca1fa781ab4d",
+  "reference_sha256": "e9c87df927ef7e69a7f62336311ded7534b0f945153058510ad627ac2bb16247",
+  "metrics": {
+    "triangles": 90357,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.49999499320983887,
+        -0.36479997634887695,
+        -0.49912410974502563
+      ],
+      [
+        0.49999499320983887,
+        0.36479997634887695,
+        0.49912410974502563
+      ]
+    ],
+    "extents": [
+      0.9999899864196777,
+      0.7295999526977539,
+      0.9982482194900513
+    ],
+    "surface_area_m2": 4.641368868399036,
+    "surface_area_ratio": 4.641461823235188,
+    "file_bytes": 5956456
+  },
+  "target_size_m": 1.1,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792273053.5963256
+}

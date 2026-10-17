@@ -1,0 +1,69 @@
+{
+  "asset_id": "pro_brazier",
+  "version": "v001",
+  "file": "assets/pro_brazier/v001/model.glb",
+  "sha256": "a283bf845d5910431269635597f119051cc379fddb6fe8a9f13eb4966c96b91a",
+  "source": "generated/pro_brazier/23440d091eaf4a268d60e0c60ce6d535/source.glb",
+  "source_sha256": "6b4442f7c642998434f84161f5899863aeb9b52ab45e22170807ca1fa781ab4d",
+  "metrics": {
+    "triangles": 2500,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.7538302195568604,
+        0.0,
+        -0.7525172098619551
+      ],
+      [
+        0.7538302195568604,
+        1.1,
+        0.7525172098619551
+      ]
+    ],
+    "extents": [
+      1.5076604391137207,
+      1.1,
+      1.5050344197239103
+    ],
+    "surface_area_m2": 10.550228381148226,
+    "surface_area_ratio": 4.641461823235189,
+    "file_bytes": 3732772
+  },
+  "scale_factor": 1.507675536343804,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/pro_brazier/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/pro_brazier/v001/lod1.glb",
+      "triangles": 1250
+    },
+    {
+      "file": "assets/pro_brazier/v001/lod2.glb",
+      "triangles": 500
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/pro_brazier/v001/previews/view_0.png",
+    "assets/pro_brazier/v001/previews/view_1.png",
+    "assets/pro_brazier/v001/previews/view_2.png",
+    "assets/pro_brazier/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 90357,
+    "lod0_triangles": 2500,
+    "lod1_triangles": 1250,
+    "lod2_triangles": 500,
+    "method": "Blender decimate; requires visual review"
+  }
+}
