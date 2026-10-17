@@ -1,3 +1,4 @@
+import { Soundscape, audioMood } from "./soundscape";
 import type { Game } from "./simulation";
 export class GameAudio {
   private ctx?: AudioContext | OfflineAudioContext;
@@ -15,6 +16,16 @@ export class GameAudio {
   private nextPlayerStep = 0;
   private nextAmbient = 12;
   private phase = "";
+  private samples?: Soundscape;
+  private lastFuel = 720;
+  private musicLevel = 0.7;
+  setMusicVolume(value: number) {
+    this.musicLevel = Math.max(0, Math.min(1, value));
+    if (this.samples) this.samples.musicVolume = this.musicLevel;
+  }
+  get sampleCount() {
+    return this.samples?.loaded ?? 0;
+  }
   private lastX = 0;
   private lastZ = 0;
   start(context?: AudioContext | OfflineAudioContext) {
@@ -26,6 +37,9 @@ export class GameAudio {
     this.master = c.createGain();
     this.master.gain.value = this.level;
     this.master.connect(c.destination);
+    if (c instanceof AudioContext)
+      this.samples = new Soundscape(c, this.master);
+    if (this.samples) this.samples.musicVolume = this.musicLevel;
     this.oscillator = c.createOscillator();
     this.oscillator.frequency.value = 42;
     this.hum = c.createGain();
@@ -105,6 +119,22 @@ export class GameAudio {
   update(game: Game, dt: number) {
     if (!this.ctx || !this.hum) return;
     this.elapsed += Math.min(0.1, dt);
+    const nearFire =
+      Math.min(
+        Math.hypot(game.player.x - game.start.x, game.player.z - game.start.z),
+        Math.hypot(
+          game.player.x - game.destination.x,
+          game.player.z - game.destination.z,
+        ),
+      ) < 5;
+    this.samples?.update(
+      audioMood(game.phase, nearFire),
+      game.fuel > 0 && game.phase === "EXPLORING",
+      game.mode === 2,
+    );
+    if (this.lastFuel - game.fuel >= 35 && game.phase === "EXPLORING")
+      this.samples?.play("burst", 0.28);
+    this.lastFuel = game.fuel;
     const phase = String(game.phase),
       hunt = phase === "HUNT_ACTIVE" || phase === "HUNT_GRACE";
     this.hum.gain.setTargetAtTime(
@@ -113,12 +143,19 @@ export class GameAudio {
       1,
     );
     if (phase !== this.phase) {
-      if (phase === "EXTINGUISHING") this.tone(80, 2, 0.14, 25);
+      if (phase === "EXTINGUISHING") {
+        this.tone(80, 2, 0.14, 25);
+        this.samples?.play("extinguish", 0.25);
+      }
       if (phase === "HUNT_ACTIVE") {
+        this.samples?.play("hunter", 0.3);
         this.tone(110, 2, 0.16, 30);
         this.air(0.7, 0.1, 170);
       }
-      if (phase === "RELIGHTING") this.air(0.3, 0.15, 1800);
+      if (phase === "RELIGHTING") {
+        this.air(0.3, 0.15, 1800);
+        this.samples?.play("relight", 0.3);
+      }
       if (phase === "SANCTUARY") {
         this.tone(220, 2, 0.08);
         this.tone(330, 2.3, 0.05);
@@ -184,6 +221,8 @@ export class GameAudio {
     }
   }
   dispose() {
+    this.samples?.dispose();
+    this.samples = undefined;
     this.oscillator?.stop();
     if (this.ctx instanceof AudioContext) void this.ctx.close();
     this.ctx = undefined;

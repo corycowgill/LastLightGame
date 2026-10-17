@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "music_model": "ACE-Step/ACE-Step-v1-3.5B",
+  "sfx_model": "OpenMOSS-Team/MOSS-SoundEffect-v2.0",
+  "clips": [
+    {
+      "id": "exploration",
+      "kind": "music",
+      "seconds": 40,
+      "seed": 104729,
+      "loop": true,
+      "prompt": "Instrumental dark ambient survival horror soundtrack in D minor, very sparse bowed low strings, distant resonant stone chamber, soft dissonant drones, occasional fragile muted bell, slow evolving texture, restrained dynamics, no vocals, no drums, no melody lead, no jump scares, no footsteps, oppressive underground catacombs, seamless atmospheric bed."
+    },
+    {
+      "id": "hunt",
+      "kind": "music",
+      "seconds": 30,
+      "seed": 104730,
+      "loop": true,
+      "prompt": "Instrumental minimal horror tension drone in D minor, hollow low strings, unstable distant metallic resonance, sparse slow sub pulses, nearly silent upper register, suspense and empty darkness, no vocals, no percussion groove, no loud stingers, no footsteps, no heroic climax, unobtrusive background for listening to a pursuing creature."
+    },
+    {
+      "id": "sanctuary",
+      "kind": "music",
+      "seconds": 35,
+      "seed": 104731,
+      "loop": true,
+      "prompt": "Instrumental dark fantasy sanctuary ambience in D minor, warm soft sustained strings, very sparse low felt piano notes, faint distant bell over a quiet drone, fragile relief by a small golden fire in a vast stone crypt, wistful and restrained, no vocals, no drums, no triumphant crescendo, no footsteps."
+    },
+    {
+      "id": "torch",
+      "kind": "sfx",
+      "seconds": 8,
+      "seed": 104732,
+      "loop": true,
+      "prompt": "Close dry wooden torch burning gently, delicate irregular crackles and tiny ember pops with a soft steady flame hiss. Isolated sound effect, no music, no speech, no wind, no footsteps, no explosive pops."
+    },
+    {
+      "id": "catacombs",
+      "kind": "sfx",
+      "seconds": 10,
+      "seed": 104733,
+      "loop": true,
+      "prompt": "Quiet air moving through a large abandoned underground stone chamber, occasional distant water drips and a soft hollow resonance. Subtle cold cavern room tone. No voices, no music, no footsteps, no sudden impacts."
+    },
+    {
+      "id": "extinguish",
+      "kind": "sfx",
+      "seconds": 3,
+      "seed": 104734,
+      "loop": false,
+      "prompt": "A small handheld flame sputters weakly and goes out with a soft descending hiss, followed by empty silence. One isolated short sound effect, no music, no voice."
+    },
+    {
+      "id": "relight",
+      "kind": "sfx",
+      "seconds": 3,
+      "seed": 104735,
+      "loop": false,
+      "prompt": "A single wooden match scraped on a rough striking surface, a brief dry scratch and small gentle flare of fire. Close isolated sound effect, no music, no speech, no background movement."
+    },
+    {
+      "id": "hunter",
+      "kind": "sfx",
+      "seconds": 4,
+      "seed": 104736,
+      "loop": false,
+      "prompt": "One low breathy inhuman exhalation from a large shadow creature in a stone crypt, restrained ominous rumble with a dry raspy texture and a short hollow decay. No words, no screaming, no music, no sudden loud impact."
+    },
+    {
+      "id": "burst",
+      "kind": "sfx",
+      "seconds": 3,
+      "seed": 104737,
+      "loop": false,
+      "prompt": "One short rush of fire from a handheld torch, fast airy ignition followed by a soft crackling decay, a defensive flash rather than an explosion. Isolated sound effect, no music, no speech, no gunshot."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # The Last Light
 
-A browser survival horror expedition built with TypeScript, Three.js, Vite, and synthesized Web Audio. Runtime artwork uses original authored and procedural geometry. No backend or API keys.
+A browser survival horror expedition built with TypeScript, Three.js, Vite, and a hybrid generated/procedural Web Audio soundscape. Runtime artwork uses original authored and procedural geometry. No backend or API keys.
 
 ## Run
 
@@ -115,3 +115,7 @@ See [the Hugging Face / Blender asset pipeline](docs/AI_ASSET_PIPELINE.md) for t
 The art bible and concept board from **Create stylized game art design** are preserved in `docs/art-direction/`; character references are in `art-source/`. The current implementation follows the ochre hood, satchel, charcoal clothing, ragged Hunter silhouette, cold masonry and warm fire palette. It is an initial low-poly interpretation, not a claim of matching the concept image fidelity.
 
 `tools/assets/build_characters.py` rebuilds both skinned GLBs with installed Blender. Torchbearer has 14 named authored clips; Hunter has five. Runtime blends locomotion/crouch, interaction, relight, burst, death and Hunter states, and attaches torch hardware/fire to a hand socket. Simulation retains ownership of movement and collision. `public/models/manifest.json` records triangle counts, hashes, axes, provenance and clip names. Neural reconstruction, polished motion retargeting and Stalker replacement remain future asset work.
+
+## Generated soundtrack and effects
+
+Nine creepy atmospheric clips are included. Listen at `/audio/listen.html`; see [audio provenance and reproduction](docs/AUDIO.md). Settings include an independent soundtrack level.

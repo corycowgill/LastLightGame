@@ -30,6 +30,7 @@ const coarse =
 const defaults = {
   sensitivity: 1,
   volume: 0.45,
+  musicVolume: 0.7,
   cues: true,
   quality: coarse ? "low" : "high",
   touchControls: coarse || new URLSearchParams(location.search).has("touch"),
@@ -249,6 +250,7 @@ function resume() {
   screen = "playing";
   document.body.dataset.playing = "true";
   audio.setVolume(settings.volume);
+  audio.setMusicVolume(settings.musicVolume);
   running = true;
   keys.clear();
   $("overlay").hidden = true;
@@ -291,7 +293,7 @@ function showSettings() {
     cameraControls.release();
   }
   panel(
-    `<div class="eyebrow">SETTINGS</div><h2>Shape your experience.</h2><label>Look sensitivity <input id="sensitivity" type="range" min="0.2" max="2" step="0.1" value="${settings.sensitivity}"></label><label>Audio volume <input id="volume" type="range" min="0" max="1" step="0.05" value="${settings.volume}"></label><label>Visual sound cues <input id="cues" type="checkbox" ${settings.cues ? "checked" : ""}></label><label>Show touch controls <input id="touchSetting" type="checkbox" ${settings.touchControls ? "checked" : ""}></label><label>Graphics <select id="quality"><option value="high">High</option><option value="low">Low</option></select></label><div id="actions"></div>`,
+    `<div class="eyebrow">SETTINGS</div><h2>Shape your experience.</h2><label>Look sensitivity <input id="sensitivity" type="range" min="0.2" max="2" step="0.1" value="${settings.sensitivity}"></label><label>Audio volume <input id="volume" type="range" min="0" max="1" step="0.05" value="${settings.volume}"></label><label>Soundtrack level <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="${settings.musicVolume}"></label><label>Visual sound cues <input id="cues" type="checkbox" ${settings.cues ? "checked" : ""}></label><label>Show touch controls <input id="touchSetting" type="checkbox" ${settings.touchControls ? "checked" : ""}></label><label>Graphics <select id="quality"><option value="high">High</option><option value="low">Low</option></select></label><div id="actions"></div>`,
   );
   ($("quality") as HTMLSelectElement).value = settings.quality;
   button("back", "SAVE & RETURN", () => {
@@ -299,6 +301,8 @@ function showSettings() {
     document.body.dataset.touch = String(settings.touchControls);
     settings.sensitivity = +($("sensitivity") as HTMLInputElement).value;
     settings.volume = +($("volume") as HTMLInputElement).value;
+    settings.musicVolume = +($("musicVolume") as HTMLInputElement).value;
+    audio.setMusicVolume(settings.musicVolume);
     settings.cues = ($("cues") as HTMLInputElement).checked;
     settings.quality = ($("quality") as HTMLSelectElement).value;
     localStorage.setItem("lastlight-settings", JSON.stringify(settings));
@@ -324,7 +328,7 @@ function ended() {
   screen = "ended";
   endingAnimation = 2.1;
   keys.clear();
-  audio.setVolume(0);
+  audio.setVolume(game.phase === "DEAD" ? 0 : settings.volume);
   running = false;
   cameraControls.release();
   if (check) {
@@ -502,6 +506,7 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 function updateHUD() {
+  $("scene").dataset.audioSamples = String(audio.sampleCount);
   $("audioUnlock").hidden = !audio.needsGesture;
   if (inputSource === "gamepad")
     $("lookHint").textContent = "LS Move · RS Look · A Use · Menu Pause";

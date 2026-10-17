@@ -165,3 +165,12 @@ Integrated GLTFLoader and AnimationMixer, crossfaded locomotion/crouch, short in
 Validation: 46 game tests pass. New tests load the actual GLBs with Three.js, verify normalized skin weights, skeletons, clip presence and animated socket displacement. Both structural GLB gates pass. Production build passes. Browser play reviewed the loaded explorer and camera movement, corrected the hood back closure and crouch translation, and reported PASS for extinction, active Hunt, navigated escape and sanctuary banking with no captured console warnings/errors. Physical iPhone/controller performance and broader visual/motion acceptance remain open. Stalker replacement and neural asset production are still outstanding. The formerly gated encoder metadata is now accessible after the user's permission update; inference is not yet validated.
 
 Browser touch CROUCH selected the actual crouch_idle mixer clip; the rigged load flag was present. The gameplay capture is docs/art-direction/gameplay-checkpoint.png. The recovered art library already has a validated serial local TRELLIS workflow; prefer it for future neural reconstruction rather than duplicating the model environment. Its source assets and queue were left unchanged.
+
+## HF audio pass — 2026-10-17
+
+- Generated three soundtrack stems with ACE-Step v1 3.5B and six effects with MOSS-SoundEffect v2 through official Hugging Face demos. About 2.13 MB bundled MP3; no runtime service needed.
+- State-based music crossfades, quieter Hunt mix, torch/room loops, event effects, independent music volume, and procedural fallback.
+- Prompts, seeds, hashes and mastering scripts preserved. Listening gallery: `/audio/listen.html`. Technical mastering is complete; artistic listening review and physical device balancing remain pending.
+- Validation: 47 TypeScript tests and five Python asset tests pass; production build passes.
+
+Browser verification: all nine audio buffers decoded; listening-page playback advanced without media errors; automated expedition passed extinction, active Hunt, navigated escape and sanctuary recovery. No browser console warnings/errors observed in that run.
