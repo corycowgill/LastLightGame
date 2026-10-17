@@ -28,6 +28,7 @@ Updated 2026-10-17. Version 0.1: playable Catacombs checkpoint for review. The f
 - The full route driver physically traverses the generated expedition, collects artifacts, forces extinction, observes the active Hunt and banks discoveries.
 - `npm run build`: TypeScript passes and Vite emits deployable `dist/`; game JS about 37 kB and Three.js about 489 kB before compression.
 - Production build served locally using `npm run preview` at http://127.0.0.1:4173/.
+- Final corrected production scenario banked one relic. Purchasing a reservoir upgrade, reloading, continuing, and opening the journal confirmed a persistent capacity of 810 Steady seconds.
 - Browser UI verification observed EXPLORING → HUNT_ACTIVE → SANCTUARY / BANISHED and an explicit scenario PASS. Menus, settings, graphics selection and pause were exercised; no runtime error logs were observed.
 - Browser screenshot capture timed out even on a separate blank tab. Consequently no screenshot-based visual acceptance is claimed, and hardware frame-rate acceptance remains open. The in-app browser's frame reporting was low; test on normal hardware before treating performance as accepted.
 
