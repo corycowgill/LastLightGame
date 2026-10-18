@@ -1,0 +1,28 @@
+{
+  "id": "arc_wall_niche_2m",
+  "name": "Wall Niche 2M",
+  "category": "architecture",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 2.3,
+  "scale_axis": "y",
+  "triangle_budget": 18000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original dark fantasy catacomb game asset. One deep ancient stone burial niche cabinet, rectangular heavy stone frame enclosing three stacked horizontal open burial recesses with thick shelves. Empty DARK inset cavities with visible depth, broad chipped limestone, weathered mineral streaks, single complete modular object, no room or wall extending outside frame, no doors, no decorations blocking cavities. Single isolated object, full silhouette with margin, neutral studio illumination, plain light gray background. Realistic aged materials, no text, no scenery, no smoke, no fire.",
+  "seed": 2122687486,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ],
+  "original_catalog_method": "authored",
+  "production_override": "User requests generated GLB crypt architecture and props",
+  "runtime_texture_size": 1024
+}

@@ -1,0 +1,39 @@
+{
+  "asset_id": "dre_urn_broken",
+  "job_id": "26f0d329ac7c40a9b4d46b2ce4f073dd",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 1899264218,
+  "file": "generated/dre_urn_broken/26f0d329ac7c40a9b4d46b2ce4f073dd/source.glb",
+  "sha256": "ad603cd2dfe22b8da16df9e1a4e27339cfa0b9b4c6492a94ead429e0d5905096",
+  "reference_sha256": "25c8989a75c08b24fba919c291f77b7fc31c1104a4873529f89bf2ffd5a4b1c8",
+  "metrics": {
+    "triangles": 99352,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.42099782824516296,
+        -0.5016212463378906,
+        -0.4255543351173401
+      ],
+      [
+        0.4206060767173767,
+        0.5016158819198608,
+        0.4253600537776947
+      ]
+    ],
+    "extents": [
+      0.8416039049625397,
+      1.0032371282577515,
+      0.8509143888950348
+    ],
+    "surface_area_m2": 8.145219937631417,
+    "surface_area_ratio": 8.092740654894074,
+    "file_bytes": 3999676
+  },
+  "target_size_m": 0.65,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792291679.776008
+}

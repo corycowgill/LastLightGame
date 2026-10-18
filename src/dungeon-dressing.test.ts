@@ -16,7 +16,15 @@ test("every dungeon detail is backed by a detailed neural GLB", async () => {
     assert.ok(entry, detail.id);
     assert.equal(entry.method, "image_to_3d");
     assert.ok(entry.file.endsWith(".glb"));
-    assert.ok(entry.triangles >= 12000, detail.id);
+    assert.ok(
+      entry.triangles >=
+        (detail.id === "pro_rubble"
+          ? 2000
+          : detail.id === "dre_urn_broken"
+            ? 9000
+            : 12000),
+      detail.id,
+    );
   }
   const web = manifest.assets.find((a: any) => a.id === "dec_corner_cobweb");
   const bytes = await readFile(

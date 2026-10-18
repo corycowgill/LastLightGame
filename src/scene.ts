@@ -2,6 +2,8 @@ import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.j
 import { AnimatedCharacter, movementClip } from "./character";
 import { CatalogAssets } from "./catalog-assets";
 import { dressDungeon } from "./dungeon-dressing";
+import { burialBlocks } from "./crypt-layout";
+import { addCryptDecals } from "./crypt-decals";
 import * as THREE from "three";
 import type { World, Game } from "./simulation";
 export function constrainCamera(
@@ -509,6 +511,17 @@ export class GameScene {
       },
     );
     dressDungeon(this.scene, this.catalog, world);
+    addCryptDecals(this.scene, world);
+    for (const block of burialBlocks(world)) {
+      const collider = new THREE.Mesh(
+        new THREE.BoxGeometry(block.halfX * 2, 2.85, block.halfZ * 2),
+        stone,
+      );
+      collider.position.set(block.x, 1.425, block.z);
+      collider.visible = false;
+      this.scene.add(collider);
+      this.walls.push(collider);
+    }
     this.resize();
   }
   private texture(seed: number, slabs: boolean) {
@@ -715,36 +728,36 @@ export class GameScene {
         this.catalog.add(
           "pro_crypt_door",
           this.scene,
-          x + side * 8.5,
+          x + side * 5.5,
           0,
-          z,
+          z + 8.5,
           1,
-          (side * Math.PI) / 2,
+          Math.PI,
         );
         this.catalog.add(
           "pro_journal",
           this.scene,
-          x + side * 7.9,
+          x + side * 5.1,
           0.1,
-          z + 2,
+          z + 5.3,
           0.9,
         );
       }
     } else if (kind === "crypt") {
       for (const side of [-1, 1])
-        for (let i = -2; i <= 2; i++) {
+        for (const i of [-1, 1]) {
           const coffin = new THREE.Mesh(
             new RoundedBoxGeometry(1, 0.8, 1.9, 1, 0.04),
             stone,
           );
-          coffin.position.set(x + side * 8, 0.4, z + i * 2.7);
+          coffin.position.set(x + side * 5.5, 0.4, z + i * 5.7);
           this.scene.add(coffin);
           this.catalog.add(
-            i === 0 ? "lan_hiding_tomb" : "pro_sarcophagus",
+            i === 1 ? "lan_hiding_tomb" : "pro_sarcophagus",
             this.scene,
-            x + side * 8,
+            x + side * 5.5,
             0,
-            z + i * 2.7,
+            z + i * 5.7,
             1,
             Math.PI / 2,
             () => {
@@ -1083,6 +1096,7 @@ export class GameScene {
     this.camera.updateProjectionMatrix();
   }
   dispose() {
+    this.scene.userData.disposed = true;
     this.catalog.dispose();
     this.actor?.dispose();
     this.hunterActor?.dispose();

@@ -1,3 +1,4 @@
+import { burialBlocks } from "./crypt-layout";
 export type Point = { x: number; z: number };
 export type World = {
   cells: (Point & { kind: string })[];
@@ -59,7 +60,19 @@ const grids = new WeakMap<World, Set<string>>();
 function grid(w: World) {
   let s = grids.get(w);
   if (!s) {
-    s = new Set(w.cells.map((c) => key(c.x, c.z)));
+    const blocks = burialBlocks(w);
+    s = new Set(
+      w.cells
+        .filter(
+          (c) =>
+            !blocks.some(
+              (b) =>
+                Math.abs(c.x * 2 - b.x) < b.halfX + 0.35 &&
+                Math.abs(c.z * 2 - b.z) < b.halfZ + 0.35,
+            ),
+        )
+        .map((c) => key(c.x, c.z)),
+    );
     grids.set(w, s);
   }
   return s;

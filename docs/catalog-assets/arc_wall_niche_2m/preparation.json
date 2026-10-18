@@ -1,0 +1,69 @@
+{
+  "asset_id": "arc_wall_niche_2m",
+  "version": "v001",
+  "file": "assets/arc_wall_niche_2m/v001/model.glb",
+  "sha256": "1a9f9f66808946da3b68700b3f4a69ed43feffbe847a976c0d28c2425ba4d520",
+  "source": "generated/arc_wall_niche_2m/837cda694cd247adab86cf941be72821/source.glb",
+  "source_sha256": "48db2837fd05afa07539bdf81cc2babc6c42a5cf806a6cf8b88fc2de4ea4b104",
+  "metrics": {
+    "triangles": 18000,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -1.6757845549807007,
+        0.0,
+        -0.7983684608441035
+      ],
+      [
+        1.6757845549807007,
+        2.3,
+        0.7983684608441035
+      ]
+    ],
+    "extents": [
+      3.3515691099614013,
+      2.3,
+      1.596736921688207
+    ],
+    "surface_area_m2": 127.37089153877021,
+    "surface_area_ratio": 11.33897585664676,
+    "file_bytes": 2573244
+  },
+  "scale_factor": 3.3410087349139275,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/arc_wall_niche_2m/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/arc_wall_niche_2m/v001/lod1.glb",
+      "triangles": 9000
+    },
+    {
+      "file": "assets/arc_wall_niche_2m/v001/lod2.glb",
+      "triangles": 3600
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/arc_wall_niche_2m/v001/previews/view_0.png",
+    "assets/arc_wall_niche_2m/v001/previews/view_1.png",
+    "assets/arc_wall_niche_2m/v001/previews/view_2.png",
+    "assets/arc_wall_niche_2m/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 93570,
+    "lod0_triangles": 18000,
+    "lod1_triangles": 9000,
+    "lod2_triangles": 3600,
+    "method": "Blender decimate; requires visual review"
+  }
+}

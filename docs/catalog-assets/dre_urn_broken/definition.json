@@ -1,0 +1,27 @@
+{
+  "id": "dre_urn_broken",
+  "name": "Funerary urn",
+  "category": "dressing",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 0.65,
+  "scale_axis": "y",
+  "triangle_budget": 10000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original dark fantasy catacomb game asset. One ancient broken funerary urn of dark weathered terracotta, missing a large piece of rim exposing a deep hollow interior, worn geometric funerary bands, cracked old ceramic, small broken pieces touching the base. No flowers, no fire. Single isolated object, full silhouette with margin, neutral studio illumination, plain light gray background. Realistic aged materials, no text, no scenery, no smoke, no fire.",
+  "seed": 1899264218,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ],
+  "runtime_texture_size": 1024,
+  "integration_notes": "Intact candidate; original broken-urn catalog ID retained"
+}

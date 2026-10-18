@@ -216,3 +216,11 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Smoothed movement speed to avoid idle/walk flicker above the fixed simulation rate; speed-driven playback and phase-preserving gait transitions.
 - Added anatomy-weight, sampled foot-height and torch-hand-stability checks. See docs/CHARACTER_ANIMATION.md for reproduction, inspection and limits.
 - Final validation: 50 TypeScript tests and eight Python asset tests pass, including loop seam checks; production build passes. Browser seed 104729 again passed extinction, active Hunt, navigated escape and sanctuary in 0:59. Idle/walk/sprint/crouch were visually reviewed in Three.js; review montage in docs/catalog-assets/character-animation-review.jpg.
+
+## Denser catacomb layout — 2026-10-17
+
+- Added generated burial-niche, funerary urn and carved sarcophagus-lid GLBs. Three-tier burial rows with occupied/empty shelves, skull groups, urn clusters, slabs and rubble replace sparse isolated perimeter dressing.
+- Added generated soot/mineral/crack/dirt decal atlas, region-instanced for room and passage wear. User explicitly authorized decals; no procedural stain textures were added. GLB web art retained.
+- Burial furniture now blocks simulation/AI navigation and camera rays. Repositioned decorative coffins and archive doors away from route mouths. QA driver uses the shared obstacle-aware pathfinder.
+- 51 TypeScript tests and production build pass. Browser seed 104729 passed extinction, active Hunt, navigated escape and sanctuary in 1:00. Art view observed about 60 FPS / 174 draws on this desktop. See docs/CRYPT_DENSITY.md for prompts, limitations and reproduction.
+- Eight Python asset tests pass. Final atlas-loading review showed no new browser warnings/errors. Screenshot: docs/catalog-assets/dense-crypt-gameplay.png. Runtime set now has 39 GLB roles from 38 neural reconstructions plus generated decals; shared catalog has 223 definitions, most still planned.

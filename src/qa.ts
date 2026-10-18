@@ -1,4 +1,4 @@
-import type { Game, World } from "./simulation";
+import { findPath, type Game, type World } from "./simulation";
 /** Diagnostic route driver; normal gameplay never uses this. */
 export class ExpeditionCheck {
   path: { x: number; z: number }[] = [];
@@ -7,36 +7,12 @@ export class ExpeditionCheck {
   sawHunt = false;
   status = "RUNNING";
   constructor(world: World) {
-    const key = (x: number, z: number) => `${x},${z}`,
-      cells = new Set<string>(world.cells.map((c: any) => key(c.x, c.z))),
-      start = key(world.start.x, world.start.z),
-      end = key(world.exit.x, world.exit.z),
-      queue = [start],
-      prev = new Map<string, string>();
-    prev.set(start, "");
-    for (let i = 0; i < queue.length && !prev.has(end); i++) {
-      const [x, z] = queue[i].split(",").map(Number);
-      for (const [dx, dz] of [
-        [1, 0],
-        [-1, 0],
-        [0, 1],
-        [0, -1],
-      ]) {
-        const n = key(x + dx, z + dz);
-        if (cells.has(n) && !prev.has(n)) {
-          prev.set(n, queue[i]);
-          queue.push(n);
-        }
-      }
-    }
-    if (!prev.has(end)) throw new Error("Destination disconnected");
-    let current = end;
-    while (current) {
-      const [x, z] = current.split(",").map(Number);
-      this.path.push({ x: x * 2, z: z * 2 });
-      current = prev.get(current)!;
-    }
-    this.path.reverse();
+    this.path = findPath(
+      world,
+      { x: world.start.x * 2, z: world.start.z * 2 },
+      { x: world.exit.x * 2, z: world.exit.z * 2 },
+    );
+    if (!this.path.length) throw new Error("Destination disconnected");
   }
   input(game: Game) {
     if (game.phase === "HUNT_ACTIVE") this.sawHunt = true;

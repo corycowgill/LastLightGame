@@ -1,0 +1,26 @@
+{
+  "id": "dre_sarcophagus_lid",
+  "name": "Sarcophagus Lid",
+  "category": "dressing",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 0.25,
+  "scale_axis": "y",
+  "triangle_budget": 12000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": null,
+  "prompt": "Original dark fantasy catacomb game asset. One long low thick stone sarcophagus lid lying flat on the ground, ancient eroded recumbent human figure relief sculpted into its upper surface, chipped limestone corners, long rectangular shape, three quarter view showing top and thickness. No coffin base, no standing statue. Single isolated object, full silhouette with margin, neutral studio illumination, plain light gray background. Realistic aged materials, no text, no scenery, no smoke, no fire.",
+  "seed": 1797812585,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ],
+  "runtime_texture_size": 1024
+}
