@@ -30,6 +30,11 @@ export const CONFIG = {
   retreatDuration: 2.8,
   burstCost: 45,
   burstCooldown: 18,
+  staminaRecoveryDelay: 0.65,
+  staminaRecovery: 0.2,
+  sprintDrain: 0.13,
+  relightMovement: 0.35,
+  crouchSight: 0.55,
 };
 export const UPGRADES = {
   compass: {
@@ -218,6 +223,7 @@ export class Game {
   private vx = 0;
   private vz = 0;
   private exhausted = false;
+  private staminaDelay = 0;
   private director = 25;
   private messageTime = 0;
   private retreatTime = 0;
@@ -266,6 +272,8 @@ export class Game {
     this.cooldown = 0;
     this.vx = this.vz = 0;
     this.exhausted = false;
+    this.staminaDelay = 0;
+    this.noise = this.noiseTimer = 0;
     this.director = 25;
     this.say("Seek the far golden fire. E to gather supplies.");
     const centers = this.world.cells.filter(
@@ -309,6 +317,9 @@ export class Game {
       (1 - 0.08 * this.upgrades.wick) *
       (1 + this.depth * 0.3)
     );
+  }
+  get movementSpeed() {
+    return Math.hypot(this.vx, this.vz);
   }
   get depth() {
     let closest = 0;
@@ -362,7 +373,8 @@ export class Game {
       this.noise = 15;
       this.noiseTimer = 2;
       this.enemies.forEach((e) => {
-        if (dist(e, this.player) < 9) e.state = "REPELLED";
+        if (dist(e, this.player) < 9 && lineOfSight(this.world, this.player, e))
+          e.state = "REPELLED";
       });
     }
   }
@@ -440,10 +452,23 @@ export class Game {
       this.player.yaw = input.yaw - Math.atan2(input.strafe, input.forward);
     if (this.player.stamina < 0.01) this.exhausted = true;
     if (this.player.stamina > 0.25) this.exhausted = false;
-    const sprint = input.sprint && !this.exhausted && !input.crouch;
+    const relighting = this.phase === "RELIGHTING";
+    const sprint =
+      input.sprint && !this.exhausted && !input.crouch && !relighting;
+    if (sprint && moving) this.staminaDelay = CONFIG.staminaRecoveryDelay;
+    else this.staminaDelay = Math.max(0, this.staminaDelay - dt);
     this.player.stamina = Math.max(
       0,
-      Math.min(1, this.player.stamina + dt * (sprint && moving ? -0.13 : 0.13)),
+      Math.min(
+        1,
+        this.player.stamina +
+          dt *
+            (sprint && moving
+              ? -CONFIG.sprintDrain
+              : this.staminaDelay <= 0
+                ? CONFIG.staminaRecovery
+                : 0),
+      ),
     );
     const speed = input.crouch
       ? CONFIG.crouch
@@ -454,12 +479,14 @@ export class Game {
     const wantX =
         ((-Math.sin(input.yaw) * input.forward +
           Math.cos(input.yaw) * input.strafe) *
-          speed) /
+          speed *
+          (relighting ? CONFIG.relightMovement : 1)) /
         length,
       wantZ =
         ((-Math.cos(input.yaw) * input.forward -
           Math.sin(input.yaw) * input.strafe) *
-          speed) /
+          speed *
+          (relighting ? CONFIG.relightMovement : 1)) /
         length;
     this.vx += (wantX - this.vx) * Math.min(1, dt * 18);
     this.vz += (wantZ - this.vz) * Math.min(1, dt * 18);
@@ -629,7 +656,10 @@ export class Game {
     }
     const d = dist(this.hunter, this.player),
       seen =
-        d < CONFIG.sight * (1 + this.depth * 0.15) &&
+        d <
+          CONFIG.sight *
+            (1 + this.depth * 0.15) *
+            (this.player.crouched ? CONFIG.crouchSight : 1) &&
         lineOfSight(this.world, this.hunter, this.player);
     const heard =
       d < this.noise &&

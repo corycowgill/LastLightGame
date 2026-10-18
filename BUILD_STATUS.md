@@ -232,3 +232,21 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Deeper chambers raise fuel burn up to 30%, Hunter sight/memory/chase speed, and Stalker pressure. Player sprint remains faster than chase. HUD/guide/journal communicate fuel pressure and counterplay.
 - 55 TypeScript tests, eight Python asset tests and production build pass. Actual browser retreat check visibly reached FLEEING then BANISHED. See docs/HUNTER_BALANCE.md for exact values, reproduction and limits.
 - Browser seed 104729 full expedition check passed extinction, active Hunt, navigated escape and sanctuary in 1:00 with the new difficulty curve. No warnings/errors observed in retreat test. Screenshots: docs/catalog-assets/hunter-retreat-gameplay.png and hunter-flee-review.png.
+
+## Stealth and escape balance — 2026-10-18
+
+- Sprint recovery waits 0.65 seconds after exertion, then restores 20% stamina per second; sprint drain remains 13% per second. Initial harsher settings failed the no-match escape and were rejected.
+- Relighting limits movement to 35% of walking speed and disables sprint for its existing two-second interaction. Matches and reserve fuel remain unchanged.
+- Crouching reduces Hunter visual range to 55%; close detection, noise investigation, and last-known-position memory remain active. This is stealth, not invisibility.
+- Flame Burst requires line of sight to repel a creature. Stone walls now block the effect. Reset clears exertion and transient noise.
+- Field guide describes the counterplay. Four new regressions cover stamina recovery, exposed relighting, crouched detection and burst occlusion/cooldown. All 59 TypeScript tests and production build pass, including the existing no-match navigated escape.
+- Current work does not replace character rigging; Mesh2Motion remains pending the browser file-upload setting described in docs/MESH2MOTION_STATUS.md.
+- Production browser seed 104729 completed extinction, active Hunt, no-match navigated escape and sanctuary recovery in 1:00. No warning/error logs observed. Screenshot: docs/balance-escape-v2.png. This scripted check does not replace human difficulty playtesting or physical controller/iPhone testing.
+
+## Runtime animation continuity — 2026-10-18
+
+- Character facing now follows the shortest angular arc with frame-rate-independent smoothing instead of instantly snapping on direction changes.
+- Locomotion uses simulation velocity rather than render-frame displacement, avoiding fixed-step aliasing and false sprinting after a teleport. Separate gait enter/exit thresholds suppress idle/walk and walk/sprint flicker.
+- Interrupted transitions fade out all other running clips from their actual weight. Extinguish/fear/quick-turn use one-shot playback rather than looping. These changes improve playback of the existing authored clips; they do not claim a new rig or new motion source.
+- Mesh2Motion upload retried in Chrome; chooser opened but file assignment explicitly failed because the ChatGPT extension lacks Allow access to file URLs. No Mesh2Motion artifact was exported or promoted. Original prepared GLBs remain ready.
+- 61 TypeScript tests and production build pass. Documentation now covers prompts, generation pipelines, reproduction boundaries and rejected experiments. Title background and earlier balance pass included in this release.

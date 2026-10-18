@@ -1,5 +1,5 @@
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { AnimatedCharacter, movementClip } from "./character";
+import { AnimatedCharacter, movementClip, smoothFacing } from "./character";
 import { CatalogAssets } from "./catalog-assets";
 import { dressDungeon } from "./dungeon-dressing";
 import { burialBlocks } from "./crypt-layout";
@@ -824,13 +824,18 @@ export class GameScene {
     const previous = this.player.position.clone();
     this.player.position.set(game.player.x, 0, game.player.z);
     const moving = previous.distanceTo(this.player.position) > 0.001;
-    this.player.rotation.y = game.player.yaw || 0;
+    this.player.rotation.y = smoothFacing(
+      this.player.rotation.y,
+      game.player.yaw || 0,
+      dt,
+    );
     this.player.scale.y = this.actor?.ready
       ? 1
       : game.player.crouched
         ? 0.72
         : 1;
-    const speed = dt > 0 ? previous.distanceTo(this.player.position) / dt : 0;
+    // Simulation velocity avoids render-frame aliasing and teleport-driven sprinting.
+    const speed = game.movementSpeed;
     this.locomotionSpeed = THREE.MathUtils.damp(
       this.locomotionSpeed,
       speed,
@@ -866,7 +871,11 @@ export class GameScene {
             ? "extinguish"
             : this.gestureTime > 0
               ? this.gesture
-              : movementClip(game.player.crouched, this.locomotionSpeed),
+              : movementClip(
+                  game.player.crouched,
+                  this.locomotionSpeed,
+                  this.actor?.clip,
+                ),
       dt,
       this.locomotionSpeed,
     );

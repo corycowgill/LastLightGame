@@ -218,6 +218,12 @@ small {
   );
   overflow: auto;
 }
+#overlay[data-backdrop="title"] {
+  background:
+    linear-gradient(90deg, #05091075 0%, #070c1230 42%, transparent 75%),
+    url("/art/title-background-v1.png") center center / cover no-repeat,
+    #070c12;
+}
 #overlay[hidden],
 #hud[hidden] {
   display: none;

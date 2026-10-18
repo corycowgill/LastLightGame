@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { movementClip } from "./character";
+import { movementClip, smoothFacing } from "./character";
 import { readFile } from "node:fs/promises";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -11,6 +11,28 @@ test("character locomotion selects idle, walk, sprint and crouch without false s
   assert.equal(movementClip(false, 5.5), "sprint");
   assert.equal(movementClip(true, 0), "crouch_idle");
   assert.equal(movementClip(true, 1.5), "crouch_walk");
+});
+
+test("locomotion hysteresis resists speed jitter and still stops at rest", () => {
+  assert.equal(movementClip(false, 4.1, "walk"), "walk");
+  assert.equal(movementClip(false, 4.1, "sprint"), "sprint");
+  assert.equal(movementClip(false, 3.6, "sprint"), "walk");
+  assert.equal(movementClip(true, 0.12, "crouch_idle"), "crouch_idle");
+  assert.equal(movementClip(true, 0.12, "crouch_walk"), "crouch_walk");
+  assert.equal(movementClip(true, 0, "crouch_walk"), "crouch_idle");
+});
+
+test("facing turns smoothly across angle wrap and is frame-rate independent", () => {
+  const start = Math.PI - 0.1,
+    target = -Math.PI + 0.1;
+  const next = smoothFacing(start, target, 1 / 60);
+  assert.ok(next > start && next < start + 0.2, "short turn across +/- pi");
+  let a = 0,
+    b = 0;
+  for (let i = 0; i < 60; i++) a = smoothFacing(a, 2, 1 / 60);
+  for (let i = 0; i < 120; i++) b = smoothFacing(b, 2, 1 / 120);
+  assert.ok(Math.abs(a - b) < 1e-6);
+  assert.ok(Math.abs(a - 2) < 0.001);
 });
 
 test("shipped GLBs load with bound skeletons, required clips and an animated hand socket", async () => {

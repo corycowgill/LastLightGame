@@ -1,125 +1,131 @@
 # The Last Light
 
-A browser survival horror expedition built with TypeScript, Three.js, Vite, and a hybrid generated/procedural Web Audio soundscape. Runtime meshes use catalog-derived neural GLBs, with procedural level assembly and effects. No backend or API keys.
+**When the flame dies, the hunt begins.** A browser survival horror expedition built with TypeScript, Three.js and Vite. Explore ancient catacombs, manage a fragile torch, collect relics and escape to sanctuary. Extinction starts a survivable Hunt rather than an arbitrary death countdown.
 
-## Run
+This repository documents the development process as well as the game: prompts, generated asset provenance, rejected experiments, animation tools, deterministic tests and actual browser checks. The shipped game runs on static hosting without inference services, API keys or a backend.
 
-Node.js 22+ recommended.
+![Title-screen artwork](public/art/title-background-v1.png)
+
+## Play and build locally
+
+Node.js 22+ recommended. Install dependencies, then choose a command:
 
 ```sh
-
 npm ci
-
 npm run dev
-
-npm test
-
-npm run build
-
-npm run preview
-
 ```
 
-Open the URL printed by Vite. Click Begin Expedition. Hold either mouse button and drag over the game to look around, or use the arrow keys. Scroll to zoom. The optional Capture Mouse button enables free mouse look when supported; embedded browsers can always use dragging. Escape pauses. Keyboard/mouse, standard Xbox controllers, and iPhone touch controls are supported. WebGL2 is required. Audio begins after a click or tap; a Tap for sound button appears when browser audio remains suspended.
+```sh
+npm test
+npm run build
+npm run preview
+```
 
-## Controls
+Open the URL printed by Vite. WebGL2 is required. Audio starts after a click or tap. `npm run build` creates `dist/`; the included [render.yaml](render.yaml) configures a Render static site with `npm ci && npm run build` and publish directory `dist`. Python, Blender, Hugging Face and ComfyUI are asset-authoring tools, not requirements to play or build the shipped game. Optional Google Fonts have system fallbacks.
 
-WASD move relative to the view, drag mouse or arrow keys to look horizontally and vertically, wheel to zoom, Shift sprint, C/Ctrl crouch, E interact or relight, Q chalk, F flame burst, 1/2/3 torch modes, Tab journal, Escape pause. Settings include look sensitivity, volume, visual sound cues, graphics quality, and an optional touch-controls toggle.
+## Controls and survival
 
-### Xbox controller
+| Device                | Controls                                                                                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Keyboard/mouse        | WASD move; drag either mouse button or arrows to look; wheel zoom; Shift sprint; C/Ctrl crouch; E interact/relight; Q chalk; F burst; 1/2/3 flame mode; Tab journal; Esc pause |
+| Xbox standard mapping | LS move; RS look; RT/LS click sprint; B toggle crouch or hold LT; A use; X burst; Y chalk; LB/RB flame mode; D-pad up/down zoom; RS click recenter; View journal; Menu pause   |
+| Touch                 | Left joystick move; drag open view to look; hold RUN; toggle CROUCH; USE/BURST/CHALK/JOURNAL buttons; flame and zoom buttons                                                   |
 
-Connect the controller, open the game, and press a controller button to activate it.
+Optional Capture Mouse enables free look when supported; dragging remains available when pointer lock is rejected. Controller menus support stick/D-pad navigation, A select, B back, and left/right adjustment. Touch supports simultaneous movement, looking and sprinting, safe-area padding, portrait/landscape layouts and a scrollable menu. Preview touch layout with `?touch`. Settings include sensitivity, sound, visual audio cues and graphics quality.
 
-| Input | Action |
+For an iPhone, use the deployed HTTPS site. PC localhost is not reachable from the phone. For same-Wi-Fi development, explicitly run `npm run dev:lan` and use the PC LAN address on port 5173; controller APIs may require HTTPS. Physical Xbox/iPhone validation remains pending; automated input tests are not a substitute.
 
-| --- | --- |
+- Ember conserves fuel, Steady supports exploration, and Blaze spends fuel quickly for stronger light. Deeper rooms increase fuel pressure.
+- A full basic torch holds 720 Steady fuel-seconds before depth modifiers. Extinction gives an eight-second grace period, followed by an active searching Hunter.
+- Relighting consumes a match, takes two seconds before upgrades, restores reserve fuel, slows movement and prevents sprinting. Find cover first.
+- Crouching quiets footsteps and reduces Hunter visual range; close detection and remembered positions still matter. Corners break line of sight.
+- Sprint stamina recovers after a brief rest. Flame Burst costs fuel and cannot repel creatures through masonry.
+- Relit torchlight makes the Hunter flee along navigable paths before banishment. Sanctuary fire provides safety. Stalkers threaten a weak flame; brighten it or retreat.
+- Bank carried relics at the destination sanctuary. Death loses carried relics; browser-local permanent upgrades survive. Saves belong to the browser and origin.
 
-| Left stick / right stick | Move / orbit camera |
+At sanctuary, buy Reservoir (+90 fuel-seconds, one relic, five ranks), Efficient Wick (8% less burn/rank), Soft Boots (12% quieter footsteps/rank), Quick Spark (0.25 seconds faster relighting/rank), or Sanctuary Compass. The latter costs three relics and provides a bearing, not a route through walls; the other three upgrades cost two relics/rank, up to three ranks.
 
-| RT or left-stick click | Sprint |
+## How we are building it
 
-| B / hold LT | Toggle crouch / crouch |
+The project began with a full game specification, then prioritized an integrated Catacombs slice: controller/camera, torch, Hunt, expedition, persistence, generated art, audio and balancing. Each pass changes a small coherent system, adds meaningful regressions, builds the production bundle and exercises gameplay. [BUILD_STATUS.md](BUILD_STATUS.md) records outcomes and remaining work.
 
-| A / X / Y | Interact or relight / flame burst / chalk |
+Our practical loop is **specify → implement → generate/review assets → integrate → test → play → revise**. Compilation alone is not acceptance. For example, an initially harsher stamina recovery change caused the existing no-match escape scenario to fail; it was retuned before keeping it. We also rejected fragmented floor reconstructions, kept their provenance, and used an explicitly documented derivative of an accepted neural wall mesh instead.
 
-| LB / RB | Previous / next flame mode |
+[Build prompts and contributor workflow](docs/BUILD_WORKFLOW.md) contains a reusable condensed development brief and the review checklist. This is a reusable summary of the original specification, not a claim to preserve every conversational prompt verbatim.
 
-| D-pad up / down | Zoom in / out |
+### Architecture
 
-| Right-stick click | Recenter camera |
+| Module                                                                  | Responsibility                                                                                                  |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `src/simulation.ts`                                                     | Seeded rooms, shared collision/navigation, torch/Hunt/perception, stamina, expedition, upgrades and persistence |
+| `src/main.ts`                                                           | 60 Hz fixed-step accumulator, input integration, HUD, menus and progression screens                             |
+| `src/scene.ts`, `src/character.ts`                                      | Three.js rendering, camera collision, particles, skeletal animation and torch socket                            |
+| `src/catalog-assets.ts`                                                 | Shared generated GLB loading, cloning, instancing and disposal                                                  |
+| `src/crypt-layout.ts`, `src/dungeon-dressing.ts`, `src/crypt-decals.ts` | Burial furniture, shared blockers, seeded dressing and wear decals                                              |
+| `src/controls.ts`, `src/platform-input.ts`                              | Camera controls, gamepad mapping, touch pointers and menu input                                                 |
+| `src/audio.ts`, `src/soundscape.ts`                                     | Generated/synthesized audio, positional cues and state-based mixing                                             |
+| `src/qa.ts`, `src/*.test.ts`                                            | Navigated expedition driver and deterministic regression tests                                                  |
 
-| View / Menu | Journal / pause |
+Grid cells represent two metres. Simulation light/perception does not depend on graphical quality. Rendering does not own character collision or AI decisions. Procedural room placement assembles assets; it does not replace generated art with procedural prop meshes.
 
-Menus support stick or D-pad navigation, A to select, B to return, and left/right to adjust settings. Prompts switch with the active input device. Disconnecting a controller releases its movement.
+## Art prompts and the image-to-GLB pipeline
 
-### iPhone touch
+The palette and silhouettes come from the [art bible](docs/art-direction/ART_BIBLE.md) and [concept board](docs/art-direction/concept-board.png): ochre cloak and satchel, elongated ragged Hunter, cold masonry, warm flame, oppressive burial architecture.
 
-Touch controls appear automatically on touch devices. Use the left joystick to move and drag the open game view to orbit the camera. RUN is held; CROUCH toggles. Action buttons provide interaction, burst, chalk and journal; the bottom buttons select flame modes and zoom. Movement, camera dragging and sprint can run simultaneously.
+The runtime catalog currently contains **39 GLB roles from 38 accepted neural reconstructions**, including generated characters, architecture, props, skeletal remains, webs and burial details. Hollow/Moth are expansion previews, not implemented enemy behaviors. See [catalog pipeline and provenance](docs/CATALOG_ASSETS.md), [dungeon dressing](docs/DUNGEON_ATMOSPHERE.md), and [dense crypts and decals](docs/CRYPT_DENSITY.md).
 
-Portrait and landscape layouts include safe-area padding, compact HUD, scrollable menus, and larger touch targets. Portrait uses a wider camera field of view. Low graphics is the default on coarse-pointer devices. Preview the layout on desktop with `?touch`.
+1. **Catalog and reference.** Define a stable asset ID, prompt, dimensions, triangle budget and reference image. Reference batches used the existing local ComfyUI SDXL/Juggernaut workflow. Inspect silhouette, material and reconstruction suitability before continuing.
+2. **Neural reconstruction.** Use the shared asset library's serial queue. Accepted sources used TRELLIS.2-4B through the Hugging Face demo, with the brazier using the installed local ComfyUI TRELLIS workflow. This was not full local TRELLIS inference on the 8 GB development GPU.
+3. **Finish.** Preserve the original source; use Blender for scale, ground pivot, budget reduction and LOD inspection. Reject unusable results rather than disguising them as finished art.
+4. **Import.** Pack embedded textures, record hashes/reference/model/seed/provider provenance, and install the GLB plus its catalog manifest. Most textures use 512px; detailed dressing uses up to 1024px. Actual settings are recorded per asset.
+5. **Integrate and inspect.** View `/asset-review.html`, then review scale, visibility, collision, dressing density and performance in real gameplay. Generated drafts are not automatically approved production art.
 
-For an iPhone, open the deployed HTTPS site. The PC localhost address will not work on the phone. For same-Wi-Fi development only, manually run `npm run dev:lan`, then open the PC LAN address on port 5173; touch works there, while controller APIs may require HTTPS. No LAN server is started automatically.
+The original shared library is **outside this repository**, at `C:/Users/coryc/Documents/Codex/2026-10-17/cre/outputs/last-light-asset-library`. Its `scripts/assetlib.py`, full catalog, raw jobs and authoring environments are not supplied by a clone of this repo. Runtime GLBs and per-import provenance are included in `public/models/catalog/` and `docs/catalog-assets/`. Repository finishing scripts currently contain development-machine Blender paths; adapt them to your installation.
 
-Automated controller snapshots and independent touch pointers are tested; physical Xbox controller and iPhone Safari validation remains pending. Responsive browser screenshots: [portrait](docs/iphone-portrait-controls.png) and [landscape](docs/iphone-landscape-controls.png).
+With that external library and its dependencies available, first read its instructions, run `status` and `doctor`, and resolve uncertain jobs. Use one serial worker on the shared GPU. From the game repository, completed candidates can be finished/imported with:
 
-Reach the far golden sanctuary with artifacts to bank discoveries. Fuel depletion starts the Hunt; it does not kill you. Use a match to relight, break sight and quiet your footsteps, or reach sanctuary. Death loses carried artifacts. Progress saves to this browser and origin.
+```sh
+python tools/assets/finish_catalog.py LIBRARY_ROOT ASSET_ID
+python tools/assets/import_catalog.py LIBRARY_ROOT ASSET_ID
+```
 
-## Sanctuary equipment
+Do not run import commands against unfinished or rejected jobs. [The catalog guide](docs/CATALOG_ASSETS.md) explains binding, promotion and the paving derivative. Model weights and authoring caches remain ignored in `.asset-tools/`.
 
-Bank relics at the destination fire, then spend them before descending again. Reservoir ranks cost one relic and add 90 fuel seconds (five ranks). Efficient Wick, Soft Boots and Quick Spark each cost two relics per rank, up to three ranks: 8% less fuel burn, 12% less footstep noise, or 0.25 seconds faster relighting per rank. Bursts and noisy interactions retain their cost/noise. Upgrades persist through death, refresh and new expeditions. Unaffordable or mastered upgrades are disabled. The Sanctuary Compass is a single purchase for three relics. Its golden needle and directional text point toward the destination fire relative to your camera, including during a Hunt. This is a bearing, not a route through walls; use chalk and landmarks to find passages.
+### Where the exact prompts live
 
-## Architecture
+| Material                  | Reproducible record                                                                                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Imported 3D assets        | Per-asset `definition.json`, `generation.json` and `preparation.json` under [docs/catalog-assets](docs/catalog-assets/), plus runtime manifests                   |
+| Soundtrack and effects    | [audio-prompts.json](tools/assets/audio-prompts.json): exact prompts, durations and seeds; [audio manifest](public/audio/manifest.json): actual output provenance |
+| Planned motion generation | [motions.json](tools/assets/motions.json); these prompts are not evidence that generated motions shipped                                                          |
+| Title-screen background   | [full imagegen prompt](docs/TITLE_BACKGROUND.md) and [PNG](public/art/title-background-v1.png); no lettering or menu was baked into the art                       |
+| Crypt wear decal atlas    | [full prompt and integration notes](docs/CRYPT_DENSITY.md)                                                                                                        |
 
-- `src/simulation.ts`: seeded walkable world, fixed-step gameplay, collision, pathfinding, perception, torch and Hunt state machines, expedition and save state. No rendering dependencies.
+Prompting lesson: specify the intended use, silhouette, material, pose, scale and exclusions, then inspect the result in context. A pleasing reference image does not guarantee usable 3D geometry or deformation.
 
-- `src/scene.ts`: original dungeon geometry, character and creature models, lighting, particles, camera collision, and Three.js lifecycle.
+### Rigging and animation: actual status
 
-- `src/audio.ts`: synthesized atmospheric and gameplay audio.
+Current Torchbearer/Hunter/Stalker meshes are neural outputs, automatically bound to existing skeleton donors with authored baked motion. The player pass corrected lower-leg weights and fitted locomotion/torch carry; the Hunter pass added navigated fleeing and new state clips. [Player animation notes](docs/CHARACTER_ANIMATION.md) and [Hunter notes](docs/HUNTER_BALANCE.md) explain the implementation and limitations.
 
-- `src/controls.ts`: pointer-lock-independent drag look, optional mouse capture, arrow-key look, zoom and input cleanup.
+`build_characters.py` creates legacy donors; `bind_generated_character.py`, `player_motion.py`, `hunter_motion.py` and `promote_character.py` bind, bake and promote generated characters. This is **not** a successful NVIDIA-generated animation pipeline. Kimodo export stalled; no verified output was integrated. Mesh2Motion replacement was requested and prepared but remains pending browser file-upload access: [handoff](docs/MESH2MOTION_STATUS.md). [Earlier model research](docs/AI_ASSET_PIPELINE.md) is historical, not the current shipped mesh source.
 
-- `src/platform-input.ts`: standard gamepad mapping, menu navigation, analog movement and independent touch pointers.
+## Soundtrack and effects pipeline
 
-- `src/platform-input.test.ts`: controller edges, disconnects, menus and simultaneous movement/look/sprint regressions.
+Nine generated clips ship alongside synthesized gameplay audio. Music used ACE-Step-v1-3.5B and effects used MOSS-SoundEffect-v2.0 through their official Hugging Face demos. These were hosted generations, not local audio-model inference. Model/provider links, limitations and license records are in [AUDIO.md](docs/AUDIO.md).
 
-- `src/controls.test.ts`: camera input regressions, including rejected capture and paused input.
+The exploration prompt begins: “Instrumental dark ambient survival horror soundtrack in D minor, very sparse bowed low strings, distant resonant stone chamber…” Constraints exclude vocals, drums, jump scares and ambient footsteps, preserving real enemy footsteps as useful signals. The Hunt bed stays restrained so positional threats remain audible; sanctuary offers fragile relief. Exact full prompts and seeds are in the linked JSON.
 
-- `src/main.ts`: input, fixed-step accumulator, menus, HUD and integration.
+`generate_audio.py` records provider responses and raw sources in ignored `.asset-tools/audio/raw`; `master_audio.py` removes DC/rumble, conditions loop boundaries, bounds peaks and encodes MP3 using FFmpeg. These authoring scripts need Python dependencies, HF authentication and provider availability. A fresh clone cannot remaster without raw sources. Runtime crossfades by game state, caps one-shots and retains synthesized fallbacks. Listen at `/audio/listen.html`.
 
-- `src/simulation.test.ts`: deterministic rules and scenario regression tests.
+Licensing notes record the models used at generation time; inspect the per-asset records and applicable terms before redistribution. No AI model weights are bundled.
 
-The simulation advances at 60 Hz. World grid cells represent two metres. Gameplay light and perception use simulation values independently of renderer settings. Room generation and AI navigation share the same walkable graph.
+## Verification and learning checkpoints
 
-## Deployment
+- `npm test`: currently 61 tests covering collision, camera, fuel, extinction, navigation, sight/sound, sanctuary, saves, upgrades, inputs, catalog integrity and balance.
+- Python asset checks: `python -m unittest discover -s tools/assets -p "test_*.py"` (requires authoring dependencies).
+- `/?debug&seed=104729`: reproducible world and developer menu. H forces Hunt, R refills, T teleports to destination. **RUN EXPEDITION CHECK** physically follows navigation through extinction, active Hunt, escape and banking; it is not a human pacing test.
+- **CHECK HUNTER RETREAT** exercises relighting and fleeing. `/?debug&seed=104729&dressing` opens a repeatable dressing review position.
+- Latest balance browser run completed the no-match escape in 1:00, with no warning/error logs observed. This accelerated route does not establish the intended 10–20 minute human expedition length.
+- [v1 video](docs/demos/README.md), [title screen](docs/title-screen-v1.png), [latest escape](docs/balance-escape-v2.png), and [build log](BUILD_STATUS.md) show checkpoints, not promises of final quality.
 
-`npm run build` creates `dist/`. Serve this directory from any static host. The included `render.yaml` configures a Render static site with `npm ci && npm run build`. The game does not require server routes. Optional Google Fonts have system font fallbacks.
-
-## Developer mode
-
-Append `?debug` to the URL. H forces extinction/Hunt, R refills fuel, T teleports to the destination sanctuary. Use `?debug&seed=104729` for a reproducible seed. The header shows frame rate, AI state and draw calls. The developer menu has an accelerated physical route check for extinction, Hunt activation, escape and artifact banking. Developer controls are for verification and do not represent normal expedition progression.
-
-## Scope
-
-This is the playable Catacombs checkpoint toward the complete vertical slice. The intended 10–20 minute pacing, visual acceptance and hardware performance still need review. Additional biomes, advanced progression branches, region streaming and a full developer visualization suite are future work. See BUILD_STATUS.md for verification and known limitations. Do not treat a successful build alone as playtest acceptance.
-
-## Current-state demo
-
-[Watch the v1 gameplay demo](docs/demos/README.md) — 71 seconds with original game audio, demonstrating torch modes, the Hunt, relighting, and sanctuary banking.
-
-## Generated character assets
-
-See [the Hugging Face / Blender asset pipeline](docs/AI_ASSET_PIPELINE.md) for the local hardware audit, selected mesh/rig/motion models, exact clip requirements and current encoder-access blocker. Downloaded AI weights remain ignored in `.asset-tools/`; the game now includes original Blender-authored skinned Torchbearer and Hunter characters based on the recovered design references. These are not neural model outputs.
-
-## Recovered art direction
-
-The art bible and concept board from **Create stylized game art design** are preserved in `docs/art-direction/`; character references are in `art-source/`. The current implementation follows the ochre hood, satchel, charcoal clothing, ragged Hunter silhouette, cold masonry and warm fire palette. It is an initial low-poly interpretation, not a claim of matching the concept image fidelity.
-
-`tools/assets/build_characters.py` rebuilds both skinned GLBs with installed Blender. Torchbearer has 14 named authored clips; Hunter has five. Runtime blends locomotion/crouch, interaction, relight, burst, death and Hunter states, and attaches torch hardware/fire to a hand socket. Simulation retains ownership of movement and collision. `public/models/manifest.json` records triangle counts, hashes, axes, provenance and clip names. Neural reconstruction, polished motion retargeting and Stalker replacement remain future asset work.
-
-## Generated soundtrack and effects
-
-Nine creepy atmospheric clips are included. Listen at `/audio/listen.html`; see [audio provenance and reproduction](docs/AUDIO.md). Settings include an independent soundtrack level.
-
-## Catalog-generated 3D art
-
-Open `/asset-review.html` to inspect the 24 runtime GLB roles. See [catalog sources, neural pipeline, verification and remaining work](docs/CATALOG_ASSETS.md). Active characters and visible dungeon/prop replacements use generated meshes; existing authored motion clips are retained through automatic binding.
+This is a playable Catacombs checkpoint. Intended session pacing, physical device testing, sustained performance, final art/deformation acceptance, Mesh2Motion replacement, additional biomes and expansion enemy behavior remain work in progress. The production build still reports a large Three.js chunk warning. Keep experimental failures and pending work visible so others can learn what actually worked.

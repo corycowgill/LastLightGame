@@ -1,16 +1,28 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-export function movementClip(crouched: boolean, speed: number) {
+export function movementClip(crouched: boolean, speed: number, previous = "") {
+  // Separate enter/exit thresholds prevent gait flicker during acceleration.
+  const moving =
+    speed > (["walk", "sprint", "crouch_walk"].includes(previous) ? 0.08 : 0.2);
+  const sprinting = speed > (previous === "sprint" ? 3.7 : 4.3);
   return crouched
-    ? speed > 0.15
+    ? moving
       ? "crouch_walk"
       : "crouch_idle"
-    : speed > 4
+    : sprinting
       ? "sprint"
-      : speed > 0.15
+      : moving
         ? "walk"
         : "idle";
+}
+
+export function smoothFacing(current: number, target: number, dt: number) {
+  const delta = Math.atan2(
+    Math.sin(target - current),
+    Math.cos(target - current),
+  );
+  return current + delta * (1 - Math.exp(-14 * Math.max(0, Math.min(dt, 0.1))));
 }
 
 /** One owned GLB/mixer; late loads are disposed if an expedition was replaced. */
@@ -65,7 +77,7 @@ export class AnimatedCharacter {
         previous &&
         locomotion.includes(this.current) &&
         locomotion.includes(name)
-          ? previous.time / previous.getClip().duration
+          ? (previous.time / previous.getClip().duration) % 1
           : 0;
       action
         .reset()
@@ -93,6 +105,9 @@ export class AnimatedCharacter {
         "chalk",
         "refill",
         "recoil",
+        "extinguish",
+        "fear",
+        "quick_turn",
       ].includes(name);
       action.setLoop(
         once ? THREE.LoopOnce : THREE.LoopRepeat,
@@ -101,7 +116,16 @@ export class AnimatedCharacter {
       action.clampWhenFinished = once;
       action.play();
       action.time = phase * action.getClip().duration;
-      if (previous) previous.crossFadeTo(action, 0.18, false);
+      // Cancel stale fades when a transition is interrupted (walk→sprint→crouch).
+      // Otherwise an older action can regain weight and pull limbs toward its pose.
+      for (const other of this.actions.values()) {
+        if (other === action) continue;
+        if (other.isRunning()) {
+          const weight = other.getEffectiveWeight();
+          other.stopFading().setEffectiveWeight(weight).fadeOut(0.18);
+        }
+      }
+      if (previous) action.fadeIn(0.18);
       this.current = name;
     }
     if (this.playerMotion && action && speed !== undefined) {

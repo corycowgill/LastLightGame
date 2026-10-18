@@ -23,3 +23,9 @@ Character tests sample idle, walk, sprint, crouch and relight clips. They reject
 The actual Three.js viewer was used to inspect idle, walk, sprint and crouch. The game expedition test exercises locomotion, extinction, active Hunt and sanctuary recovery. Review the current clips at `/asset-review.html` by choosing Torchbearer and an animation.
 
 The source still has reconstruction artifacts and no articulated fingers or cloth simulation. Feet are targeted to the flat dungeon floor; terrain-aware runtime foot IK and final hand/finger contact polish remain future work. This is an animation improvement, not a claim of final film-quality deformation.
+
+## Playback continuity follow-up
+
+Runtime facing uses a shortest-arc damped turn. Locomotion selection has hysteresis and uses simulation velocity, avoiding idle frames from rendering faster than the simulation. Interrupted transitions fade out all running donor actions from their effective weights; extinguish/fear/quick-turn are one-shot actions. Two regressions cover gait jitter and frame-rate-independent turning.
+
+This improves playback of the existing bound mesh and authored motion. It is not the pending Mesh2Motion rig replacement. Chrome's file chooser opened on the follow-up attempt, but file assignment explicitly failed with the extension file-URL access requirement. No new rig was promoted.
