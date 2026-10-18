@@ -258,3 +258,11 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Replaced player skeleton, skin weights and base motion with actual site output. Preserved original bundled GLB and hash/settings. Added reproducible bone/clip aliases, root/facing/ground corrections, loop closure and site-derived torch arm carry. No new procedural mesh or NVIDIA motion claim.
 - 61 TypeScript tests, eight Python asset tests and production build pass. Walk/crouch reviewed in Three.js. Motion remains a draft: generated cloak/hands and some sliding/intersection need further polish. Hunter/Stalker re-rigging remains outstanding.
 - Added source-hash/site-skin/clip-provenance/in-place-root regression: 62 TypeScript tests now pass. Production browser seed 104729 passed extinction, active Hunt, no-match navigated escape and sanctuary in 1:00; no warnings/errors observed. Screenshot: docs/mesh2motion/expedition-check.png.
+
+## Torchbearer weight discontinuities — 2026-10-18
+
+- User review correctly identified remaining bad rigging. Structural weights/socket/bounds checks had missed sharp neighboring weight changes and severe shoulder/waist mesh stretching.
+- Added reproducible adjacency smoothing over welded seam vertices, normalized four-bone influences and lower-leg exclusions. Original neural geometry, Mesh2Motion skeleton and motion retained; raw site export unchanged. Re-grounded death after correction.
+- Sampled >2.5x edge stretches decreased from 20,755 to 230 across idle/walk/sprint/crouch-walk (about 98.9%); peak decreased from ~18x to <4.25x. New deformation regression rejects the prior output. Remaining localized distortion/source holes are documented rather than claimed fixed.
+- Viewer review covered walk, crouch and sprint; screenshot docs/mesh2motion/skin-repair-walk.png. Updated the reproduction pipeline and provenance.
+- Final validation: 63 TypeScript tests, eight Python tests and production build pass. Browser seed 104729 completed extinction, active Hunt, no-match escape and sanctuary in 1:00 without observed warning/error logs; docs/mesh2motion/skin-repair-expedition.png.

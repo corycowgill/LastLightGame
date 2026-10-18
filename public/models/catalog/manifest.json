@@ -258,7 +258,7 @@
       "reference": "references/characters/TORCHBEARER_A_POSE.png",
       "reference_sha256": "851ebc0f2041cddceb1106b09cd198acc23feeb49cb7990c303ef1d49628452d",
       "source_sha256": "dd4834ecc195adb249fa8f4bf1cd392ed1bbde2f842dfbcc35c66f1249843a8c",
-      "sha256": "b6ad787d0e0209cf7c4e2261dc083a7cd07e70a4f12906a70bdf668fcd685016",
+      "sha256": "43ee69b27abc0d9dda09a28c819901595b2ebb1cddcbc69411ab2cd566a3e551",
       "bytes": 2559820,
       "triangles": 16000,
       "finishing": "Blender budget reduction; texture resize to 512; geometry preserved during texture packing",
@@ -273,7 +273,7 @@
       "integration_status": "reviewable_in_game_draft",
       "license": "TRELLIS.2 model MIT; original project reference",
       "license_url": "https://huggingface.co/microsoft/TRELLIS.2-4B",
-      "animation_binding": "Mesh2Motion Human rig and skin weights; site library motion; runtime aliases, in-place root correction and raised right-arm carry pose",
+      "animation_binding": "Mesh2Motion Human skeleton and site motion; adjacency-smoothed site skin weights; root/facing/ground corrections and torch carry",
       "clips": [
         "idle",
         "walk",
@@ -320,7 +320,8 @@
           "Walk_Stealth"
         ],
         "fitting": "Mirrored A-pose arms plus individually fitted pelvis, spine, neck, head and hip joints",
-        "root_corrections": "horizontal root travel removed; fitted standing/crouch height offsets; sampled mesh-floor correction for death"
+        "root_corrections": "horizontal root travel removed; fitted standing/crouch height offsets; sampled mesh-floor correction for death",
+        "skin_correction": "48 mesh-adjacency diffusion passes over welded UV seams, normalized strongest four influences; lower-leg upper-limb exclusion"
       }
     },
     {

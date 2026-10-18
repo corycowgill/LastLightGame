@@ -1,5 +1,5 @@
 {
-  "animation_binding": "Mesh2Motion Human rig and skin weights; site library motion; runtime aliases, in-place root correction and raised right-arm carry pose",
+  "animation_binding": "Mesh2Motion Human skeleton and site motion; adjacency-smoothed site skin weights; root/facing/ground corrections and torch carry",
   "animation_source": {
     "tool": "Mesh2Motion",
     "url": "https://app.mesh2motion.org/create",
@@ -29,6 +29,7 @@
       "Walk_Stealth"
     ],
     "fitting": "Mirrored A-pose arms plus individually fitted pelvis, spine, neck, head and hip joints",
-    "root_corrections": "horizontal root travel removed; fitted standing/crouch height offsets; sampled mesh-floor correction for death"
+    "root_corrections": "horizontal root travel removed; fitted standing/crouch height offsets; sampled mesh-floor correction for death",
+    "skin_correction": "48 mesh-adjacency diffusion passes over welded UV seams, normalized strongest four influences; lower-leg upper-limb exclusion"
   }
 }
