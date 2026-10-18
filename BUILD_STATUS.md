@@ -251,3 +251,10 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Mesh2Motion upload retried in Chrome; chooser opened but file assignment explicitly failed because the ChatGPT extension lacks Allow access to file URLs. No Mesh2Motion artifact was exported or promoted. Original prepared GLBs remain ready.
 - 61 TypeScript tests and production build pass. Documentation now covers prompts, generation pipelines, reproduction boundaries and rejected experiments. Title background and earlier balance pass included in this release.
 - Post-build production browser check also passed extinction, active Hunt, navigated escape and sanctuary in 1:00 after these animation changes; no warning/error logs observed. Evidence: docs/animation-release-check.png. New rig quality remains unverified because Mesh2Motion export is blocked.
+
+## Mesh2Motion Torchbearer — 2026-10-18
+
+- User enabled Chrome file access; original generated Torchbearer successfully uploaded, fitted, bound and exported through Mesh2Motion. First fit rejected after visual review; second export preserves fitted pelvis/spine/neck/head/hips and mirrored A-pose arms.
+- Replaced player skeleton, skin weights and base motion with actual site output. Preserved original bundled GLB and hash/settings. Added reproducible bone/clip aliases, root/facing/ground corrections, loop closure and site-derived torch arm carry. No new procedural mesh or NVIDIA motion claim.
+- 61 TypeScript tests, eight Python asset tests and production build pass. Walk/crouch reviewed in Three.js. Motion remains a draft: generated cloak/hands and some sliding/intersection need further polish. Hunter/Stalker re-rigging remains outstanding.
+- Added source-hash/site-skin/clip-provenance/in-place-root regression: 62 TypeScript tests now pass. Production browser seed 104729 passed extinction, active Hunt, no-match navigated escape and sanctuary in 1:00; no warnings/errors observed. Screenshot: docs/mesh2motion/expedition-check.png.

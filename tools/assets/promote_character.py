@@ -31,6 +31,10 @@ if kind == 'torchbearer':
     entry['animation_binding'] = 'anatomical region weights; fitted foot-targeted gait and stable torch-carry clips baked into GLB'
 if kind == 'hunter':
     entry['animation_binding'] = 'existing neural skin and skeleton; rebuilt authored search, pursuit, flee, capture and banish clips'
+if len(sys.argv) > 3:
+    motion = json.loads(Path(sys.argv[3]).read_text(encoding='utf-8'))
+    entry['animation_binding'] = motion['animation_binding']
+    entry['animation_source'] = motion['animation_source']
 manifest_path.write_text(json.dumps(manifest,indent=2),encoding='utf-8')
 shutil.copy2(destination,root/'public/models'/f'{kind}.glb')
 primary_path = root/'public/models/manifest.json'

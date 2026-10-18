@@ -1,19 +1,33 @@
-# Mesh2Motion rig replacement — in progress
+# Mesh2Motion Torchbearer replacement
 
-Requested source: https://app.mesh2motion.org/create (official project https://mesh2motion.org).
+## Current result — 2026-10-18
 
-Opened in the user's Chrome. The site advertises fresh model rigging, humanoid/creature rigs, bundled GLB animation exports and CC0 animation assets. No new Mesh2Motion rig or animation export has yet been obtained or integrated.
+Chrome file access was enabled by the user. The original neural Torchbearer was uploaded into https://app.mesh2motion.org/create, fitted with its Human skeleton and Single Hand Bone option, bound on the site, and exported with 14 selected library animations. Site revision: `b04ee333b-release`.
 
-Clean original neural geometry, verified with zero skins, is prepared locally:
+The first fit was rejected after visual review: the upper body was misaligned. Pelvis, spine, neck, head and hips were fitted individually without moving their children, with mirrored arms positioned against the generated A-pose. Arm-plane correction was enabled. The second export is preserved at [mesh2motion/torchbearer-site-export.glb](mesh2motion/torchbearer-site-export.glb); its hash and settings are in [torchbearer.json](mesh2motion/torchbearer.json).
 
-- `.asset-tools/mesh2motion/torchbearer-unrigged.glb`
-- `.asset-tools/mesh2motion/hunter-unrigged.glb`
-- `.asset-tools/mesh2motion/stalker-unrigged.glb`
+The game now uses the site's skeleton and skin weights on the original neural mesh. No new body geometry was authored. Runtime adaptation maps bones/clips, removes horizontal root travel, corrects the fitted pelvis height and forward axis, closes loop endpoints and attaches a torch socket. The site's Idle Torch right-arm pose is carried into locomotion. Death root translation is grounded against sampled mesh bounds. Rotations remain site-derived rather than the previous authored gait.
 
-These are exact copies of the prepared library sources, not the current bound runtime models. Runtime assets remain unchanged while the new site output is pending.
+## Reproduce from the preserved export
 
-Chrome upload chooser timed out, then browser control reported an unattached debugger. The browser tool's upload troubleshooting requires enabling Allow access to file URLs on the ChatGPT Chrome extension. User was informed and asked to confirm when enabled. Do not claim the upload or re-rig succeeded.
+From the repository, using its Node dependencies and Python:
 
-Resume the existing Mesh2Motion Create tab in Chrome. Upload Torchbearer first, choose the appropriate human A-pose rig, fit bones visibly, bind, review locomotion and crouch, then export a bundled GLB. Repeat for Hunter and Stalker using the matching human/creature setup. Review feet, shoulders, hands, cloak and torch attachment before promotion. Preserve original site exports and licensing provenance; adapt runtime bone/socket names and clip mappings to actual exports rather than guessing them.
+```sh
+python tools/assets/prepare_mesh2motion.py docs/mesh2motion/torchbearer-site-export.glb .asset-tools/mesh2motion/torchbearer-runtime.glb
+npx tsx tools/assets/ground_mesh2motion.ts .asset-tools/mesh2motion/torchbearer-runtime.glb
+python tools/assets/promote_character.py cha_torchbearer .asset-tools/mesh2motion/torchbearer-runtime.glb docs/mesh2motion/torchbearer.json
+npm test
+npm run build
+```
 
-Validate export packaging, scale, clip availability, sampled deformations, torch attachment and gameplay before replacing aliases. Existing runtime clips were authored and baked in Blender; no NVIDIA motion export was previously verified. This task is specifically replacing those with reviewed Mesh2Motion output.
+The preparation offsets are fitted to this exact export, not a generic converter for arbitrary models. Original site clips are retained in the source GLB. Runtime aliases are listed in the preparation script. Relight uses Interact; chalk/refill use PickUp Table; burst uses Spell Simple Shoot. These mappings are practical fallbacks, not bespoke motion capture for every interaction.
+
+## Validation and limits
+
+62 TypeScript tests, eight Python tests and production build pass. Character checks cover normalized weights, lower-leg bone influence, foot/wrist envelopes, clip/socket motion, loop endpoints and animated bounds. The ankle pivot is lower on this skeleton; crouch lowers the carrying wrist, while sprint has a larger arm-height range. Test bounds now reflect these anatomical differences rather than the legacy donor's exact coordinates.
+
+Walk and crouch were inspected in the actual Three.js review viewer; screenshots are in `docs/mesh2motion/`. This is an integrated animation draft. Generated cloak topology, hands/fingers, occasional cloth intersection and foot sliding still limit quality. Clothing has no cloth simulation. Hunter and Stalker retain their prior rigs and motion; their Mesh2Motion replacement remains outstanding. No NVIDIA-generated output is claimed.
+
+## Earlier upload blocker
+
+The old chooser failures were caused by Chrome extension file access. That blocker is resolved for this session; it is not a remaining task for the user. The downloads completed in the user's Downloads folder even though the browser download-event notification timed out. File headers, content and subsequent GLTF decoding verified the actual artifacts before use.

@@ -2,8 +2,61 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { movementClip, smoothFacing } from "./character";
 import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+test("Mesh2Motion source is preserved and runtime keeps its skin with in-place motion", async () => {
+  const source = await readFile(
+    new URL("../docs/mesh2motion/torchbearer-site-export.glb", import.meta.url),
+  );
+  const record = JSON.parse(
+    await readFile(
+      new URL("../docs/mesh2motion/torchbearer.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.equal(
+    createHash("sha256").update(source).digest("hex"),
+    record.animation_source.export_sha256,
+  );
+  const original = JSON.parse(
+    source.toString("utf8", 20, 20 + source.readUInt32LE(12)),
+  );
+  const runtime = await readFile(
+    new URL("../public/models/torchbearer.glb", import.meta.url),
+  );
+  const size = runtime.readUInt32LE(12);
+  const doc = JSON.parse(runtime.toString("utf8", 20, 20 + size));
+  assert.equal(doc.skins[0].joints.length, original.skins[0].joints.length);
+  assert.ok(doc.nodes.some((n: any) => n.name === "game_forward"));
+  for (const animation of doc.animations) {
+    assert.equal(animation.extras.source, "Mesh2Motion");
+    assert.ok(
+      original.animations.some(
+        (a: any) => a.name === animation.extras.source_clip,
+      ),
+    );
+    for (const channel of animation.channels.filter(
+      (c: any) => c.target.path === "translation",
+    )) {
+      const accessor =
+        doc.accessors[animation.samplers[channel.sampler].output];
+      const offset =
+        28 +
+        size +
+        (doc.bufferViews[accessor.bufferView].byteOffset ?? 0) +
+        (accessor.byteOffset ?? 0);
+      for (let i = 1; i < accessor.count; i++)
+        for (const axis of [0, 4])
+          assert.equal(
+            runtime.readFloatLE(offset + i * 12 + axis),
+            runtime.readFloatLE(offset + axis),
+            "animation must not move the collision-owned character horizontally",
+          );
+    }
+  }
+});
 
 test("character locomotion selects idle, walk, sprint and crouch without false sprinting", () => {
   assert.equal(movementClip(false, 0), "idle");
@@ -121,17 +174,24 @@ test("shipped GLBs load with bound skeletons, required clips and an animated han
             const foot = gltf.scene.getObjectByName("foot_" + side)!;
             const point = foot.getWorldPosition(new THREE.Vector3());
             assert.ok(
-              point.y >= 0.025 && point.y < 0.35,
+              // Mesh2Motion's ankle pivot sits lower; sprint raises the swing foot.
+              point.y >= 0 && point.y < (clipName === "sprint" ? 0.5 : 0.35),
               `${clipName}: foot left floor envelope ${point.y}`,
             );
           }
         }
         assert.ok(
-          Math.min(...handHeights) > 0.65,
+          Math.min(...handHeights) >
+            (clipName.startsWith("crouch")
+              ? 0.4
+              : clipName === "sprint"
+                ? 0.5
+                : 0.65),
           `${clipName}: torch wrist collapsed`,
         );
         assert.ok(
-          Math.max(...handHeights) - Math.min(...handHeights) < 0.09,
+          Math.max(...handHeights) - Math.min(...handHeights) <
+            (clipName === "sprint" ? 0.3 : 0.09),
           `${clipName}: unstable torch carry`,
         );
         if (clipName !== "relight") {

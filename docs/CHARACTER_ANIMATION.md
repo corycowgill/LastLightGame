@@ -29,3 +29,7 @@ The source still has reconstruction artifacts and no articulated fingers or clot
 Runtime facing uses a shortest-arc damped turn. Locomotion selection has hysteresis and uses simulation velocity, avoiding idle frames from rendering faster than the simulation. Interrupted transitions fade out all running donor actions from their effective weights; extinguish/fear/quick-turn are one-shot actions. Two regressions cover gait jitter and frame-rate-independent turning.
 
 This improves playback of the existing bound mesh and authored motion. It is not the pending Mesh2Motion rig replacement. Chrome's file chooser opened on the follow-up attempt, but file assignment explicitly failed with the extension file-URL access requirement. No new rig was promoted.
+
+## Mesh2Motion source replacement — 2026-10-18
+
+The Torchbearer rig, weights and base motion now come from an actual reviewed Mesh2Motion export. This supersedes the authored gait source described above for the player only. See MESH2MOTION_STATUS.md for exact source, adapters, validation and remaining quality limits. Hunter/Stalker remain unchanged.

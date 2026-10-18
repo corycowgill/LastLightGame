@@ -1,0 +1,34 @@
+{
+  "animation_binding": "Mesh2Motion Human rig and skin weights; site library motion; runtime aliases, in-place root correction and raised right-arm carry pose",
+  "animation_source": {
+    "tool": "Mesh2Motion",
+    "url": "https://app.mesh2motion.org/create",
+    "site_revision": "b04ee333b-release",
+    "export": "docs/mesh2motion/torchbearer-site-export.glb",
+    "export_sha256": "2bfc69b15d6e1c8a85a21976a2a8a8419e6f3da1c8e7520e56ab350f4ca65202",
+    "skeleton": "Human",
+    "hands": "Single Hand Bone",
+    "mirror_joints": true,
+    "arm_plane_correction": true,
+    "geometry_source": "original prepared neural Torchbearer; no new mesh generation",
+    "carry_pose": "Idle_Torch right arm held during locomotion",
+    "source_clips": [
+      "Crouch_Idle",
+      "Crouch_Walk",
+      "Death_A",
+      "Idle_Listening",
+      "Idle_Torch",
+      "Interact",
+      "PickUp_Table",
+      "Shivering",
+      "Spell_Simple_Shoot",
+      "Sprint",
+      "Turn_Left_90",
+      "Walk",
+      "Walk_Carry",
+      "Walk_Stealth"
+    ],
+    "fitting": "Mirrored A-pose arms plus individually fitted pelvis, spine, neck, head and hip joints",
+    "root_corrections": "horizontal root travel removed; fitted standing/crouch height offsets; sampled mesh-floor correction for death"
+  }
+}
