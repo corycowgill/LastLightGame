@@ -1,0 +1,39 @@
+{
+  "asset_id": "dec_corner_cobweb",
+  "job_id": "65625aa24d214a87b291feb434b81ba4",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 19841723,
+  "file": "generated/dec_corner_cobweb/65625aa24d214a87b291feb434b81ba4/source.glb",
+  "sha256": "3ab082ed723947a897ccb19e408b0ea9b67cc0e10f376ea14906ac513a5dfd73",
+  "reference_sha256": "e58c80e3a335752b0fdc040f83870d474257f5433c9ac14d325fcab44187fe0b",
+  "metrics": {
+    "triangles": 97940,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.500652551651001,
+        -0.493798166513443,
+        -0.13377824425697327
+      ],
+      [
+        0.5007128119468689,
+        0.4904072880744934,
+        0.13367435336112976
+      ]
+    ],
+    "extents": [
+      1.0013653635978699,
+      0.9842054545879364,
+      0.267452597618103
+    ],
+    "surface_area_m2": 1.2179701129907676,
+    "surface_area_ratio": 1.2146509681847137,
+    "file_bytes": 5421996
+  },
+  "target_size_m": 1.2,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792281614.4866314
+}

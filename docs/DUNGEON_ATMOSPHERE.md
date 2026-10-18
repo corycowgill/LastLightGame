@@ -1,21 +1,22 @@
-# Dungeon atmosphere pass
+# Dungeon dressing: generated GLBs
 
-Reviewed the shared 221-entry graphics catalog and its art bible. The catalog's bone pile, crypt skull and short chain are now generated GLBs used in the actual game. They remain integration drafts. The bone reference produced a ribcage/spine rather than a loose heap; it is laid on the floor, with a separate nearby skull. A 2,500-triangle skeleton candidate visibly damaged the ribs; runtime uses the 12,000-triangle candidate. Skull and chain each use about 2,500 triangles. No replacement prop geometry was manually created.
+This supersedes the first atmosphere pass. Every dungeon dressing object now loads a catalog GLB reconstructed by TRELLIS.2 from original project reference art. No web planes, web shader, CanvasTexture grime, damp overlays or procedural dressing geometry remain in `dungeon-dressing.ts`. Seeded placement remains code; it places the generated assets rather than generating their shapes.
 
-Two unlit-candle references were rejected because both contained flames. They were preserved in the library and omitted from gameplay. No new decorative fire source or hiding mechanic was introduced.
+| Asset | Geometry | Embedded texture maximum | Runtime file |
+|---|---:|---:|---|
+| Torn corner cobweb | 24,000 triangles | 1024px | public/models/catalog/dec_corner_cobweb.glb |
+| Skeletal remains | 24,000 triangles | 1024px | public/models/catalog/dre_small_bone_pile.glb |
+| Crypt skull | 12,000 triangles | 1024px | public/models/catalog/dre_crypt_skull.glb |
+| Rusted chain | 15,998 triangles | 1024px | public/models/catalog/dre_chain_short.glb |
 
-Torn webs collect above side recesses; skeletal remains are clustered in neglected corners rather than spread uniformly. Rusted chains hang along the sides. Sanctuaries have no human remains around the safe fire. Seeded placement preserves the three-metre central lanes. Damp and grime are native transparent material overlays, while masonry instances receive restrained cool color variation to reduce uniform clean repetition. These changes do not alter AI perception, navigation or sanctuary rules.
+The web is reconstructed geometry with depth and open gaps, not a textured rectangle packaged as GLB. Its source reference is the original generated RGBA web art, retained in the shared library at `references/props/dec_corner_cobweb.png`. The unused runtime PNG has been removed. The existing catalog ID now records the explicit neural reconstruction override from its former decal method.
 
-## Web texture
+The bones, skull and chain reuse their original neural sources with higher-detail Blender reductions and higher-resolution embedded textures. No new shape was manually authored. Skeletons are laid on the floor and grounded after loading. Two unlit candle references remain rejected because they contained flames; no decorative fire or hiding mechanic was added.
 
-Project file: `public/textures/corner-cobweb.png`, 768px RGBA. Original full-size output remains in the local generated-images directory. Generated with the built-in imagegen tool, resized for browser use with alpha preserved. Rendered as a lit, double-sided transparent texture with a dusty neutral material response; not a reconstructed solid web mesh.
+Source/reference hashes, generation backend, prompts/seeds where applicable, and preparation records are in `docs/catalog-assets/`. Earlier low-detail candidates remain in the library for history, not runtime use. All assets remain integration drafts pending further art review; higher polygon counts alone do not certify final quality.
 
-Final generation prompt:
+## Review and validation
 
-> Create a single game-ready transparent RGBA texture for an abandoned dark fantasy catacomb: a neglected, irregular triangular corner cobweb, delicate dusty ivory and gray silk strands, a few thicker radial threads and torn sagging wisps, uneven organic spacing, realistically fragile and old. Web spans from upper left corner to upper right and lower left, leaving lower right largely empty. Orthographic front view, flat texture intended on a transparent plane in a 3D game lit by torchlight. Only spider silk, NO spider, NO architecture, NO wall, NO background, NO lighting glow, NO shadow behind web, NO frame, NO text. Visible thin strands with generous transparent holes and true transparent background. Subtle natural dusty strands, not clean concentric perfect Halloween icon. Save a project-bound texture for The Last Light.
+`/?debug&seed=104729&dressing` starts at a repeatable art-review position using the actual game renderer. Normal games retain the sanctuary start. `/asset-review.html` includes all four GLBs. The regression suite verifies that every dressing placement has a neural GLB manifest entry and that the web has geometry across all three dimensions. Existing navigation and sanctuary safety remain authoritative.
 
-## Review
-
-`/?debug&seed=104729&dressing` starts a new expedition at a repeatable art-review location using the actual game renderer. Normal games keep the sanctuary start. `/asset-review.html` includes all three new solid props. Source/reference hashes, prompts, seeds, provider jobs and preparation records are in `docs/catalog-assets/dre_*`.
-
-This improves dressing and surface age; it does not claim photorealism or final production approval. Existing neural masonry and character deformation still have visible reconstruction limitations. Physical device and sustained performance review remain pending.
+The broader game still uses procedural level layout, lighting, fire and particles as gameplay systems. This correction concerns the dungeon art props, not those systems. Physical iPhone/Xbox and sustained performance review remain pending. Generated masonry and character deformation still have visible reconstruction limitations.

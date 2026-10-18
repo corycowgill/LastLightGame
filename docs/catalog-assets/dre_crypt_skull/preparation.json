@@ -1,12 +1,12 @@
 {
   "asset_id": "dre_crypt_skull",
-  "version": "v001",
-  "file": "assets/dre_crypt_skull/v001/model.glb",
-  "sha256": "57d3b430a372db0eee11bcc5234a98248b67a5702f83ea179c8c207bbc363141",
+  "version": "v002",
+  "file": "assets/dre_crypt_skull/v002/model.glb",
+  "sha256": "f02257960f0105c3c96cf4eefe44884d557edb01a2804f22f77630abd0e35b34",
   "source": "generated/dre_crypt_skull/30274f0a29034cd1b17ab08762fbd0ea/source.glb",
   "source_sha256": "c04004bf6febae1a1ef0199e67b2b6892c29c3337607e4b26d06889075270be7",
   "metrics": {
-    "triangles": 2500,
+    "triangles": 12000,
     "geometry_count": 1,
     "bounds": [
       [
@@ -27,7 +27,7 @@
     ],
     "surface_area_m2": 0.8417390107919087,
     "surface_area_ratio": 9.116687279709955,
-    "file_bytes": 1716876
+    "file_bytes": 2133720
   },
   "scale_factor": 0.3030675011608232,
   "units": "meters",
@@ -35,15 +35,15 @@
   "forward_axis": "must_verify",
   "pivot": "ground_center",
   "sockets": {},
-  "collision": "assets/dre_crypt_skull/v001/collision.json",
+  "collision": "assets/dre_crypt_skull/v002/collision.json",
   "lods": [
     {
-      "file": "assets/dre_crypt_skull/v001/lod1.glb",
-      "triangles": 1250
+      "file": "assets/dre_crypt_skull/v002/lod1.glb",
+      "triangles": 6000
     },
     {
-      "file": "assets/dre_crypt_skull/v001/lod2.glb",
-      "triangles": 943
+      "file": "assets/dre_crypt_skull/v002/lod2.glb",
+      "triangles": 2400
     }
   ],
   "qa_status": "needs_review",
@@ -54,16 +54,16 @@
     "license_review_required"
   ],
   "previews": [
-    "assets/dre_crypt_skull/v001/previews/view_0.png",
-    "assets/dre_crypt_skull/v001/previews/view_1.png",
-    "assets/dre_crypt_skull/v001/previews/view_2.png",
-    "assets/dre_crypt_skull/v001/previews/view_3.png"
+    "assets/dre_crypt_skull/v002/previews/view_0.png",
+    "assets/dre_crypt_skull/v002/previews/view_1.png",
+    "assets/dre_crypt_skull/v002/previews/view_2.png",
+    "assets/dre_crypt_skull/v002/previews/view_3.png"
   ],
   "optimization": {
     "source_triangles": 97034,
-    "lod0_triangles": 2500,
-    "lod1_triangles": 1250,
-    "lod2_triangles": 943,
+    "lod0_triangles": 12000,
+    "lod1_triangles": 6000,
+    "lod2_triangles": 2400,
     "method": "Blender decimate; requires visual review"
   }
 }

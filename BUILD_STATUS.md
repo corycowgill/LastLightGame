@@ -201,3 +201,10 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - See docs/DUNGEON_ATMOSPHERE.md for prompt, texture path, review procedure and limitations.
 - Verified all three new GLBs in the browser viewer; in-game scene loaded 27 shared templates with no observed warnings/errors. Screenshot: docs/catalog-assets/creepy-dungeon-gameplay.png. Browser Hunt scenario passed extinction, active Hunt, navigated escape and sanctuary in 0:59. Art-review view observed 60 FPS / 115 draws on this desktop.
 - 49 TypeScript tests, eight Python asset tests and production build pass. Runtime now includes 35 GLB roles from 34 neural reconstructions plus the generated web texture. Visual drafts remain subject to art refinement; physical iPhone/Xbox testing remains pending.
+
+## GLB-only dressing correction — 2026-10-17
+
+- Replaced runtime web planes with genuine TRELLIS-reconstructed web GLB geometry (24k triangles, visible depth/open gaps). Removed procedural CanvasTexture damp/grime overlays and unused runtime web PNG. Every dungeon-dressing placement now uses a neural catalog GLB.
+- Higher-detail source-preserving candidates: skeletal remains 24k triangles, skull 12k, chain 15,998; web 24k. All four use embedded textures up to 1024px. Import tooling records actual texture settings. Original low-detail candidates remain preserved in library history.
+- Added a regression check that every dressing ID resolves to a detailed neural GLB and the web contains geometry in all three dimensions. 50 TypeScript tests, eight Python asset tests and production build pass.
+- Browser Hunt scenario passed extinction, active Hunt, navigated escape and sanctuary in 0:59. Art view observed 60 FPS / 89 draws on this desktop. Runtime set: 36 GLB roles from 35 neural reconstructions. These remain reviewed integration drafts, not certified final production art.

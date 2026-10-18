@@ -58,7 +58,8 @@ def main():
             model = library / lod['file']
             triangles = lod['triangles']
         shutil.copy2(model, destination)
-        compact(destination)
+        texture_size = spec.get('runtime_texture_size', 512)
+        compact(destination, max_size=texture_size)
         if spec['category'] != 'characters':
             normalize_static(destination, spec['scale_axis'], spec['target_size_m'], align_longest=asset_id in ('pro_chalk','pro_match_case','pro_journal'), thin_y=asset_id=='arc_floor_2m')
         if spec.get('reference'):
@@ -74,7 +75,7 @@ def main():
             'reference': reference.relative_to(library).as_posix(), 'reference_sha256': digest(reference),
             'source_sha256': run['sha256'], 'sha256': digest(destination),
             'bytes': destination.stat().st_size, 'triangles': triangles,
-            'finishing': 'Blender budget reduction; texture resize to 512; geometry preserved during texture packing',
+            'finishing': f'Blender budget reduction; texture resize to {texture_size}; geometry preserved during texture packing',
             'target_size_m': spec['target_size_m'], 'scale_axis': spec['scale_axis'],
             'units': 'meters', 'up_axis': 'Y', 'pivot': 'ground_center',
             'forward_axis': prepared['forward_axis'],

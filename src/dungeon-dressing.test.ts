@@ -2,6 +2,36 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { dungeonDressing } from "./dungeon-dressing";
 import { generateWorld } from "./simulation";
+import { readFile } from "node:fs/promises";
+
+test("every dungeon detail is backed by a detailed neural GLB", async () => {
+  const manifest = JSON.parse(
+    await readFile(
+      new URL("../public/models/catalog/manifest.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  for (const detail of dungeonDressing(generateWorld(104729))) {
+    const entry = manifest.assets.find((a: any) => a.id === detail.id);
+    assert.ok(entry, detail.id);
+    assert.equal(entry.method, "image_to_3d");
+    assert.ok(entry.file.endsWith(".glb"));
+    assert.ok(entry.triangles >= 12000, detail.id);
+  }
+  const web = manifest.assets.find((a: any) => a.id === "dec_corner_cobweb");
+  const bytes = await readFile(
+    new URL("../public/models/catalog/" + web.file, import.meta.url),
+  );
+  const gltf = JSON.parse(
+    bytes.toString("utf8", 20, 20 + bytes.readUInt32LE(12)),
+  );
+  const position =
+    gltf.accessors[gltf.meshes[0].primitives[0].attributes.POSITION];
+  assert.ok(
+    position.max.every((n: number, i: number) => n - position.min[i] > 0.01),
+    "web contains geometry in all three dimensions",
+  );
+});
 
 test("dungeon stories are repeatable and keep large props outside central walking lanes", () => {
   for (const seed of [1, 42, 104729, 99183]) {

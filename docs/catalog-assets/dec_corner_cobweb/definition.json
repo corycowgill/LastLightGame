@@ -1,0 +1,29 @@
+{
+  "id": "dec_corner_cobweb",
+  "name": "Torn Corner Cobweb",
+  "category": "dressing",
+  "biome": "catacombs",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 1.0,
+  "scale_axis": "y",
+  "triangle_budget": 24000,
+  "pivot": "ground_center",
+  "sockets": [],
+  "dependencies": [],
+  "reference": "references/props/dec_corner_cobweb.png",
+  "prompt": "See game docs/DUNGEON_ATMOSPHERE.md for exact built-in imagegen prompt",
+  "seed": 19841723,
+  "license_status": "original_generated_project_art",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "LOD",
+    "preview"
+  ],
+  "generation_backend": "built_in_imagegen",
+  "game_file": "public/textures/corner-cobweb.png",
+  "original_catalog_method": "decal",
+  "production_override": "User requires neural reconstructed GLB geometry, not runtime planes",
+  "runtime_texture_size": 1024
+}

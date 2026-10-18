@@ -1,12 +1,12 @@
 {
   "asset_id": "dre_small_bone_pile",
-  "version": "v002",
-  "file": "assets/dre_small_bone_pile/v002/model.glb",
-  "sha256": "4d144e97ad9bac36662f815e01f0bd2cfff184fa3d0a908ef69599b6596a14b0",
+  "version": "v003",
+  "file": "assets/dre_small_bone_pile/v003/model.glb",
+  "sha256": "09315649a6805760d810c66ec72d4aa67858ca2b30fb1e39437f317662794ef0",
   "source": "generated/dre_small_bone_pile/4642b10460e4425d975e2c48f397b00d/source.glb",
   "source_sha256": "c63234dbb79f0cacb7d76a1afc3a5151a8dc6bb95f6da5eb65cc594a091ab614",
   "metrics": {
-    "triangles": 12000,
+    "triangles": 24000,
     "geometry_count": 1,
     "bounds": [
       [
@@ -27,7 +27,7 @@
     ],
     "surface_area_m2": 1.6833146414430966,
     "surface_area_ratio": 2.992559362565505,
-    "file_bytes": 3289628
+    "file_bytes": 3768924
   },
   "scale_factor": 0.7480992094813721,
   "units": "meters",
@@ -35,15 +35,15 @@
   "forward_axis": "must_verify",
   "pivot": "ground_center",
   "sockets": {},
-  "collision": "assets/dre_small_bone_pile/v002/collision.json",
+  "collision": "assets/dre_small_bone_pile/v003/collision.json",
   "lods": [
     {
-      "file": "assets/dre_small_bone_pile/v002/lod1.glb",
-      "triangles": 6000
+      "file": "assets/dre_small_bone_pile/v003/lod1.glb",
+      "triangles": 12000
     },
     {
-      "file": "assets/dre_small_bone_pile/v002/lod2.glb",
-      "triangles": 2400
+      "file": "assets/dre_small_bone_pile/v003/lod2.glb",
+      "triangles": 4800
     }
   ],
   "qa_status": "needs_review",
@@ -54,16 +54,16 @@
     "license_review_required"
   ],
   "previews": [
-    "assets/dre_small_bone_pile/v002/previews/view_0.png",
-    "assets/dre_small_bone_pile/v002/previews/view_1.png",
-    "assets/dre_small_bone_pile/v002/previews/view_2.png",
-    "assets/dre_small_bone_pile/v002/previews/view_3.png"
+    "assets/dre_small_bone_pile/v003/previews/view_0.png",
+    "assets/dre_small_bone_pile/v003/previews/view_1.png",
+    "assets/dre_small_bone_pile/v003/previews/view_2.png",
+    "assets/dre_small_bone_pile/v003/previews/view_3.png"
   ],
   "optimization": {
     "source_triangles": 98026,
-    "lod0_triangles": 12000,
-    "lod1_triangles": 6000,
-    "lod2_triangles": 2400,
+    "lod0_triangles": 24000,
+    "lod1_triangles": 12000,
+    "lod2_triangles": 4800,
     "method": "Blender decimate; requires visual review"
   }
 }

@@ -7,7 +7,7 @@
   "method": "image_to_3d",
   "target_size_m": 0.23,
   "scale_axis": "y",
-  "triangle_budget": 2500,
+  "triangle_budget": 12000,
   "pivot": "ground_center",
   "sockets": [],
   "dependencies": [],
@@ -21,5 +21,6 @@
     "collision",
     "LOD",
     "preview"
-  ]
+  ],
+  "runtime_texture_size": 1024
 }

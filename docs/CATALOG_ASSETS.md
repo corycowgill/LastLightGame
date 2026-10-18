@@ -1,6 +1,6 @@
 # Catalog-derived neural assets — 17 October 2026
 
-The runtime replacement set contains **35 GLB roles from 34 accepted neural reconstructions**. All 21 original individual prop/character references from the shared asset library have generated meshes. Two additional accepted reconstructions provide the catalog wall and arch. Paving/ceiling geometry reuses the neural wall mesh with a documented rotation and fit; the separate slab attempt was rejected. No new runtime replacement mesh was built from primitive or manually authored geometry.
+The runtime replacement set contains **36 GLB roles from 35 accepted neural reconstructions**. All 21 original individual prop/character references from the shared asset library have generated meshes. Two additional accepted reconstructions provide the catalog wall and arch. Paving/ceiling geometry reuses the neural wall mesh with a documented rotation and fit; the separate slab attempt was rejected. No new runtime replacement mesh was built from primitive or manually authored geometry.
 
 Source library: `C:/Users/coryc/Documents/Codex/2026-10-17/cre/outputs/last-light-asset-library`. Its live catalog has 221 definitions, most still planned. This pass does **not** claim all 221 definitions are finished. The separate experimental urn reference was not reconstructed. Stable catalog IDs, original references, seeds and provider runs are preserved.
 
@@ -37,7 +37,7 @@ Raw model sources, editable Blender binding files, LODs and original references 
 - 48 TypeScript tests: simulation/input, character load/weights/socket motion, sampled deformation bounds, catalog hashes, embedded resources and rigid scale checks.
 - Eight Python asset tests, including actual triangle ray tests for an open arch, opaque wall and visible floor support.
 - Shared pipeline: 18 tests, including authored-source rejection under neural override.
-- Production Vite build passes. All 35 GLBs decoded through the actual Three.js browser viewer with no warnings/errors observed.
+- Production Vite build passes. All 36 GLBs decoded through the actual Three.js browser viewer with no warnings/errors observed.
 - In-game Hunt recovery and screenshot evidence are recorded in BUILD_STATUS.md after the final browser run.
 
 These remain reviewable integration drafts, not certified production assets. Physical iPhone/Xbox testing, sustained device performance profiling, full deformation/art review and expansion enemy rigging remain pending. No approved library release was created.
@@ -51,3 +51,7 @@ These dress room boundaries and sanctuary recesses. The upright bell and closed 
 All eight new GLBs decoded in the production browser viewer without observed warnings/errors. Seed 104729 again passed extinction, active Hunt, navigated escape and sanctuary recovery in 0:59. The recovery view observed 60 FPS and 56 draws on this desktop; this is not sustained device profiling. See `catalog-assets/landmark-meshes.jpg` for actual rendered meshes.
 
 The official hosted NVIDIA Kimodo demo accepted a six-second cautious torch-carrying walk prompt using Kimodo-SOMA-RP-v1. Generation returned to its idle UI, but the BVH export stalled and the five-minute session expired. No downloaded motion was verified or integrated. Current runtime clips remain the authored donors; local Kimodo inference and motion retargeting remain pending. No paid Space or new hardware was provisioned.
+
+## GLB-only dungeon dressing correction
+
+The earlier web plane and procedural damp/grime overlays were removed. Webs now use actual TRELLIS-reconstructed GLB geometry; bones/skulls/chains use higher-detail reductions and 1K embedded textures. See DUNGEON_ATMOSPHERE.md for current files and limits.
