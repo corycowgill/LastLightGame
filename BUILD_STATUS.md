@@ -266,3 +266,10 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Sampled >2.5x edge stretches decreased from 20,755 to 230 across idle/walk/sprint/crouch-walk (about 98.9%); peak decreased from ~18x to <4.25x. New deformation regression rejects the prior output. Remaining localized distortion/source holes are documented rather than claimed fixed.
 - Viewer review covered walk, crouch and sprint; screenshot docs/mesh2motion/skin-repair-walk.png. Updated the reproduction pipeline and provenance.
 - Final validation: 63 TypeScript tests, eight Python tests and production build pass. Browser seed 104729 completed extinction, active Hunt, no-match escape and sanctuary in 1:00 without observed warning/error logs; docs/mesh2motion/skin-repair-expedition.png.
+
+## 2026-10-18 — candidate rigs published for user validation
+
+- Added `/asset-review.html?rigs`: raw Mesh2Motion Torchbearer (66 joints, 59 clips) and Hunter (66 joints, 44 clips), orbit controls and complete animation selection.
+- Preserved multi-angle screenshots, immutable raw exports and hash/bind-position audit under `docs/mesh2motion/multiview/`.
+- Gameplay assets unchanged. Candidate symmetry, deformation and ground contact review still pending; Stalker export and Hollow fitting unfinished due to browser detachment.
+- Production build and all 63 tests passed. Existing Three.js bundle size warning remains.

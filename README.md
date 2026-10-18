@@ -129,3 +129,7 @@ Licensing notes record the models used at generation time; inspect the per-asset
 - [v1 video](docs/demos/README.md), [title screen](docs/title-screen-v1.png), [latest escape](docs/balance-escape-v2.png), and [build log](BUILD_STATUS.md) show checkpoints, not promises of final quality.
 
 This is a playable Catacombs checkpoint. Intended session pacing, physical device testing, sustained performance, final art/deformation acceptance, Hunter/Stalker Mesh2Motion replacement, additional biomes and expansion enemy behavior remain work in progress. The production build still reports a large Three.js chunk warning. Keep experimental failures and pending work visible so others can learn what actually worked.
+
+## Mesh2Motion candidate review (2026-10-18)
+
+Open `/asset-review.html?rigs` to inspect the new 66-joint Torchbearer and Hunter site exports. Orbit front/back/both sides and select any of their 59 / 44 library animations. These raw candidates are published for user validation and do not replace gameplay models yet. Stalker export and Hollow fitting remain pending after the browser connection stalled. Fitting evidence, exact clip names and hashes are in `docs/mesh2motion/multiview/`.

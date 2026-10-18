@@ -28,8 +28,13 @@ const selector = document.querySelector<HTMLSelectElement>("#asset")!;
 const animations = document.querySelector<HTMLSelectElement>("#animation")!;
 const status = document.querySelector("#status")!;
 let root: THREE.Group | undefined, mixer: THREE.AnimationMixer | undefined;
-const entries = (await (await fetch("/models/catalog/manifest.json")).json())
+const rigReview = new URLSearchParams(location.search).has("rigs");
+const entries = (await (await fetch(rigReview ? "/models/rig-review/manifest.json" : "/models/catalog/manifest.json")).json())
   .assets;
+if (rigReview) {
+  document.querySelector("h1")!.textContent = "Mesh2Motion rig review";
+  document.querySelector("header p")!.textContent = "Candidate rigs · not installed in gameplay. Drag to orbit front, back and sides; pinch or scroll to zoom. Select a motion below.";
+}
 for (const entry of entries) selector.add(new Option(entry.name, entry.id));
 let generation = 0;
 function release(model: THREE.Group) {
@@ -53,7 +58,7 @@ async function select() {
   const entry = entries.find((a: { id: string }) => a.id === selector.value);
   status.textContent = "Loading " + entry.name + "…";
   const gltf = await new GLTFLoader().loadAsync(
-    "/models/catalog/" + entry.file,
+    (rigReview ? "/models/rig-review/" : "/models/catalog/") + entry.file,
   );
   if (version !== generation) {
     release(gltf.scene);

@@ -1,0 +1,24 @@
+{
+  "assets": [
+    {
+      "id": "torchbearer",
+      "name": "Torchbearer \u2014 candidate",
+      "file": "torchbearer.glb",
+      "bytes": 7565668,
+      "triangles": 16000,
+      "model": "Mesh2Motion \u00b7 66 joints",
+      "backend": "59 library animations",
+      "forward_axis": "+Z"
+    },
+    {
+      "id": "hunter",
+      "name": "Hunter \u2014 candidate",
+      "file": "hunter.glb",
+      "bytes": 5747936,
+      "triangles": 20000,
+      "model": "Mesh2Motion \u00b7 66 joints",
+      "backend": "44 library animations",
+      "forward_axis": "+Z"
+    }
+  ]
+}
