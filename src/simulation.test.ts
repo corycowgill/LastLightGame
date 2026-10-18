@@ -386,7 +386,11 @@ test("wick reduces all flame rates without preventing depletion and spark speeds
     g.setMode(mode);
     g.fuel = 100;
     advance(g, 1);
-    assert.ok(Math.abs(g.fuel - (100 - [0.35, 1, 3.5][mode] * 0.76)) < 0.00001);
+    assert.ok(
+      Math.abs(
+        g.fuel - (100 - [0.35, 1, 3.5][mode] * 0.76 * (1 + g.depth * 0.3)),
+      ) < 0.00001,
+    );
   }
   g.upgrades.spark = 3;
   g.forceHunt();

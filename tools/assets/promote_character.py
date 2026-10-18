@@ -29,6 +29,8 @@ destination.write_bytes(raw)
 entry.update(sha256=hashlib.sha256(raw).hexdigest(),bytes=len(raw),animation_binding='automatic skin weights; existing authored animation rig and clips',forward_axis='-Z',clips=[a['name'] for a in doc['animations']],skin_joints=len(doc['skins'][0]['joints']))
 if kind == 'torchbearer':
     entry['animation_binding'] = 'anatomical region weights; fitted foot-targeted gait and stable torch-carry clips baked into GLB'
+if kind == 'hunter':
+    entry['animation_binding'] = 'existing neural skin and skeleton; rebuilt authored search, pursuit, flee, capture and banish clips'
 manifest_path.write_text(json.dumps(manifest,indent=2),encoding='utf-8')
 shutil.copy2(destination,root/'public/models'/f'{kind}.glb')
 primary_path = root/'public/models/manifest.json'

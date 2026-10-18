@@ -972,17 +972,23 @@ export class GameScene {
           ? "banish"
           : game.hunter.state === "PURSUING"
             ? "pursue"
-            : "search",
+            : game.hunter.state === "FLEEING"
+              ? "flee"
+              : "search",
       dt,
     );
     if (this.hunter.visible) {
-      this.hunter.position.set(
-        game.hunter.x,
-        0.04 * Math.sin(this.elapsed * 7),
-        game.hunter.z,
-      );
-      this.hunter.lookAt(game.player.x, this.hunter.position.y, game.player.z);
-      this.hunter.rotation.y += Math.PI;
+      const dx = game.hunter.x - this.hunter.position.x,
+        dz = game.hunter.z - this.hunter.position.z;
+      this.hunter.position.set(game.hunter.x, 0, game.hunter.z);
+      if (Math.hypot(dx, dz) > 0.005) {
+        const desired = Math.atan2(-dx, -dz);
+        const delta = Math.atan2(
+          Math.sin(desired - this.hunter.rotation.y),
+          Math.cos(desired - this.hunter.rotation.y),
+        );
+        this.hunter.rotation.y += delta * (1 - Math.exp(-dt * 10));
+      }
     }
     const e = game.enemies?.[0];
     this.stalker.visible = !!e;

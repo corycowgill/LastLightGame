@@ -224,3 +224,11 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Burial furniture now blocks simulation/AI navigation and camera rays. Repositioned decorative coffins and archive doors away from route mouths. QA driver uses the shared obstacle-aware pathfinder.
 - 51 TypeScript tests and production build pass. Browser seed 104729 passed extinction, active Hunt, navigated escape and sanctuary in 1:00. Art view observed about 60 FPS / 174 draws on this desktop. See docs/CRYPT_DENSITY.md for prompts, limitations and reproduction.
 - Eight Python asset tests pass. Final atlas-loading review showed no new browser warnings/errors. Screenshot: docs/catalog-assets/dense-crypt-gameplay.png. Runtime set now has 39 GLB roles from 38 neural reconstructions plus generated decals; shared catalog has 223 definitions, most still planned.
+
+## Hunter retreat / depth balance — 2026-10-18
+
+- Hunter flees visible torch/sanctuary light using valid retreat paths, with 2.8 seconds of recoil/escape before post-relight banishment. Cannot capture while fleeing or retreat through walls. Spawn candidates exclude blocked burial furniture.
+- Rebuilt authored Hunter search/pursue/flee/capture/banish animations inside its original neural GLB; movement-facing turns and restrained playback replace player-facing swivel and excess bobbing.
+- Deeper chambers raise fuel burn up to 30%, Hunter sight/memory/chase speed, and Stalker pressure. Player sprint remains faster than chase. HUD/guide/journal communicate fuel pressure and counterplay.
+- 55 TypeScript tests, eight Python asset tests and production build pass. Actual browser retreat check visibly reached FLEEING then BANISHED. See docs/HUNTER_BALANCE.md for exact values, reproduction and limits.
+- Browser seed 104729 full expedition check passed extinction, active Hunt, navigated escape and sanctuary in 1:00 with the new difficulty curve. No warnings/errors observed in retreat test. Screenshots: docs/catalog-assets/hunter-retreat-gameplay.png and hunter-flee-review.png.

@@ -24,6 +24,10 @@ export const CONFIG = {
   grace: 8,
   relight: 2,
   fuel: 720,
+  lightRepel: [2.8, 6, 11],
+  fireRepel: 8,
+  hunterFlee: 5.8,
+  retreatDuration: 2.8,
   burstCost: 45,
   burstCooldown: 18,
 };
@@ -216,6 +220,9 @@ export class Game {
   private exhausted = false;
   private director = 25;
   private messageTime = 0;
+  private retreatTime = 0;
+  private retreatTarget: Point | undefined;
+  private roomCenters: Point[] = [];
   constructor(seed = 1) {
     this.world = generateWorld(seed);
     this.reset(seed);
@@ -249,6 +256,11 @@ export class Game {
     this.artifacts = 0;
     this.elapsed = 0;
     this.completed = false;
+    this.retreatTime = 0;
+    this.retreatTarget = undefined;
+    this.roomCenters = this.world.cells
+      .filter((c) => c.x % 14 === 0 && c.z % 14 === 0)
+      .map((c) => ({ x: c.x * 2, z: c.z * 2 }));
     this.timer = 0;
     this.memory = 0;
     this.cooldown = 0;
@@ -292,7 +304,19 @@ export class Game {
     return { angle: angle || 0, distance };
   }
   get fuelRate() {
-    return [0.35, 1, 3.5][this.mode] * (1 - 0.08 * this.upgrades.wick);
+    return (
+      [0.35, 1, 3.5][this.mode] *
+      (1 - 0.08 * this.upgrades.wick) *
+      (1 + this.depth * 0.3)
+    );
+  }
+  get depth() {
+    let closest = 0;
+    this.roomCenters.forEach((p, i) => {
+      if (dist(p, this.player) < dist(this.roomCenters[closest], this.player))
+        closest = i;
+    });
+    return closest / Math.max(1, this.roomCenters.length - 1);
   }
   footstepNoise(sprint: boolean, crouch: boolean) {
     return (crouch ? 1 : sprint ? 11 : 5) * (1 - 0.12 * this.upgrades.boots);
@@ -476,7 +500,9 @@ export class Game {
         } else if (this.phase === "RELIGHTING") {
           this.fuel = Math.max(this.fuel, Math.min(this.maxFuel, 120));
           this.phase = "EXPLORING";
-          this.hunter.state = "BANISHED";
+          if (!["DORMANT", "BANISHED"].includes(this.hunter.state))
+            this.retreatFrom(this.player);
+          else this.hunter.state = "BANISHED";
           this.say("The flame lives. The Hunter retreats.");
         } else this.spawnHunter();
       }
@@ -485,10 +511,13 @@ export class Game {
       dist(this.player, this.start) < 3 ||
       dist(this.player, this.destination) < 3;
     if (
-      !safe &&
-      (this.phase === "HUNT_ACTIVE" ||
-        (this.phase === "RELIGHTING" &&
-          !["DORMANT", "BANISHED"].includes(this.hunter.state)))
+      this.hunter.state === "FLEEING" ||
+      (!safe &&
+        (this.phase === "HUNT_ACTIVE" ||
+          (this.phase === "EXPLORING" &&
+            !["DORMANT", "BANISHED"].includes(this.hunter.state)) ||
+          (this.phase === "RELIGHTING" &&
+            !["DORMANT", "BANISHED"].includes(this.hunter.state))))
     )
       this.updateHunter(dt);
     if (safe && this.fuel === 0) {
@@ -529,7 +558,12 @@ export class Game {
             ((p.x - this.player.x) * direction.x +
               (p.z - this.player.z) * direction.z) /
             Math.max(d, 1);
-        return d > 18 && d < 45 && (!visible || front < -0.3);
+        return (
+          walkable(this.world, p.x, p.z) &&
+          d > 18 &&
+          d < 45 &&
+          (!visible || front < -0.3)
+        );
       })
       .sort((a, b) => dist(a, this.player) - dist(b, this.player));
     const p = candidates[0];
@@ -569,16 +603,41 @@ export class Game {
     }
   }
   private updateHunter(dt: number) {
+    if (["DORMANT", "BANISHED"].includes(this.hunter.state)) return;
+    const fire = [this.start, this.destination].find(
+      (p) =>
+        dist(p, this.hunter) < CONFIG.fireRepel &&
+        lineOfSight(this.world, p, this.hunter),
+    );
+    const torchNear =
+      this.fuel > 0 &&
+      this.phase === "EXPLORING" &&
+      dist(this.player, this.hunter) < CONFIG.lightRepel[this.mode] &&
+      lineOfSight(this.world, this.player, this.hunter);
+    if ((fire || torchNear) && this.hunter.state !== "FLEEING")
+      this.retreatFrom(fire ?? this.player);
+    if (this.hunter.state === "FLEEING") {
+      this.retreatTime -= dt;
+      if (this.retreatTarget)
+        this.moveEnemy(this.hunter, this.retreatTarget, CONFIG.hunterFlee, dt);
+      if (this.retreatTime <= 0) {
+        this.hunter.state = this.fuel > 0 || fire ? "BANISHED" : "SEARCHING";
+        this.memory = 0;
+        this.retreatTarget = undefined;
+      }
+      return; // A recoiling Hunter cannot capture the player.
+    }
     const d = dist(this.hunter, this.player),
       seen =
-        d < CONFIG.sight && lineOfSight(this.world, this.hunter, this.player);
+        d < CONFIG.sight * (1 + this.depth * 0.15) &&
+        lineOfSight(this.world, this.hunter, this.player);
     const heard =
       d < this.noise &&
       findPath(this.world, this.hunter, this.player).length * 2 <
         this.noise * 1.5;
     if (seen || heard) {
       this.target = { ...this.player };
-      this.memory = CONFIG.memory;
+      this.memory = CONFIG.memory + this.depth * 4;
       this.hunter.state = seen ? "PURSUING" : "INVESTIGATING";
     } else {
       this.memory = Math.max(0, this.memory - dt);
@@ -605,7 +664,7 @@ export class Game {
       this.hunter,
       this.target,
       this.hunter.state === "PURSUING"
-        ? CONFIG.hunterChase
+        ? CONFIG.hunterChase + this.depth * 0.55
         : CONFIG.hunterSearch,
       dt,
     );
@@ -616,6 +675,34 @@ export class Game {
       this.save();
     }
   }
+  private retreatFrom(light: Point) {
+    this.hunter.state = "FLEEING";
+    this.retreatTime = CONFIG.retreatDuration;
+    this.routes.delete(this.hunter);
+    const options = this.world.cells
+      .map((c) => ({ x: c.x * 2, z: c.z * 2 }))
+      .filter(
+        (p) =>
+          dist(p, this.hunter) < 14 &&
+          dist(p, light) > dist(this.hunter, light) + 4 &&
+          walkable(this.world, p.x, p.z),
+      );
+    options.sort(
+      (a, b) =>
+        dist(b, light) -
+        dist(b, this.hunter) * 0.4 -
+        (dist(a, light) - dist(a, this.hunter) * 0.4),
+    );
+    this.retreatTarget = options.find((p) => {
+      const path = findPath(this.world, this.hunter, p);
+      return (
+        path.length > 0 &&
+        path
+          .slice(0, 4)
+          .every((step) => dist(step, light) >= dist(this.hunter, light) - 0.5)
+      );
+    });
+  }
   private updateStalker(dt: number, crouch: boolean) {
     for (const e of this.enemies) {
       const d = dist(e, this.player);
@@ -624,12 +711,17 @@ export class Game {
         if (d > 10) e.state = "LISTENING";
         continue;
       }
-      if (d < 15 && this.noise > 3 && lineOfSight(this.world, e, this.player)) {
+      if (
+        d < 15 + this.depth * 5 &&
+        this.noise > 3 &&
+        lineOfSight(this.world, e, this.player)
+      ) {
         e.state = "INVESTIGATING";
-        if (d > 3.5 || this.mode === 0) this.moveEnemy(e, this.player, 1.8, dt);
+        if (d > 2 || this.mode === 0)
+          this.moveEnemy(e, this.player, 1.8 + this.depth * 0.5, dt);
       } else e.state = "LISTENING";
-      if (d < 1.4 && !crouch && this.mode === 0) {
-        this.fuel = Math.max(0, this.fuel - dt * 15);
+      if (d < 1.4 && !crouch && this.mode !== 2) {
+        this.fuel = Math.max(0, this.fuel - dt * (this.mode === 0 ? 18 : 8));
         this.say("A Stalker tears at the flame. Brighten it or retreat.");
       }
     }

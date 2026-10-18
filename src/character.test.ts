@@ -48,6 +48,13 @@ test("shipped GLBs load with bound skeletons, required clips and an animated han
       }
     });
     assert.ok(skinned > 0);
+    if (name === "hunter")
+      assert.ok(
+        gltf.animations.some(
+          (clip) => clip.name === "flee" && clip.duration > 0.5,
+        ),
+        "Hunter needs a real retreat clip",
+      );
     if (name === "torchbearer") {
       gltf.scene.traverse((node) => {
         const mesh = node as THREE.SkinnedMesh;

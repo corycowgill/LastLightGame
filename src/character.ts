@@ -23,11 +23,13 @@ export class AnimatedCharacter {
   private current = "";
   private disposed = false;
   private playerMotion = false;
+  private hunterMotion = false;
   get clip() {
     return this.current;
   }
   constructor(path: string, loaded: () => void) {
     this.playerMotion = path.includes("torchbearer");
+    this.hunterMotion = path.includes("hunter");
     new GLTFLoader().load(
       path,
       (gltf) => {
@@ -69,7 +71,17 @@ export class AnimatedCharacter {
         .reset()
         .setEffectiveWeight(1)
         .setEffectiveTimeScale(
-          name === "sprint" || name === "pursue" ? 3 : name === "walk" ? 2 : 1,
+          this.hunterMotion
+            ? name === "pursue"
+              ? 1.35
+              : name === "flee"
+                ? 1.5
+                : 1
+            : name === "sprint" || name === "pursue"
+              ? 3
+              : name === "walk"
+                ? 2
+                : 1,
         );
       const once = [
         "death",

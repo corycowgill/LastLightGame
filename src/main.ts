@@ -214,6 +214,20 @@ function menu() {
       check = new ExpeditionCheck(game.world);
       cameraControls.release();
     });
+  if (new URLSearchParams(location.search).has("debug"))
+    button("retreat-check", "CHECK HUNTER RETREAT", () => {
+      begin(false);
+      game.player.x = 28;
+      game.player.z = 0;
+      game.player.yaw = cameraControls.pose.yaw = -Math.PI / 2;
+      cameraControls.pose.pitch = 0.18;
+      game.hunter = { x: 42, z: 0, state: "PURSUING" };
+      game.phase = "HUNT_ACTIVE";
+      game.fuel = 0;
+      game.enemies = [];
+      game.relight();
+      cameraControls.release();
+    });
 }
 function rebuild() {
   draw = true;
@@ -294,7 +308,7 @@ function pause() {
 function controls() {
   screen = "guide";
   panel(
-    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Drag mouse / arrow keys · Look &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C / CTRL · Crouch<br>E · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Xbox: LS Move · RS Look · A Use · B Toggle Crouch · X Burst · Y Chalk · LB/RB Flame · LT Crouch · RT/LS Sprint · D-pad Up/Down Zoom · RS Click Recenter · View Journal · Menu Pause. Menus: D-pad Navigate · A Select · B Back.</p><p>Touch: Left pad Move · Drag view Look · RUN Hold Sprint · CROUCH Toggle · USE Interact/Relight · BURST, CHALK and JOURNAL actions · Flame buttons · +/− Zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps. Break sight around corners to lose the Hunter. A match restores a reserve of fuel after a two second relight. Golden sanctuary fires banish the Hunt.</p><div id="actions"></div>',
+    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Drag mouse / arrow keys · Look &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C / CTRL · Crouch<br>E · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Xbox: LS Move · RS Look · A Use · B Toggle Crouch · X Burst · Y Chalk · LB/RB Flame · LT Crouch · RT/LS Sprint · D-pad Up/Down Zoom · RS Click Recenter · View Journal · Menu Pause. Menus: D-pad Navigate · A Select · B Back.</p><p>Touch: Left pad Move · Drag view Look · RUN Hold Sprint · CROUCH Toggle · USE Interact/Relight · BURST, CHALK and JOURNAL actions · Flame buttons · +/− Zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps. Break sight around corners to lose the Hunter. A match restores a reserve of fuel after a two second relight. Relit torchlight makes the Hunter recoil and flee before banishment; stronger flame protects a wider area. Sanctuary fires repel it when unobstructed. Deeper air drains fuel faster, and the Hunter grows more persistent. Stalkers can damage a steady flame at close range; use Blaze or keep your distance. Golden sanctuary fires banish the Hunt.</p><div id="actions"></div>',
   );
   button("back", "BACK", menu);
 }
@@ -335,7 +349,7 @@ function journal() {
   running = false;
   cameraControls.release();
   panel(
-    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>What remains of us.</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (1 - 0.08 * game.upgrades.wick))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><div id="actions"></div>`,
+    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>What remains of us.</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / ((1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><div id="actions"></div>`,
   );
   button("resume", "CLOSE JOURNAL", resume);
 }
@@ -597,7 +611,9 @@ function updateHUD() {
       : "";
   $("bearing").textContent = new URLSearchParams(location.search).has("debug")
     ? `${fps.toFixed(0)} FPS · ${game.phase} · ${game.hunter.state} · ${view.renderer.info.render.calls} DRAWS`
-    : "SEEK THE GOLDEN FIRE";
+    : game.depth > 0
+      ? `DEEP AIR · FLAME DRAIN +${Math.round(game.depth * 30)}%`
+      : "SEEK THE GOLDEN FIRE";
   $("scene").dataset.cameraYaw = cameraControls.pose.yaw.toFixed(3);
   $("scene").dataset.cameraPitch = cameraControls.pose.pitch.toFixed(3);
   $("scene").dataset.cameraDistance = cameraControls.pose.distance.toFixed(2);
