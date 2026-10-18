@@ -6,6 +6,8 @@ Source library: `C:/Users/coryc/Documents/Codex/2026-10-17/cre/outputs/last-ligh
 
 ## Runtime changes
 
+Current player animation supersedes the original donor binding described below: the Torchbearer now has corrected anatomical skin weights, fitted foot-targeted gait/carry clips, speed-driven playback and phase-preserving transitions. See `CHARACTER_ANIMATION.md`. Hunter and Stalker retain their existing clips.
+
 - Neural Torchbearer, Hunter and Stalker replace the previous authored character meshes. Automatic region/material-aware skin weights bind them to the existing authored animation donors. The player retains its generated A-pose as the bind pose, with carrying offsets in the clips. Motions are not claimed as NVIDIA/Kimodo output. Skeletal refinement, finger contacts and cloth deformation remain art-polish work.
 - Neural torch hardware, oil and match pickups, artifact, brazier, coffin, pillar, memorial, crates, barrels, rubble, crypt doors, journal, satchel, flask and chalk replace or enrich the corresponding visible props. Not every room variant appears in every seed.
 - Neural wall, arch and stone paving replace the visible masonry/floor/ceiling shell after loading. Region-based instancing shares geometry/materials. The wall uses LOD1 because LOD2 introduced holes. Stone materials have restrained metalness; sanctuary lighting was reduced to preserve surface detail.

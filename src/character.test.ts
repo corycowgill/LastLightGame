@@ -48,6 +48,86 @@ test("shipped GLBs load with bound skeletons, required clips and an animated han
       }
     });
     assert.ok(skinned > 0);
+    if (name === "torchbearer") {
+      gltf.scene.traverse((node) => {
+        const mesh = node as THREE.SkinnedMesh;
+        if (!mesh.isSkinnedMesh) return;
+        const vertices = mesh.geometry.getAttribute("position");
+        const weights = mesh.geometry.getAttribute("skinWeight");
+        const joints = mesh.geometry.getAttribute("skinIndex");
+        mesh.geometry.computeBoundingBox();
+        const bounds = mesh.geometry.boundingBox!;
+        const knee = bounds.min.y + (bounds.max.y - bounds.min.y) * 0.45;
+        for (let i = 0; i < vertices.count; i++) {
+          if (vertices.getY(i) >= knee) continue;
+          for (let component = 0; component < 4; component++) {
+            const weight = weights.getComponent(i, component);
+            const bone = mesh.skeleton.bones[joints.getComponent(i, component)];
+            assert.ok(
+              weight < 0.0001 || !/arm|hand|head/.test(bone.name),
+              "lower legs must never follow arms, hands or head",
+            );
+          }
+        }
+      });
+      for (const clipName of [
+        "idle",
+        "walk",
+        "sprint",
+        "crouch_idle",
+        "crouch_walk",
+        "relight",
+      ]) {
+        const motion = gltf.animations.find((c) => c.name === clipName)!;
+        assert.ok(motion && motion.duration >= 0.5);
+        const sampleMixer = new THREE.AnimationMixer(gltf.scene);
+        sampleMixer.clipAction(motion).play();
+        const rightHand = gltf.scene.getObjectByName("hand_R")!;
+        const handHeights: number[] = [];
+        for (const phase of [0, 0.2, 0.4, 0.6, 0.8]) {
+          sampleMixer.setTime(phase * motion.duration);
+          gltf.scene.updateMatrixWorld(true);
+          handHeights.push(rightHand.getWorldPosition(new THREE.Vector3()).y);
+          for (const side of ["L", "R"]) {
+            const foot = gltf.scene.getObjectByName("foot_" + side)!;
+            const point = foot.getWorldPosition(new THREE.Vector3());
+            assert.ok(
+              point.y >= 0.025 && point.y < 0.35,
+              `${clipName}: foot left floor envelope ${point.y}`,
+            );
+          }
+        }
+        assert.ok(
+          Math.min(...handHeights) > 0.65,
+          `${clipName}: torch wrist collapsed`,
+        );
+        assert.ok(
+          Math.max(...handHeights) - Math.min(...handHeights) < 0.09,
+          `${clipName}: unstable torch carry`,
+        );
+        if (clipName !== "relight") {
+          const landmarks = ["foot_L", "foot_R", "hand_R", "head"].map((n) =>
+            gltf.scene.getObjectByName(n)!,
+          );
+          sampleMixer.setTime(0);
+          gltf.scene.updateMatrixWorld(true);
+          const start = landmarks.map((n) =>
+            n.getWorldPosition(new THREE.Vector3()),
+          );
+          sampleMixer.setTime(motion.duration - 0.0001);
+          gltf.scene.updateMatrixWorld(true);
+          landmarks.forEach((node, i) =>
+            assert.ok(
+              node.getWorldPosition(new THREE.Vector3()).distanceTo(start[i]) <
+                0.004,
+              `${clipName}: visible loop seam at ${node.name}`,
+            ),
+          );
+        }
+        sampleMixer.stopAllAction();
+        sampleMixer.uncacheRoot(gltf.scene);
+      }
+    }
     const socket = gltf.scene.getObjectByName("torch_socket")!;
     assert.ok(socket);
     const mixer = new THREE.AnimationMixer(gltf.scene);

@@ -60,6 +60,7 @@ export class GameScene {
   private socketPoint = new THREE.Vector3();
   private initialized = false;
   private elapsed = 0;
+  private locomotionSpeed = 0;
   private lastFuel = 720;
   private burst = 0;
   constructor(
@@ -817,6 +818,12 @@ export class GameScene {
         ? 0.72
         : 1;
     const speed = dt > 0 ? previous.distanceTo(this.player.position) / dt : 0;
+    this.locomotionSpeed = THREE.MathUtils.damp(
+      this.locomotionSpeed,
+      speed,
+      12,
+      dt,
+    );
     this.gestureTime = Math.max(0, this.gestureTime - dt);
     if (game.message !== this.lastMessage) {
       this.lastMessage = game.message;
@@ -846,8 +853,9 @@ export class GameScene {
             ? "extinguish"
             : this.gestureTime > 0
               ? this.gesture
-              : movementClip(game.player.crouched, speed),
+              : movementClip(game.player.crouched, this.locomotionSpeed),
       dt,
+      this.locomotionSpeed,
     );
     this.container.dataset.animation = this.actor?.clip ?? "fallback";
     this.player.updateMatrixWorld(true);

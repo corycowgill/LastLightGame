@@ -22,10 +22,12 @@ export class AnimatedCharacter {
   private actions = new Map<string, THREE.AnimationAction>();
   private current = "";
   private disposed = false;
+  private playerMotion = false;
   get clip() {
     return this.current;
   }
   constructor(path: string, loaded: () => void) {
+    this.playerMotion = path.includes("torchbearer");
     new GLTFLoader().load(
       path,
       (gltf) => {
@@ -51,11 +53,18 @@ export class AnimatedCharacter {
       (error) => console.warn(`Character fallback retained: ${path}`, error),
     );
   }
-  update(name: string, dt: number) {
+  update(name: string, dt: number, speed?: number) {
     if (!this.mixer) return;
     const action = this.actions.get(name) ?? this.actions.get("idle");
     if (action && name !== this.current) {
       const previous = this.actions.get(this.current);
+      const locomotion = ["walk", "sprint", "crouch_walk"];
+      const phase =
+        previous &&
+        locomotion.includes(this.current) &&
+        locomotion.includes(name)
+          ? previous.time / previous.getClip().duration
+          : 0;
       action
         .reset()
         .setEffectiveWeight(1)
@@ -79,8 +88,22 @@ export class AnimatedCharacter {
       );
       action.clampWhenFinished = once;
       action.play();
+      action.time = phase * action.getClip().duration;
       if (previous) previous.crossFadeTo(action, 0.18, false);
       this.current = name;
+    }
+    if (this.playerMotion && action && speed !== undefined) {
+      const reference =
+        name === "sprint"
+          ? 3
+          : name === "crouch_walk"
+            ? 0.9
+            : name === "walk"
+              ? 1.6
+              : 0;
+      action.setEffectiveTimeScale(
+        reference ? THREE.MathUtils.clamp(speed / reference, 0.65, 2.2) : 1,
+      );
     }
     this.mixer.update(Math.min(dt, 0.1));
   }

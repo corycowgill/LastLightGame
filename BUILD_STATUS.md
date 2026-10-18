@@ -208,3 +208,11 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Higher-detail source-preserving candidates: skeletal remains 24k triangles, skull 12k, chain 15,998; web 24k. All four use embedded textures up to 1024px. Import tooling records actual texture settings. Original low-detail candidates remain preserved in library history.
 - Added a regression check that every dressing ID resolves to a detailed neural GLB and the web contains geometry in all three dimensions. 50 TypeScript tests, eight Python asset tests and production build pass.
 - Browser Hunt scenario passed extinction, active Hunt, navigated escape and sanctuary in 0:59. Art view observed 60 FPS / 89 draws on this desktop. Runtime set: 36 GLB roles from 35 neural reconstructions. These remain reviewed integration drafts, not certified final production art.
+
+## Torchbearer animation correction — 2026-10-17
+
+- Fixed lower-leg vertices receiving arm weights and narrowed mantle color pinning to avoid flattened sleeves. Rebound the original neural mesh; no replacement character geometry.
+- Baked new fitted player clips with foot/arm targets, forward knees, flat planted feet, stable torch carry, controlled bob and separate gait/interaction timing. Hunter/Stalker unchanged. These are authored motions, not NVIDIA-generated output.
+- Smoothed movement speed to avoid idle/walk flicker above the fixed simulation rate; speed-driven playback and phase-preserving gait transitions.
+- Added anatomy-weight, sampled foot-height and torch-hand-stability checks. See docs/CHARACTER_ANIMATION.md for reproduction, inspection and limits.
+- Final validation: 50 TypeScript tests and eight Python asset tests pass, including loop seam checks; production build passes. Browser seed 104729 again passed extinction, active Hunt, navigated escape and sanctuary in 0:59. Idle/walk/sprint/crouch were visually reviewed in Three.js; review montage in docs/catalog-assets/character-animation-review.jpg.

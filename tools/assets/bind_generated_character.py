@@ -2,7 +2,8 @@
 
 blender --background --python tools/assets/bind_generated_character.py -- SOURCE.glb RIG.glb OUTPUT.glb
 The geometry remains neural reconstruction. Skinning uses region-constrained
-distance weights; existing authored clips are retained, not claimed as AI motion.
+distance weights. Player clips are rebuilt for its fitted rest pose; other actors
+retain their authored clips. No motion is claimed as NVIDIA output.
 """
 import bpy
 import sys
@@ -76,9 +77,15 @@ def fallback_weights(mesh):
         scores = []
         z, x = vertex.co.z / height, abs(vertex.co.x) / height
         side = 'R' if vertex.co.x > 0 else 'L'
-        if z > .83: allowed = ['head']
-        elif (.55 < z < .84 and vertex.index in cloth) or (z > .73 and x < .28): allowed = ['chest','spine']
-        elif x > .16 and z > .18: allowed = [f'upperarm_{side}',f'forearm_{side}',f'hand_{side}']
+        if not is_player:
+            if z > .83: allowed = ['head']
+            elif z > .73 and x < .28: allowed = ['chest','spine']
+            elif x > .16 and z > .18: allowed = [f'upperarm_{side}',f'forearm_{side}',f'hand_{side}']
+            elif z < .51: allowed = [f'thigh_{side}',f'shin_{side}',f'foot_{side}','hips']
+            else: allowed = ['hips','spine','chest']
+        elif z > .83: allowed = ['head']
+        elif (.68 < z < .84 and x < .23 and vertex.index in cloth) or (z > .73 and x < .19): allowed = ['chest','spine']
+        elif x > .16 and z > .49: allowed = [f'upperarm_{side}',f'forearm_{side}',f'hand_{side}'] + (['chest'] if z > .72 else [])
         elif z < .51: allowed = [f'thigh_{side}',f'shin_{side}',f'foot_{side}','hips']
         else: allowed = ['hips','spine','chest']
         for bone in bones:
@@ -86,7 +93,7 @@ def fallback_weights(mesh):
             delta = bone.tail_local - bone.head_local
             t = max(0, min(1, (vertex.co - bone.head_local).dot(delta) / max(delta.length_squared, 1e-8)))
             distance = (vertex.co - bone.head_local - t * delta).length
-            scores.append((1 / max(distance, .012 * height) ** 6, bone.name))
+            scores.append((1 / max(distance, (.018 if is_player else .012) * height) ** (3 if is_player else 6), bone.name))
         selected = sorted(scores, reverse=True)[:4]; total = sum(s for s, _ in selected)
         for weight, name in selected: groups[name].add([vertex.index], weight / total, 'REPLACE')
 
@@ -98,35 +105,9 @@ for mesh in meshes:
 # pose offset in the clips, never baked across a differently oriented skeleton.
 for bone in rig.pose.bones: bone.matrix_basis = Matrix.Identity(4)
 if is_player:
-    def local_bias(name, desired):
-        bone=rig.data.bones[name]
-        direction=bone.tail_local-bone.head_local
-        world_rotation=direction.rotation_difference(Vector(desired))
-        basis=bone.matrix_local.to_quaternion()
-        return basis.inverted() @ world_rotation @ basis
-    offsets={
-        'forearm_R':local_bias('forearm_R',(.03,.15,.14)),
-        'upperarm_L':local_bias('upperarm_L',(-.025,0,-.28)),
-    }
-    for track in rig.animation_data.nla_tracks: track.mute=True
-    for track in rig.animation_data.nla_tracks:
-        action=track.strips[0].action
-        rig.animation_data.action=action
-        if track.strips[0].action_slot: rig.animation_data.action_slot=track.strips[0].action_slot
-        frames=range(int(action.frame_range[0]),int(action.frame_range[1])+1)
-        samples=[]
-        for frame in frames:
-            bpy.context.scene.frame_set(frame)
-            samples.append((frame,{name:bias @ rig.pose.bones[name].matrix_basis.to_quaternion() for name,bias in offsets.items()}))
-        for frame,poses in samples:
-            for name,rotation in poses.items():
-                bone=rig.pose.bones[name];bone.rotation_mode='QUATERNION';bone.rotation_quaternion=rotation
-                bone.keyframe_insert('rotation_quaternion',frame=frame)
-    rig.animation_data.action=None
-    socket=bpy.data.objects.get('torch_socket')
-    if socket:
-        socket.parent=rig;socket.parent_type='BONE';socket.parent_bone='hand_R'
-        socket.matrix_parent_inverse=Matrix.Identity(4);socket.location=(0,0,0);socket.rotation_euler=(0,0,0)
+    sys.path.insert(0,str(Path(__file__).resolve().parent))
+    from player_motion import rebuild_player_motion
+    rebuild_player_motion(rig,height)
 for mesh in meshes:
     mesh.modifiers.new('Generated skin', 'ARMATURE').object = rig
     for poly in mesh.data.polygons: poly.use_smooth = True
@@ -138,5 +119,5 @@ for obj in rig.children:
     if obj.type == 'EMPTY': obj.select_set(True)
 output.parent.mkdir(parents=True, exist_ok=True)
 bpy.ops.wm.save_as_mainfile(filepath=str(output.with_suffix('.blend').resolve()))
-bpy.ops.export_scene.gltf(filepath=str(output.resolve()), export_format='GLB', use_selection=True, export_yup=True, export_animations=True)
+bpy.ops.export_scene.gltf(filepath=str(output.resolve()), export_format='GLB', use_selection=True, export_yup=True, export_animations=True, export_animation_mode='NLA_TRACKS', export_force_sampling=True)
 print('BOUND_GENERATED_MESH', output)

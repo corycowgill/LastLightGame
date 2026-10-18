@@ -27,6 +27,8 @@ encoded=json.dumps(doc,separators=(',',':')).encode();encoded += b' '*((-len(enc
 raw=struct.pack('<4sII',b'glTF',2,20+len(encoded)+len(binary_chunk))+struct.pack('<II',len(encoded),0x4e4f534a)+encoded+binary_chunk
 destination.write_bytes(raw)
 entry.update(sha256=hashlib.sha256(raw).hexdigest(),bytes=len(raw),animation_binding='automatic skin weights; existing authored animation rig and clips',forward_axis='-Z',clips=[a['name'] for a in doc['animations']],skin_joints=len(doc['skins'][0]['joints']))
+if kind == 'torchbearer':
+    entry['animation_binding'] = 'anatomical region weights; fitted foot-targeted gait and stable torch-carry clips baked into GLB'
 manifest_path.write_text(json.dumps(manifest,indent=2),encoding='utf-8')
 shutil.copy2(destination,root/'public/models'/f'{kind}.glb')
 primary_path = root/'public/models/manifest.json'
