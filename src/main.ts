@@ -244,6 +244,7 @@ async function begin(load: boolean) {
   if (preparing) return;
   preparing = true;
   running = false;
+  $("hud").hidden = true;
   frameSample = 0;
   worstFrame = 0;
   longFrames = 0;
