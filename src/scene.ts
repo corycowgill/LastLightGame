@@ -1,4 +1,5 @@
 import { addHunterEyes } from "./hunter-eyes";
+import { CameraIndex } from "./camera-index";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { AnimatedCharacter, movementClip, smoothFacing } from "./character";
 import { CatalogAssets } from "./catalog-assets";
@@ -43,6 +44,7 @@ export class GameScene {
   private flame: THREE.Mesh;
   private torchBasket = new THREE.Group();
   private walls: THREE.Object3D[] = [];
+  private cameraIndex?: CameraIndex;
   private boxes: THREE.Mesh[] = [];
   private items = new Map<string, THREE.Object3D>();
   private chalk = new THREE.Group();
@@ -554,6 +556,8 @@ export class GameScene {
       this.scene.add(collider);
       this.walls.push(collider);
     }
+    this.cameraIndex = new CameraIndex(this.walls);
+    this.container.dataset.cameraColliders = String(this.walls.length);
     this.resize();
   }
   private texture(seed: number, slabs: boolean) {
@@ -857,7 +861,10 @@ export class GameScene {
     this.sanctuaryLights.forEach((light, i) => {
       const near =
         light.position.distanceToSquared(this.player.position) < 22 * 22;
-      light.castShadow = !this.lowQuality && near;
+      // Keep shader light/shadow counts stable when entering a room. Only
+      // refresh nearby maps; toggling castShadow can trigger shader compiles.
+      light.castShadow = !this.lowQuality;
+      light.shadow.autoUpdate = !this.lowQuality && near;
       light.intensity =
         12 *
         (1 +
@@ -1012,7 +1019,8 @@ export class GameScene {
       0.9,
       0.64,
     );
-    this.torch.castShadow =
+    this.torch.castShadow = !this.lowQuality;
+    this.torch.shadow.autoUpdate =
       !this.lowQuality && (burning || this.torch.intensity > 0.1);
     this.flame.visible = burning;
     this.flame.scale.set(
@@ -1145,7 +1153,13 @@ export class GameScene {
       );
     this.ray.set(anchor, offset.clone().normalize());
     this.ray.far = offset.length();
-    const hit = this.ray.intersectObjects(this.walls, false)[0];
+    const desiredRayEnd = anchor.clone().add(offset);
+    const candidates =
+      this.cameraIndex?.query(anchor, desiredRayEnd) ?? this.walls;
+    const candidateCount = String(candidates.length);
+    if (this.container.dataset.cameraCandidates !== candidateCount)
+      this.container.dataset.cameraCandidates = candidateCount;
+    const hit = this.ray.intersectObjects(candidates, false)[0];
     if (hit) offset.setLength(Math.max(0.4, hit.distance - 0.25));
     const desired = anchor.clone().add(offset);
     desired.y = THREE.MathUtils.clamp(desired.y, 0.35, 3.7);
@@ -1155,12 +1169,33 @@ export class GameScene {
     } else this.camera.position.lerp(desired, 1 - Math.exp(-dt * 12));
     // Recheck the interpolated camera too: smoothing must not cross a wall at corners.
     this.camera.position.copy(
-      constrainCamera(anchor, this.camera.position, this.walls),
+      constrainCamera(
+        anchor,
+        this.camera.position,
+        this.cameraIndex?.query(anchor, this.camera.position) ?? this.walls,
+      ),
     );
     this.target.copy(anchor);
     this.target.y += 0.05;
     this.camera.lookAt(this.target);
     this.renderer.render(this.scene, this.camera);
+  }
+  get assetsLoaded() {
+    return this.catalog.loaded;
+  }
+  async prepare(game: Game, yaw: number, pitch: number, distance: number) {
+    // Discover pickup templates and settle poses without advancing simulation.
+    this.update(game, 0, yaw, pitch, distance);
+    await Promise.all([
+      this.catalog.ready(),
+      this.actor?.settled,
+      this.hunterActor?.settled,
+      this.stalkerActor?.settled,
+    ]);
+    if (this.scene.userData.disposed) return;
+    await this.renderer.compileAsync(this.scene, this.camera);
+    if (this.scene.userData.disposed) return;
+    this.update(game, 0, yaw, pitch, distance);
   }
   resize() {
     const w = Math.max(1, this.container.clientWidth),
@@ -1179,6 +1214,12 @@ export class GameScene {
     const geometries = new Set<THREE.BufferGeometry>(),
       materials = new Set<THREE.Material>();
     this.scene.traverse((o) => {
+      if (
+        o instanceof THREE.PointLight ||
+        o instanceof THREE.SpotLight ||
+        o instanceof THREE.DirectionalLight
+      )
+        o.shadow.dispose();
       const m = o as THREE.Mesh;
       if (m.geometry) geometries.add(m.geometry);
       if (m.material)

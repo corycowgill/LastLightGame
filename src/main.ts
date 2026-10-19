@@ -239,7 +239,17 @@ function rebuild() {
   view = new GameScene($("scene"), game.world);
   view.setQuality(settings.quality === "low");
 }
-function begin(load: boolean) {
+let preparing = false;
+async function begin(load: boolean) {
+  if (preparing) return;
+  preparing = true;
+  running = false;
+  frameSample = 0;
+  worstFrame = 0;
+  longFrames = 0;
+  metricTimer = 0;
+  hudTimer = 0;
+  hudPhase = "";
   check = undefined;
   started = true;
   Object.assign(cameraControls.pose, {
@@ -276,6 +286,27 @@ function begin(load: boolean) {
   rebuild();
   audio.start();
   audio.setVolume(settings.volume);
+  panel(
+    '<div class="eyebrow">PREPARING EXPEDITION</div><h2>The stone is waking.</h2><p id="loadingStatus">Preparing the crypts, fire and shadows…</p>',
+  );
+  try {
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
+    await view.prepare(
+      game,
+      cameraControls.pose.yaw,
+      cameraControls.pose.pitch,
+      cameraControls.pose.distance,
+    );
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
+  } catch (error) {
+    console.warn("Expedition warm-up used fallback rendering", error);
+  } finally {
+    preparing = false;
+  }
   resume();
 }
 function resume() {
@@ -453,11 +484,56 @@ window.visualViewport?.addEventListener("resize", () => {
   draw = true;
 });
 let saveTimer = 0;
+let savePending = false;
+function queueSave() {
+  if (savePending) return;
+  savePending = true;
+  const save = () => {
+    savePending = false;
+    game.save();
+  };
+  if ("requestIdleCallback" in window)
+    window.requestIdleCallback(save, { timeout: 2000 });
+  else setTimeout(save, 0);
+}
+let hudTimer = 0;
+let hudPhase = "";
+let inventoryMarkup = "";
+const frameTimes = new Float32Array(240);
+let frameSample = 0;
+let worstFrame = 0;
+let longFrames = 0;
+let metricTimer = 0;
 function frame(now: number) {
   const rawDt = (now - last) / 1000;
   const dt = Math.min(rawDt, 0.1);
   last = now;
+  if (preparing) {
+    const status = document.getElementById("loadingStatus");
+    const text = `Preparing crypts, fire and shadows · ${view?.assetsLoaded ?? 0} model types loaded`;
+    if (status && status.textContent !== text) status.textContent = text;
+  }
   fps = fps * 0.95 + (1 / Math.max(rawDt, 0.001)) * 0.05;
+  if (running && rawDt > 0 && Number.isFinite(rawDt)) {
+    worstFrame = Math.max(worstFrame, rawDt * 1000);
+    if (rawDt > 0.0334) longFrames++;
+    frameTimes[frameSample++ % frameTimes.length] = rawDt * 1000;
+    metricTimer += dt;
+    if (metricTimer >= 1) {
+      metricTimer = 0;
+      const samples = Array.from(
+        frameTimes.subarray(0, Math.min(frameSample, frameTimes.length)),
+      ).sort((a, b) => a - b);
+      $("scene").dataset.frameP95 =
+        samples[Math.floor((samples.length - 1) * 0.95)].toFixed(1);
+      $("scene").dataset.frameWorst = worstFrame.toFixed(1);
+      $("scene").dataset.longFrameTotal = String(longFrames);
+      $("scene").dataset.longFramePercent = (
+        (100 * samples.filter((t) => t > 33.4).length) /
+        samples.length
+      ).toFixed(1);
+    }
+  }
   let pad: PadSnapshot | null = null;
   try {
     pad =
@@ -468,12 +544,14 @@ function frame(now: number) {
   controller.update(document.hidden ? null : pad, dt, running);
   if (controller.used) selectInput("gamepad");
   const inputStatus = document.getElementById("inputStatus");
-  if (inputStatus)
-    inputStatus.textContent = controller.connected
+  if (inputStatus) {
+    const label = controller.connected
       ? "Xbox connected · A select · B back · D-pad / left stick navigate"
       : settings.touchControls
         ? "Touch controls ready · Landscape recommended"
         : "Keyboard & mouse · Connect Xbox and press a button";
+    if (inputStatus.textContent !== label) inputStatus.textContent = label;
+  }
 
   if (running) {
     cameraControls.keyboard(keys, dt);
@@ -518,10 +596,15 @@ function frame(now: number) {
     audio.update(game, dt);
     saveTimer += dt;
     if (saveTimer > 5) {
-      game.save();
+      queueSave();
       saveTimer = 0;
     }
-    updateHUD();
+    hudTimer += dt;
+    if (hudTimer >= 0.1 || hudPhase !== game.phase) {
+      hudTimer = 0;
+      hudPhase = game.phase;
+      updateHUD();
+    }
     if (game.phase === "DEAD" || game.completed) ended();
   }
   const ending = screen === "ended" && endingAnimation > 0;
@@ -580,8 +663,11 @@ function updateHUD() {
     `${Math.ceil(pct * 100)}% · ~${Math.ceil(game.fuel / game.fuelRate)}s`;
   $("mode").textContent =
     ["EMBER", "STEADY FLAME", "BLAZE"][game.mode] || "FLAME";
-  $("inventory").innerHTML =
-    `<b>${game.matches}</b> MATCHES &nbsp; <b>${game.artifacts}</b> RELICS<br><small>${game.chalk.length} CHALK MARKS · ${game.banked} BANKED</small>`;
+  const markup = `<b>${game.matches}</b> MATCHES &nbsp; <b>${game.artifacts}</b> RELICS<br><small>${game.chalk.length} CHALK MARKS · ${game.banked} BANKED</small>`;
+  if (markup !== inventoryMarkup) {
+    inventoryMarkup = markup;
+    $("inventory").innerHTML = markup;
+  }
   const useLabel =
     inputSource === "gamepad" ? "A" : inputSource === "touch" ? "USE" : "E";
   $("pauseButton").textContent =

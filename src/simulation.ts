@@ -149,7 +149,31 @@ export function lineOfSight(w: World, a: Point, b: Point) {
       return false;
   return true;
 }
+const pathCaches = new WeakMap<World, Map<string, Point[]>>();
+function cachedPath(w: World, a: Point, b: Point): Point[] {
+  let cache = pathCaches.get(w);
+  if (!cache) {
+    cache = new Map();
+    pathCaches.set(w, cache);
+  }
+  const id = `${Math.round(a.x / 2)},${Math.round(a.z / 2)}:${Math.round(b.x / 2)},${Math.round(b.z / 2)}`;
+  let path = cache.get(id);
+  if (!path) {
+    path = solvePath(w, a, b);
+    if (cache.size >= 128) cache.delete(cache.keys().next().value!);
+    cache.set(id, path);
+  }
+  return path;
+}
 export function findPath(w: World, a: Point, b: Point): Point[] {
+  // Consumers shorten their routes; never expose the cached mutable array.
+  return cachedPath(w, a, b).map((p) => ({ ...p }));
+}
+export function navigationDistance(w: World, a: Point, b: Point) {
+  const path = cachedPath(w, a, b);
+  return path.length ? path.length * 2 : Infinity;
+}
+function solvePath(w: World, a: Point, b: Point): Point[] {
   const sx = Math.round(a.x / 2),
     sz = Math.round(a.z / 2),
     end = key(Math.round(b.x / 2), Math.round(b.z / 2)),
@@ -670,8 +694,9 @@ export class Game {
             (this.player.crouched ? CONFIG.crouchSight : 1) &&
         lineOfSight(this.world, this.hunter, this.player);
     const heard =
+      !seen &&
       d < this.noise &&
-      findPath(this.world, this.hunter, this.player).length * 2 <
+      navigationDistance(this.world, this.hunter, this.player) <
         this.noise * 1.5;
     if (seen || heard) {
       this.target = { ...this.player };

@@ -320,3 +320,11 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Quiet, widely spaced panned stone/metal resonances add unease during exploration. They stop near sanctuary fire and during the Hunt so they do not obscure actual threats. No resource manipulation, fake enemy spawns or jump-scare stingers.
 - Production build and all 64 tests pass, including connectivity and the full fixed-seed simulation escape driver.
 - Browser validation: regression seed 104729 passed extinction, active Hunt, physical escape and sanctuary. Loaded art-review room ran at 60 FPS / ~170 draws on the local desktop browser. Also fixed fuel countdown overflow in the touch HUD.
+
+## 2026-10-18 — frame pacing / system performance
+
+- Added static spatial camera broad phase, bounded per-world navigation cache, 10 Hz HUD and change-only inventory updates, two-slot catalog decode queue and static-transform freezing.
+- Added explicit expedition loading / asynchronous shader warm-up before movement/fuel starts; idle autosaves; stable shadow shader variants and explicit shadow target disposal.
+- New worst-frame/p95/long-frame telemetry distinguishes gameplay from preparation. Local dense crypt and accelerated Hunt/escape validation held 60 FPS, p95 16.8ms; sampled post-warm-up gameplay worst ~33.4ms. Preparation still takes time.
+- Focused camera/path benchmarks improved ~22x / ~45x; these are CPU operation measurements, not whole-game FPS claims. See docs/PERFORMANCE.md and tools/performance-benchmark.ts.
+- Production build and all 67 tests pass. Browser fixed-seed extinction/Hunt/escape/sanctuary check passes with all 33 catalog types loaded. Physical-device profiling remains outstanding.

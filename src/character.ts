@@ -36,6 +36,10 @@ export class AnimatedCharacter {
   private disposed = false;
   private playerMotion = false;
   private hunterMotion = false;
+  private finishLoading!: () => void;
+  readonly settled = new Promise<void>((resolve) => {
+    this.finishLoading = resolve;
+  });
   get clip() {
     return this.current;
   }
@@ -47,6 +51,7 @@ export class AnimatedCharacter {
       (gltf) => {
         if (this.disposed) {
           this.release(gltf.scene);
+          this.finishLoading();
           return;
         }
         this.root.add(gltf.scene);
@@ -62,9 +67,13 @@ export class AnimatedCharacter {
           this.actions.set(clip.name, this.mixer.clipAction(clip));
         this.ready = true;
         loaded();
+        this.finishLoading();
       },
       undefined,
-      (error) => console.warn(`Character fallback retained: ${path}`, error),
+      (error) => {
+        console.warn(`Character fallback retained: ${path}`, error);
+        this.finishLoading();
+      },
     );
   }
   update(name: string, dt: number, speed?: number) {

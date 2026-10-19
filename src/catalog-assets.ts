@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { LoadQueue } from "./load-queue";
+const loads = new LoadQueue(2);
 
 /** Shared decoded templates: one download per catalog ID, ownership per expedition. */
 export class CatalogAssets {
@@ -10,6 +12,9 @@ export class CatalogAssets {
     .then((r) => (r.ok ? r.json() : { assets: [] }))
     .catch(() => ({ assets: [] }));
   loaded = 0;
+  async ready() {
+    await Promise.all([...this.templates.values()]);
+  }
 
   add(
     id: string,
@@ -33,9 +38,11 @@ export class CatalogAssets {
         const entry = manifest.assets.find((a: { id: string }) => a.id === id);
         if (!entry || this.disposed) return undefined;
         try {
-          const gltf = await new GLTFLoader().loadAsync(
-            `/models/catalog/${entry.file}`,
-          );
+          const gltf = await loads.run(async () => {
+            if (this.disposed) return undefined;
+            return new GLTFLoader().loadAsync(`/models/catalog/${entry.file}`);
+          });
+          if (!gltf) return undefined;
           this.roots.add(gltf.scene);
           if (this.disposed) {
             this.release();
@@ -44,7 +51,9 @@ export class CatalogAssets {
           gltf.scene.traverse((node) => {
             const mesh = node as THREE.Mesh;
             if (mesh.isMesh) {
-              mesh.castShadow = !["pro_torch", "dec_corner_cobweb"].includes(id);
+              mesh.castShadow = !["pro_torch", "dec_corner_cobweb"].includes(
+                id,
+              );
               mesh.receiveShadow = true;
               if (
                 id.startsWith("arc_") ||
@@ -80,6 +89,10 @@ export class CatalogAssets {
       if (!root || this.disposed) return;
       anchor.add(root.clone(true));
       replace?.();
+      if (parent instanceof THREE.Scene) {
+        anchor.updateMatrix();
+        anchor.matrixAutoUpdate = false;
+      }
     });
     return anchor;
   }
@@ -121,6 +134,7 @@ export class CatalogAssets {
             ),
           );
           batch.name = id;
+          batch.matrixAutoUpdate = false;
           // The reconstructed web has a solid backing: keep it from casting
           // a rectangular opaque shadow across the room.
           batch.castShadow = id !== "dec_corner_cobweb";
@@ -194,6 +208,7 @@ export class CatalogAssets {
             }
           });
           instances.castShadow = instances.receiveShadow = true;
+          instances.matrixAutoUpdate = false;
           instances.name = id;
           instances.computeBoundingSphere();
           parent.add(instances);
