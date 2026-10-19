@@ -139,3 +139,7 @@ Open `/asset-review.html?rigs` to inspect the new 66-joint Torchbearer and Hunte
 The main game now loads the 66-joint All Fingers Torchbearer and Hunter exports. Runtime adapters map the player library to 14 gameplay clips and the Hunter library to idle, search, pursuit, flee, capture and banishment. The full 103 original clips remain available at `/asset-review.html?rigs`.
 
 Rebuild from preserved exports with `prepare_mesh2motion.py SOURCE DESTINATION [hunter]`, then `smooth_mesh2motion_weights.py DESTINATION`. The weight repair uses 48 welded adjacency diffusion passes, a hand-local finger influence taper, and 240 projected passes under the GPU four-influence limit. Ground the player's death motion using `npx tsx tools/assets/ground_mesh2motion.ts DESTINATION`, then run `promote_character.py` with the per-model provenance JSON. This changes weights and clip adapters, not source mesh geometry. Raw site exports remain immutable. Stalker and Hollow still use their previous assets.
+
+### Crypt dressing and lighting
+
+Room dressing reuses catalog image-to-3D GLBs and the generated decal atlas. Seeded offering clusters sit in side aisles, clear of central crossing routes. `CatalogAssets.scatter` instances repeated source meshes in room-sized batches, preserving source materials and geometry. Firelight uses one torch shadow map plus nearby sanctuary shadow maps; low graphics disables them. Flame motion changes rendered shadows only, not enemy detection, fuel use or navigation.

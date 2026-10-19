@@ -44,7 +44,8 @@ export class CatalogAssets {
           gltf.scene.traverse((node) => {
             const mesh = node as THREE.Mesh;
             if (mesh.isMesh) {
-              mesh.castShadow = mesh.receiveShadow = true;
+              mesh.castShadow = !["pro_torch", "dec_corner_cobweb"].includes(id);
+              mesh.receiveShadow = true;
               if (
                 id.startsWith("arc_") ||
                 (id.startsWith("lan_") && id !== "lan_fallen_bell") ||
@@ -84,6 +85,53 @@ export class CatalogAssets {
   }
 
   /** Region batches keep neural masonry affordable without generating runtime geometry. */
+  scatter(id: string, parent: THREE.Object3D, placements: THREE.Matrix4[]) {
+    const holder = this.add(id, new THREE.Group(), 0, 0, 0, 1, 0, () => {
+      if (this.disposed) return;
+      if (id === "dre_small_bone_pile") holder.rotation.x = -Math.PI / 2;
+      holder.updateMatrixWorld(true);
+      const bounds = new THREE.Box3().setFromObject(holder);
+      const offset = new THREE.Matrix4().makeTranslation(
+        0,
+        id === "dec_corner_cobweb"
+          ? -bounds.getSize(new THREE.Vector3()).y / 2
+          : -bounds.min.y,
+        0,
+      );
+      const regions = new Map<string, THREE.Matrix4[]>();
+      for (const pose of placements) {
+        const key = `${Math.floor(pose.elements[12] / 28)},${Math.floor(pose.elements[14] / 28)}`;
+        const region = regions.get(key) ?? [];
+        region.push(pose);
+        regions.set(key, region);
+      }
+      holder.traverse((node) => {
+        const mesh = node as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        for (const region of regions.values()) {
+          const batch = new THREE.InstancedMesh(
+            mesh.geometry,
+            mesh.material,
+            region.length,
+          );
+          region.forEach((pose, i) =>
+            batch.setMatrixAt(
+              i,
+              pose.clone().multiply(offset).multiply(mesh.matrixWorld),
+            ),
+          );
+          batch.name = id;
+          // The reconstructed web has a solid backing: keep it from casting
+          // a rectangular opaque shadow across the room.
+          batch.castShadow = id !== "dec_corner_cobweb";
+          batch.receiveShadow = true;
+          batch.computeBoundingSphere();
+          parent.add(batch);
+        }
+      });
+    });
+  }
+
   batch(
     id: string,
     parent: THREE.Object3D,

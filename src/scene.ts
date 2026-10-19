@@ -37,6 +37,8 @@ export class GameScene {
   private hunter = new THREE.Group();
   private stalker = new THREE.Group();
   private torch = new THREE.PointLight(0xffa347, 28, 18, 1.5);
+  private sanctuaryLights: THREE.PointLight[] = [];
+  private lowQuality = false;
   private flame: THREE.Mesh;
   private torchBasket = new THREE.Group();
   private walls: THREE.Object3D[] = [];
@@ -262,6 +264,13 @@ export class GameScene {
       this.scene.add(fire);
       const light = new THREE.PointLight(0xffb85b, 12, 21, 1.6);
       light.position.set(x, 1.6, z);
+      light.shadow.mapSize.set(512, 512);
+      light.shadow.camera.near = 0.15;
+      light.shadow.camera.far = 21;
+      light.shadow.bias = -0.0003;
+      light.shadow.normalBias = 0.035;
+      light.shadow.radius = 2.5;
+      this.sanctuaryLights.push(light);
       this.scene.add(light);
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(1.05, 0.025, 5, 40),
@@ -348,8 +357,12 @@ export class GameScene {
     this.player.add(this.flame);
     this.torch.position.copy(this.flame.position);
     this.torch.castShadow = true;
-    this.torch.shadow.mapSize.set(512, 512);
-    this.torch.shadow.bias = -0.002;
+    this.torch.shadow.mapSize.set(1024, 1024);
+    this.torch.shadow.camera.near = 0.12;
+    this.torch.shadow.camera.far = 32;
+    this.torch.shadow.bias = -0.00025;
+    this.torch.shadow.normalBias = 0.025;
+    this.torch.shadow.radius = 3;
     this.player.add(this.torch);
     this.scene.add(this.player);
     const shadow = new THREE.MeshStandardMaterial({
@@ -420,14 +433,18 @@ export class GameScene {
         c !== this.torchBasket &&
         c !== this.stick,
     );
-    this.actor = new AnimatedCharacter("/models/torchbearer.glb?v=multiview-66", () => {
-      playerFallback.forEach((c) => (c.visible = false));
-      this.container.dataset.character = "rigged";
-    });
+    this.actor = new AnimatedCharacter(
+      "/models/torchbearer.glb?v=multiview-66",
+      () => {
+        playerFallback.forEach((c) => (c.visible = false));
+        this.container.dataset.character = "rigged";
+      },
+    );
     this.player.add(this.actor.root);
     const hunterFallback = [...this.hunter.children];
-    this.hunterActor = new AnimatedCharacter("/models/hunter.glb?v=multiview-66", () =>
-      hunterFallback.forEach((c) => (c.visible = false)),
+    this.hunterActor = new AnimatedCharacter(
+      "/models/hunter.glb?v=multiview-66",
+      () => hunterFallback.forEach((c) => (c.visible = false)),
     );
     this.hunter.add(this.hunterActor.root);
     const stalkerFallback = [...this.stalker.children];
@@ -814,6 +831,7 @@ export class GameScene {
     }
   }
   setQuality(low: boolean) {
+    this.lowQuality = low;
     this.renderer.setPixelRatio(low ? 1 : Math.min(devicePixelRatio, 1.6));
     this.renderer.shadowMap.enabled = !low;
     this.resize();
@@ -821,6 +839,16 @@ export class GameScene {
   update(game: Game, dt: number, yaw: number, pitch: number, distance = 3.7) {
     this.container.dataset.catalogModels = String(this.catalog.loaded);
     this.elapsed += dt;
+    this.sanctuaryLights.forEach((light, i) => {
+      const near =
+        light.position.distanceToSquared(this.player.position) < 22 * 22;
+      light.castShadow = !this.lowQuality && near;
+      light.intensity =
+        12 *
+        (1 +
+          0.055 * Math.sin(this.elapsed * 7.3 + i * 2) +
+          0.025 * Math.sin(this.elapsed * 13.7 + i));
+    });
     const previous = this.player.position.clone();
     this.player.position.set(game.player.x, 0, game.player.z);
     const moving = previous.distanceTo(this.player.position) > 0.001;
@@ -928,7 +956,7 @@ export class GameScene {
     this.burst = Math.max(0, this.burst - dt * 2);
     this.ambient.intensity = THREE.MathUtils.damp(
       this.ambient.intensity,
-      burning ? 0.65 : 0.3,
+      burning ? 0.55 : 0.3,
       2,
       dt,
     );
@@ -953,7 +981,24 @@ export class GameScene {
       8,
       dt,
     );
-    this.torch.distance = radius + this.burst * 10;
+    this.torch.distance = THREE.MathUtils.damp(
+      this.torch.distance,
+      radius + this.burst * 10,
+      6,
+      dt,
+    );
+    // Moving flame tip gives the masonry and hanging chains a gentle living
+    // shadow, without moving the player or changing AI visibility rules.
+    this.torch.position.copy(this.flame.position);
+    this.torch.position.x += Math.sin(this.elapsed * 5.7) * 0.018;
+    this.torch.position.z += Math.sin(this.elapsed * 8.1) * 0.012;
+    this.torch.color.setHSL(
+      0.075 + 0.008 * Math.sin(this.elapsed * 3.1),
+      0.9,
+      0.64,
+    );
+    this.torch.castShadow =
+      !this.lowQuality && (burning || this.torch.intensity > 0.1);
     this.flame.visible = burning;
     this.flame.scale.set(
       1 + 0.15 * Math.sin(this.elapsed * 21),

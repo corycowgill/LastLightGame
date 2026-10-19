@@ -18,7 +18,7 @@ test("every dungeon detail is backed by a detailed neural GLB", async () => {
     assert.ok(entry.file.endsWith(".glb"));
     assert.ok(
       entry.triangles >=
-        (detail.id === "pro_rubble"
+        (detail.id.startsWith("pro_")
           ? 2000
           : detail.id === "dre_urn_broken"
             ? 9000
@@ -58,7 +58,7 @@ test("dungeon stories are repeatable and keep large props outside central walkin
           Math.abs(c.z * 2 - detail.z) < 10,
       )!;
       assert.ok(room);
-      if (detail.id.startsWith("dre_")) {
+      if (detail.id.startsWith("dre_") || detail.id.startsWith("pro_")) {
         assert.ok(Math.abs(detail.x - room.x * 2) >= 3.5);
         assert.ok(Math.abs(detail.z - room.z * 2) >= 1.8);
       }

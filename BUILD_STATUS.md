@@ -281,3 +281,12 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Kept in-place root motion, torch hand socket, stable carry pose, facing conversion and player death grounding.
 - Stalker and Hollow are not part of this replacement; their unfinished website sessions still need recovery.
 - Validation: all 63 tests and production build passed; browser expedition driver reported PASS for extinction, active Hunt, navigated escape and sanctuary; separate Hunter retreat recovered to EXPLORING/BANISHED. Runtime URLs versioned to avoid stale cached GLBs.
+
+## 2026-10-18 — denser crypt dressing and firelight
+
+- Added nearer side-aisle funerary clusters using existing catalog GLBs: skulls, bone piles, broken urns, memorial stones, hanging chains, tomb lids and raised webs. Floor stain/grit decals tie the offerings to the stone. Central lanes and sanctuary safety remain clear.
+- Repeated dressing is instanced in room-sized batches with source geometry/materials preserved, rather than creating another draw call for every prop.
+- Torch shadows use a 1024 map, tighter near plane and reduced bias/normal bias. Nearby sanctuary fires now cast 512 shadows; distant fires stop rendering shadow maps. Low quality still disables shadow rendering.
+- Reduced warm-mode ambient fill, smoothed torch mode range changes, added subtle flame-tip movement/color variation and independent sanctuary flicker. Hunt dark adaptation remains unchanged.
+- Torch housing and solid-backed reconstructed webs no longer project oversized opaque shadows.
+- Validation: production build and all 63 tests pass; browser driver completed extinction, active Hunt, escape and sanctuary with the new dressing and lighting. Observed 60 FPS at the completed sanctuary on the local desktop browser; hardware and room views will vary.

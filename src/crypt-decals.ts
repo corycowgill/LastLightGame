@@ -61,6 +61,18 @@ export function addCryptDecals(scene: THREE.Scene, world: World) {
       put(0, x + side * 8.78, 2.9, z - 4.5, 1.6, 1.7, (-side * Math.PI) / 2);
       put(3, x + side * 5.7, 0.005, z - 4.3, 3.1, 2.4, side * 0.8, true);
       if (room.kind !== "sanctuary") {
+        // Damp burial stains and grit anchor the nearer offerings to the floor.
+        put(
+          3,
+          x + side * 4.15,
+          0.009,
+          z + side * 4.1,
+          3.2,
+          2.6,
+          side * 0.4,
+          true,
+        );
+        put(2, x + side * 4.8, 0.01, z - 4.6, 1.6, 2.4, side * 0.6, true);
         put(2, x + side * 3.5, 0.006, z + 4.3, 2.6, 2.2, side * 1.7, true);
         put(3, x + side * 6.3, 0.007, z + 5.8, 2.4, 2.3, side, true);
       }

@@ -42,6 +42,37 @@ export function dungeonDressing(world: World): Dressing[] {
         add("dre_crypt_skull", -side * 6.4, 0.03, 5.2, 0.85);
       }
       add("dre_chain_short", -side * 7.8, 2.3, -3.7, 1, 0.35);
+      // Collapsed funerary offerings reach into the lit side aisles, while
+      // leaving the crossing and all doorway approaches unobstructed.
+      for (const bank of [-1, 1]) {
+        const dx = bank * (3.9 + random() * 0.35);
+        const dz = bank * (3.8 + random() * 0.5);
+        add("pro_memorial", dx + bank * 0.55, 0, dz + 0.7, 0.65, -bank * 0.25);
+        add("dre_urn_broken", dx, 0, dz, 0.8);
+        add("dre_small_bone_pile", dx + bank * 0.3, 0, dz - 0.65, 0.7);
+        add(
+          "dre_crypt_skull",
+          dx - bank * 0.25,
+          0.025,
+          dz - 0.25,
+          0.85,
+          -bank * 0.6,
+        );
+        add("dre_chain_short", bank * 5.7, 2.7, -bank * 4.8, 0.9, bank * 0.3);
+        add(
+          "dec_corner_cobweb",
+          bank * 5.9,
+          3.15,
+          -bank * 5.2,
+          1.5,
+          (bank * Math.PI) / 2,
+        );
+      }
+      if (room.kind === "crypt" || room.kind === "landmark") {
+        add("dre_sarcophagus_lid", -side * 4.8, 0, -4.4, 0.8, side * 0.35);
+        add("dre_small_bone_pile", -side * 4.2, 0, -4.1, 0.85);
+        add("dre_crypt_skull", -side * 3.8, 0.03, -4.3, 0.9, Math.PI);
+      }
       // Funerary clusters form recognisable corners rather than uniform scatter.
       for (const corner of [-1, 1]) {
         add("dre_urn_broken", corner * 5.4, 0, 5.1, 1);
@@ -109,28 +140,18 @@ export function dressDungeon(
   catalog: CatalogAssets,
   world: World,
 ) {
+  const groups = new Map<string, THREE.Matrix4[]>();
   for (const detail of dungeonDressing(world)) {
-    const anchor = catalog.add(
-      detail.id,
-      scene,
-      detail.x,
-      detail.y,
-      detail.z,
-      detail.scale,
-      detail.yaw,
-      () => {
-        anchor.updateMatrixWorld(true);
-        const bounds = new THREE.Box3().setFromObject(anchor);
-        if (detail.id === "dre_small_bone_pile")
-          anchor.position.y += detail.y - bounds.min.y;
-        if (detail.id === "dec_corner_cobweb") {
-          // Catalog pivot is at its base; placements specify the web's vertical centre.
-          anchor.position.y -= bounds.getSize(new THREE.Vector3()).y / 2;
-        }
-      },
-    );
-    if (detail.id === "dre_small_bone_pile") anchor.rotation.x = -Math.PI / 2;
+    const pose = new THREE.Object3D();
+    pose.position.set(detail.x, detail.y, detail.z);
+    pose.rotation.y = detail.yaw;
+    pose.scale.setScalar(detail.scale);
+    pose.updateMatrix();
+    const list = groups.get(detail.id) ?? [];
+    list.push(pose.matrix.clone());
+    groups.set(detail.id, list);
   }
+  for (const [id, placements] of groups) catalog.scatter(id, scene, placements);
   const matrices = burialRows(world).flatMap((row) =>
     [0, 1, 2].map((tier) =>
       new THREE.Matrix4()
