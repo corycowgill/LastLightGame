@@ -10,6 +10,8 @@ Expeditions now generate **12–18 chambers** with changing routes, branches, lo
 
 ## Rebuilt Torchbearer (2026-10-19)
 
+The Torchbearer wears ivory-white cloth with dark leather accents. A player-only material recolor preserves the neural surface, face, rig and animations.
+
 The player is a **new TRELLIS image-to-3D body**, with a separate generated torch GLB, a fresh 52-joint bind and nine torch-specific motions generated through the authenticated Hugging Face HY-Motion service. The old player mesh, skin and Mesh2Motion clips are no longer used by gameplay. The right-hand socket drives the prop's position and rotation; a prop tip socket drives the runtime flame. Hunter and Stalker are unchanged by this rebuild.
 
 Review the shipped player with its separate torch at `/asset-review.html?rebuild`. Select idle, walk, sprint, crouch, relight or other motions and drag to orbit. [Rebuild guide](docs/torchbearer-rebuild/README.md) includes the reference images, prompts, source hashes, failed approaches, carry IK, licensing and reproduction commands. Gloves follow the wrist as a unit; individual finger skin articulation and terrain-aware foot placement remain future work.

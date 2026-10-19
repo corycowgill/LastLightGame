@@ -1,5 +1,8 @@
 import { addHunterEyes } from "./hunter-eyes";
-import { prepareCharacterSurface } from "./character-materials";
+import {
+  prepareCharacterSurface,
+  prepareIvoryGarb,
+} from "./character-materials";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -86,8 +89,11 @@ async function select() {
   root = gltf.scene;
   if (!rigReview && entry.id.startsWith("cha_"))
     root.traverse((node) => {
-      if ((node as THREE.Mesh).isMesh)
+      if ((node as THREE.Mesh).isMesh) {
         prepareCharacterSurface(node as THREE.Mesh);
+        if (entry.id === "cha_torchbearer")
+          prepareIvoryGarb(node as THREE.Mesh);
+      }
     });
   if (!rigReview && entry.id === "cha_hunter") addHunterEyes(root);
   if (entry.id === "cha_torchbearer" || rebuildReview) {

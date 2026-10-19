@@ -1,6 +1,9 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { prepareCharacterSurface } from "./character-materials";
+import {
+  prepareCharacterSurface,
+  prepareIvoryGarb,
+} from "./character-materials";
 
 export function movementClip(crouched: boolean, speed: number, previous = "") {
   // Separate enter/exit thresholds prevent gait flicker during acceleration.
@@ -78,6 +81,7 @@ export class AnimatedCharacter {
           const mesh = node as THREE.Mesh;
           if (mesh.isMesh) {
             prepareCharacterSurface(mesh);
+            if (this.playerMotion) prepareIvoryGarb(mesh);
           }
         });
         this.mixer = new THREE.AnimationMixer(gltf.scene);
