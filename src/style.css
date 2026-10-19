@@ -840,3 +840,23 @@ body[data-touch="true"] #lookHint {
     display: none;
   }
 }
+
+#survivalHint {
+  color: #c1afa0;
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: 0.07em;
+  margin-top: 8px;
+  max-width: 290px;
+  min-height: 15px;
+}
+.lowfuel #survivalHint {
+  color: #f39b76;
+}
+@media (max-height: 500px) {
+  #survivalHint {
+    font-size: 8px;
+    margin-top: 3px;
+    max-width: 205px;
+  }
+}

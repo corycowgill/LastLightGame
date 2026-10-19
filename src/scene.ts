@@ -40,7 +40,8 @@ export class GameScene {
   private player = new THREE.Group();
   private hunter = new THREE.Group();
   private stalker = new THREE.Group();
-  private torch = new THREE.PointLight(0xffa347, 28, 18, 1.5);
+  // Bounded near-field light avoids clipping the adjacent hood to white.
+  private torch = new THREE.PointLight(0xffa347, 2.2, 18, 0);
   private sanctuaryLights: THREE.PointLight[] = [];
   private lowQuality = false;
   private flame: THREE.Mesh;
@@ -804,7 +805,9 @@ export class GameScene {
       this.player.worldToLocal(this.socketPoint);
       this.flame.position
         .copy(this.socketPoint)
-        .add(new THREE.Vector3(0, 0.46, 0));
+        // Tilt the carried torch out from the shoulder rather than driving
+        // its flame vertically through the hood during relaxed animations.
+        .add(new THREE.Vector3(-0.28, 0.37, -0.08));
       this.torch.position.copy(this.flame.position);
       this.stick?.position
         .copy(this.socketPoint)
@@ -818,9 +821,12 @@ export class GameScene {
           : 0;
       });
     this.torchBasket.position.copy(this.flame.position);
-    this.torchHardware?.position
-      .copy(this.flame.position)
-      .add(new THREE.Vector3(0, -0.65, 0));
+    if (this.torchHardware) {
+      this.torchHardware.position
+        .copy(this.flame.position)
+        .add(new THREE.Vector3(0.39, -0.52, 0));
+      this.torchHardware.rotation.z = 0.65;
+    }
     const burning =
       game.fuel > 0 && ["EXPLORING", "SANCTUARY"].includes(game.phase);
     if (this.lastFuel - game.fuel > 35) this.burst = 1;
@@ -839,12 +845,12 @@ export class GameScene {
       dt,
     );
     const radius = [3, 9, 20][game.mode] || 9,
-      intensity = [10, 26, 64][game.mode] || 35;
+      intensity = [0.9, 2.2, 4.8][game.mode] || 2.2;
     const flicker = flameFlicker(this.elapsed, game.fuel / game.maxFuel);
     this.container.dataset.flameFlicker = flicker.toFixed(2);
     this.torch.intensity = THREE.MathUtils.damp(
       this.torch.intensity,
-      burning ? intensity * flicker + this.burst * 180 : 0,
+      burning ? intensity * flicker + this.burst * 8 : 0,
       8,
       dt,
     );

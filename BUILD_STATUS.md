@@ -349,3 +349,11 @@ The Stalker now recoils for 0.7 seconds, then retreats at 1.35 m/s along collisi
 Below 10% fuel, irregular bounded light dips and matching flame contraction add visible sputtering. Fuel consumption, AI visibility and extinction timing remain independent of this effect. `/?debug&stalker&seed=104729` opens a repeatable low-fuel creature review. The screenshot's statue/circle belonged to the earlier build; those placements remain removed.
 
 Validation: 73 tests pass, including all torch modes repelling the Stalker, escape movement, no contact fuel drain, darkness state recovery and bounded critical-fuel flicker. Production build succeeds; existing Three.js chunk warning remains.
+
+## 2026-10-19 — character lighting and survival readability
+
+Animated character surfaces retain their generated texture maps but cap metallic response and disable self-shadow reception to avoid near-light striping. The carried torch now tilts outward from its hand socket, clearing the hood; its bounded near-field lighting reduces close-range clipping while retaining mode radii and critical-fuel flicker. Sanctuary and world shadows remain enabled. This does not repair remaining source-rig deformation defects or provide new animation assets.
+
+Compact HUD guidance explains visible Stalker fear and critical-fuel survival actions. Directional accessibility cues now include Stalker pursuit. The menu shows a Git build ID and checks `build.json` for a newer release, offering a manual reload without interrupting an expedition. Render header rules request revalidation for HTML, build identity and mutable model paths; an existing service must sync its Blueprint to adopt those rules. Reference: https://render.com/docs/static-site-headers and https://render.com/docs/blueprint-spec.
+
+Validation: 74 tests pass; production build succeeds. Physical iPhone/Xbox verification and broader rig/art acceptance remain outstanding.

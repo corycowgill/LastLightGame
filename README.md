@@ -157,3 +157,9 @@ See [the performance report](docs/PERFORMANCE.md) for measured frame pacing, CPU
 ### Stalker fire response and low fuel
 
 A burning torch now triggers a brief Stalker cower followed by a slow, hunched retreat using navigable routes; Ember has the shortest protection radius. Its existing recoil and investigate clips supply the motion, with a blended skeletal fear pose. It resumes pursuit in darkness. Below 10% fuel, `flame.ts` drives irregular light dips and flame contraction without changing simulation visibility or fuel. Review both at `/?debug&stalker&seed=104729`.
+
+### Readability and release identity
+
+Character cloth uses restrained metallic response and avoids self-shadow reception; world shadows remain active. The torch tilts outward from its animation socket and uses bounded near-field light to reduce clipping beside the hood. Critical-fuel and visible-creature hints explain survival decisions without revealing creatures through walls.
+
+The menu displays the Git commit used to build the game. Vite emits `build.json`; returning to the menu can offer an update when the deployed ID differs. Reloading is always a player action. Render's Blueprint declares revalidation headers for HTML, build identity and mutable GLB paths; sync the Blueprint for existing services to apply them. Source archives build with the label `local` when Git is unavailable.

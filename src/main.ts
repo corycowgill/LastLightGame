@@ -10,7 +10,8 @@ import {
 } from "./platform-input";
 import { ExpeditionCheck } from "./qa";
 let check: ExpeditionCheck | undefined;
-import { Game } from "./simulation";
+import { Game, lineOfSight } from "./simulation";
+declare const __BUILD_ID__: string;
 import { GameScene } from "./scene";
 import { GameAudio } from "./audio";
 import { dungeonDressing } from "./dungeon-dressing";
@@ -205,12 +206,27 @@ function menu() {
   cameraControls.release();
   panel(
     intro +
-      '<div id="actions"></div><div class="version">A CATACOMBS EXPEDITION · HEADPHONES RECOMMENDED</div>',
+      `<div id="actions"></div><div class="version">A CATACOMBS EXPEDITION · HEADPHONES RECOMMENDED<br>BUILD ${__BUILD_ID__}</div>`,
   );
   button("new", "BEGIN EXPEDITION", () => begin(false));
   button("continue", "CONTINUE JOURNEY", () => begin(true));
   button("settings", "SETTINGS", showSettings);
   button("controls", "FIELD GUIDE", controls);
+  // Offer updates only from the menu, never reload an active expedition.
+  fetch("/build.json", { cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((build) => {
+      if (
+        screen === "menu" &&
+        build?.id &&
+        build.id !== __BUILD_ID__ &&
+        !document.getElementById("updateBuild")
+      )
+        button("updateBuild", "UPDATE READY · RELOAD GAME", () =>
+          location.reload(),
+        );
+    })
+    .catch(() => {});
   if (new URLSearchParams(location.search).has("debug"))
     button("check", "RUN EXPEDITION CHECK", () => {
       begin(false);
@@ -670,6 +686,22 @@ function updateHUD() {
     `${Math.ceil(pct * 100)}% · ~${Math.ceil(game.fuel / game.fuelRate)}s`;
   $("mode").textContent =
     ["EMBER", "STEADY FLAME", "BLAZE"][game.mode] || "FLAME";
+  const closeCreature = game.enemies.find(
+    (e) =>
+      Math.hypot(e.x - game.player.x, e.z - game.player.z) < 8 &&
+      lineOfSight(game.world, e, game.player),
+  );
+  $("survivalHint").textContent =
+    game.fuel <= 0
+      ? game.matches > 0
+        ? "STRIKE A MATCH · KEEP MOVING"
+        : "FIND GOLDEN FIRE · STAY QUIET"
+      : pct < 0.1
+        ? "FLAME FAILING · FIND OIL OR GOLDEN FIRE"
+        : closeCreature?.state === "COWERING" ||
+            closeCreature?.state === "FLEEING"
+          ? "IT FEARS YOUR FLAME · KEEP YOUR DISTANCE"
+          : "";
   const markup = `<b>${game.matches}</b> MATCHES &nbsp; <b>${game.artifacts}</b> RELICS<br><small>${game.chalk.length} CHALK MARKS · ${game.banked} BANKED</small>`;
   if (markup !== inventoryMarkup) {
     inventoryMarkup = markup;
@@ -719,7 +751,9 @@ function updateHUD() {
   const threat =
     hunt && game.hunter.state !== "DORMANT"
       ? game.hunter
-      : game.enemies.find((e) => e.state === "INVESTIGATING");
+      : game.enemies.find(
+          (e) => e.state === "INVESTIGATING" || e.state === "PURSUING",
+        );
   let cue = "";
   if (settings.cues && threat) {
     const dx = threat.x - game.player.x,
