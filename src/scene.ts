@@ -697,15 +697,6 @@ export class GameScene {
         upright.userData.archShell = true;
       }
     }
-    if (kind === "landmark") {
-      const rune = new THREE.Mesh(
-        new THREE.TorusGeometry(0.35, 0.025, 4, 24),
-        new THREE.MeshBasicMaterial({ color: 0x83a8b0 }),
-      );
-      rune.position.set(x + 7.2, 1.7, z);
-      rune.rotation.y = Math.PI / 2;
-      this.scene.add(rune);
-    }
   }
   setQuality(low: boolean) {
     this.lowQuality = low;

@@ -17,7 +17,6 @@ export function roomProps(x: number, z: number, kind: string): RoomProp[] {
     for (const sz of [-1, 1]) add("pro_pillar", sx * 7.8, sz * 7.8);
   if (kind === "sanctuary") {
     add("lan_sanctuary_arch_hero", 8.2, 0, -Math.PI / 2);
-    add("lan_processional_statue", -7.8, -5.5, Math.PI / 2);
   } else if (kind === "flooded") {
     add("lan_fallen_bell", 7.7, -5.8);
     add("lan_split_pillar_relief", -7.8, -5.5, Math.PI / 2);
@@ -37,8 +36,6 @@ export function roomProps(x: number, z: number, kind: string): RoomProp[] {
           Math.PI / 2,
         );
   } else if (kind === "landmark") {
-    // Keep the eastern portal clear once the statue is genuinely solid.
-    add("lan_processional_statue", 5.7, 3.3, -Math.PI / 2);
     add("lan_split_pillar_relief", -7.8, 5, Math.PI / 2);
     add("lan_broken_processional_dais", -7.7, -5.5);
     add("lan_artifact_pedestal", -7.7, -5.5, 0, 1, 0.55);

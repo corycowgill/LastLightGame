@@ -336,3 +336,8 @@ Large props now share placement data between rendering, player collision, Hunter
 Regenerate metadata after changing source GLBs with `npx tsx tools/assets/collision-bounds.ts`. Bounds include source hashes; tests catch stale metadata. Collision checks use a spatial hash and navigation edges are cached. The diagnostic Hunt now starts on the final approach because older routes crossed non-solid furniture; gameplay Hunt timing is unchanged.
 
 Validation: 71 tests pass and production build succeeds. Browser expedition check passed extinction, active Hunt, navigated escape and sanctuary in 1:02 simulated expedition time. Observed local frame p95 18.2 ms, worst 36.4 ms; these are a short desktop checkpoint, not a hardware guarantee.
+
+## 2026-10-19 — remove misleading statue interactions
+
+Removed decorative processional statues from sanctuary/landmark rooms and the floating landmark circle, which suggested an interaction without providing one. Shared placement removal also removes their collision blockers. Validation: 71 tests pass; production build succeeds.
+
