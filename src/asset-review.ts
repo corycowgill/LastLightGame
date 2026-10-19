@@ -1,4 +1,5 @@
 import { addHunterEyes } from "./hunter-eyes";
+import { prepareCharacterSurface } from "./character-materials";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -67,7 +68,9 @@ async function select() {
   const entry = entries.find((a: { id: string }) => a.id === selector.value);
   status.textContent = "Loading " + entry.name + "…";
   const gltf = await new GLTFLoader().loadAsync(
-    (rigReview ? "/models/rig-review/" : "/models/catalog/") + entry.file,
+    (rigReview ? "/models/rig-review/" : "/models/catalog/") +
+      entry.file +
+      `?v=${entry.sha256 ?? "review"}`,
   );
   if (version !== generation) {
     release(gltf.scene);
@@ -80,6 +83,11 @@ async function select() {
     release(root);
   }
   root = gltf.scene;
+  if (!rigReview && entry.id.startsWith("cha_"))
+    root.traverse((node) => {
+      if ((node as THREE.Mesh).isMesh)
+        prepareCharacterSurface(node as THREE.Mesh);
+    });
   if (!rigReview && entry.id === "cha_hunter") addHunterEyes(root);
   scene.add(root);
   mixer = new THREE.AnimationMixer(root);

@@ -316,8 +316,8 @@
       "reference": "references/characters/TORCHBEARER_A_POSE.png",
       "reference_sha256": "851ebc0f2041cddceb1106b09cd198acc23feeb49cb7990c303ef1d49628452d",
       "source_sha256": "dd4834ecc195adb249fa8f4bf1cd392ed1bbde2f842dfbcc35c66f1249843a8c",
-      "sha256": "71e312bcfa080c5b2af1da90bc9647c0c21afa3edbf6e800f29019a447ad5af6",
-      "bytes": 5782520,
+      "sha256": "78bafcbf7a7e3365a74c6271d49a3de46b57973085f3405c7e820db5bc35f58b",
+      "bytes": 5862728,
       "triangles": 16000,
       "finishing": "Blender budget reduction; texture resize to 512; geometry preserved during texture packing",
       "target_size_m": 1.55,
@@ -331,7 +331,7 @@
       "integration_status": "reviewable_in_game_draft",
       "license": "TRELLIS.2 model MIT; original project reference",
       "license_url": "https://huggingface.co/microsoft/TRELLIS.2-4B",
-      "animation_binding": "Mesh2Motion multi-view fitted Human All Fingers skeleton; adjacency-smoothed weights; in-place motion and game-facing adapter",
+      "animation_binding": "Mesh2Motion 66-joint skin; animated torch grip, bounded gait sway and anatomical upper-body weight repair",
       "clips": [
         "idle",
         "walk",
@@ -419,8 +419,9 @@
           "Walk_Stealth"
         ],
         "review_status": "installed for user gameplay validation; toe chains limited to foot/ball; Stalker and Hollow pending",
-        "skin_correction": "48 welded adjacency diffusion passes; hand-local finger influence taper; 240 four-influence projected smoothing passes; normalized weights and lower-leg upper-limb exclusion",
-        "runtime_adapter": "14 player / 6 Hunter gameplay aliases; complete site libraries remain in rig review"
+        "skin_correction": "48 welded adjacency diffusion passes; hand-local finger influence taper; 240 four-influence projected smoothing passes; normalized weights and lower-leg upper-limb exclusion; spatial shoulder/torso separation; thigh exclusion above ribcage; finger exclusion above wrist crease",
+        "runtime_adapter": "14 player aliases; time-varying torch-side arm and grip; original site clips and source mesh preserved",
+        "arm_motion_repair": "2026-10-19: replaced frozen midpoint arm channels with sampled Idle_Torch grip plus bounded source gait sway; 120 rotation tracks restored"
       }
     },
     {

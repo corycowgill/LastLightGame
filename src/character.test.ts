@@ -8,11 +8,17 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 test("Mesh2Motion source is preserved and runtime keeps its skin with in-place motion", async () => {
   const source = await readFile(
-    new URL("../docs/mesh2motion/multiview/torchbearer/site-export.glb", import.meta.url),
+    new URL(
+      "../docs/mesh2motion/multiview/torchbearer/site-export.glb",
+      import.meta.url,
+    ),
   );
   const record = JSON.parse(
     await readFile(
-      new URL("../docs/mesh2motion/multiview/torchbearer/provenance.json", import.meta.url),
+      new URL(
+        "../docs/mesh2motion/multiview/torchbearer/provenance.json",
+        import.meta.url,
+      ),
       "utf8",
     ),
   );
@@ -28,9 +34,48 @@ test("Mesh2Motion source is preserved and runtime keeps its skin with in-place m
   );
   const size = runtime.readUInt32LE(12);
   const doc = JSON.parse(runtime.toString("utf8", 20, 20 + size));
+  const geometryBytes = (bytes: Buffer, json: any, index: number) => {
+    const a = json.accessors[index],
+      v = json.bufferViews[a.bufferView];
+    const widths: Record<string, number> = {
+      SCALAR: 1,
+      VEC2: 2,
+      VEC3: 3,
+      VEC4: 4,
+      MAT4: 16,
+    };
+    const sizes: Record<number, number> = {
+      5121: 1,
+      5123: 2,
+      5125: 4,
+      5126: 4,
+    };
+    const offset =
+      28 + bytes.readUInt32LE(12) + (v.byteOffset ?? 0) + (a.byteOffset ?? 0);
+    return bytes.subarray(
+      offset,
+      offset + a.count * widths[a.type] * sizes[a.componentType],
+    );
+  };
+  const originalMesh = original.meshes[0].primitives[0],
+    shippedMesh = doc.meshes[0].primitives[0];
+  for (const attribute of ["POSITION", "NORMAL", "TEXCOORD_0"])
+    assert.deepEqual(
+      geometryBytes(runtime, doc, shippedMesh.attributes[attribute]),
+      geometryBytes(source, original, originalMesh.attributes[attribute]),
+      `arm repair must preserve source ${attribute}`,
+    );
+  assert.deepEqual(
+    geometryBytes(runtime, doc, shippedMesh.indices),
+    geometryBytes(source, original, originalMesh.indices),
+  );
+  assert.deepEqual(
+    geometryBytes(runtime, doc, doc.skins[0].inverseBindMatrices),
+    geometryBytes(source, original, original.skins[0].inverseBindMatrices),
+  );
   assert.equal(doc.skins[0].joints.length, original.skins[0].joints.length);
   assert.equal(doc.skins[0].joints.length, 66);
-  assert.ok(doc.nodes.some((n: any) => n.name === 'index_03_l'));
+  assert.ok(doc.nodes.some((n: any) => n.name === "index_03_l"));
   assert.ok(doc.nodes.some((n: any) => n.name === "game_forward"));
   for (const animation of doc.animations) {
     assert.equal(animation.extras.source, "Mesh2Motion");

@@ -448,7 +448,7 @@ export class GameScene {
         c !== this.stick,
     );
     this.actor = new AnimatedCharacter(
-      "/models/torchbearer.glb?v=multiview-66",
+      "/models/torchbearer.glb?v=arm-repair-v2",
       () => {
         playerFallback.forEach((c) => (c.visible = false));
         this.container.dataset.character = "rigged";

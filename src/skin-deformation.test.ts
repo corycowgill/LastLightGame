@@ -24,6 +24,18 @@ test("Torchbearer skin does not tear at shoulder and waist weight boundaries", a
   });
   const positions = mesh.geometry.getAttribute("position"),
     indices = mesh.geometry.index!;
+  const weights = mesh.geometry.getAttribute("skinWeight"),
+    joints = mesh.geometry.getAttribute("skinIndex");
+  for (let i = 0; i < positions.count; i++)
+    if (positions.getY(i) > 0.98)
+      for (let k = 0; k < 4; k++) {
+        const bone = mesh.skeleton.bones[joints.getComponent(i, k)].name;
+        assert.ok(
+          weights.getComponent(i, k) < 0.0001 ||
+            !/^(thigh|shin|foot|ball|toe)/.test(bone),
+          "ribcage must not follow leg bones",
+        );
+      }
   const edges: [number, number, number][] = [];
   const a = new THREE.Vector3(),
     b = new THREE.Vector3();
@@ -42,10 +54,21 @@ test("Torchbearer skin does not tear at shoulder and waist weight boundaries", a
     mixer.clipAction(clip).play();
     let excessive = 0,
       worst = 0;
-    for (const phase of [0.1, 0.3, 0.5, 0.7]) {
+    const phases = Array.from({ length: 12 }, (_, i) => i / 12);
+    const hands: Record<string, THREE.Vector3[]> = { L: [], R: [] };
+    for (const phase of phases) {
       mixer.setTime(clip.duration * phase);
       gltf.scene.updateMatrixWorld(true);
       mesh.skeleton.update();
+      const chest = gltf.scene.getObjectByName("chest")!;
+      for (const side of ["L", "R"])
+        hands[side].push(
+          chest.worldToLocal(
+            gltf.scene
+              .getObjectByName(`hand_${side}`)!
+              .getWorldPosition(new THREE.Vector3()),
+          ),
+        );
       const deformed = Array.from({ length: positions.count }, (_, i) =>
         mesh.applyBoneTransform(
           i,
@@ -59,11 +82,25 @@ test("Torchbearer skin does not tear at shoulder and waist weight boundaries", a
       }
     }
     // The rejected site weights had thousands of 2.5x edges and 14–18x peaks.
-    assert.ok(worst < 5, `${name}: edge stretched ${worst.toFixed(2)}x`);
+    assert.ok(worst < 4.5, `${name}: edge stretched ${worst.toFixed(2)}x`);
     assert.ok(
-      excessive / (edges.length * 4) < 0.001,
+      excessive / (edges.length * phases.length) < 0.001,
       `${name}: widespread skin tearing`,
     );
+    if (name !== "idle")
+      for (const side of ["L", "R"]) {
+        const travel = Math.max(
+          ...hands[side].map((p) => p.distanceTo(hands[side][0])),
+        );
+        assert.ok(
+          travel > 0.01,
+          `${name}: ${side} arm must move relative to the chest, not remain frozen`,
+        );
+        assert.ok(
+          travel < 1,
+          `${name}: ${side} wrist escaped its anatomical envelope`,
+        );
+      }
     mixer.stopAllAction();
     mixer.uncacheRoot(gltf.scene);
   }

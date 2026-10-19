@@ -1,5 +1,5 @@
 {
-  "animation_binding": "Mesh2Motion multi-view fitted Human All Fingers skeleton; adjacency-smoothed weights; in-place motion and game-facing adapter",
+  "animation_binding": "Mesh2Motion 66-joint skin; animated torch grip, bounded gait sway and anatomical upper-body weight repair",
   "animation_source": {
     "tool": "Mesh2Motion",
     "url": "https://app.mesh2motion.org/create",
@@ -70,7 +70,8 @@
       "Walk_Stealth"
     ],
     "review_status": "installed for user gameplay validation; toe chains limited to foot/ball; Stalker and Hollow pending",
-    "skin_correction": "48 welded adjacency diffusion passes; hand-local finger influence taper; 240 four-influence projected smoothing passes; normalized weights and lower-leg upper-limb exclusion",
-    "runtime_adapter": "14 player / 6 Hunter gameplay aliases; complete site libraries remain in rig review"
+    "skin_correction": "48 welded adjacency diffusion passes; hand-local finger influence taper; 240 four-influence projected smoothing passes; normalized weights and lower-leg upper-limb exclusion; spatial shoulder/torso separation; thigh exclusion above ribcage; finger exclusion above wrist crease",
+    "runtime_adapter": "14 player aliases; time-varying torch-side arm and grip; original site clips and source mesh preserved",
+    "arm_motion_repair": "2026-10-19: replaced frozen midpoint arm channels with sampled Idle_Torch grip plus bounded source gait sway; 120 rotation tracks restored"
   }
 }

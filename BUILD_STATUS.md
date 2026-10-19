@@ -365,3 +365,11 @@ Replaced the fixed eleven-room snake with 12–18 seeded chambers, branching gra
 Old fixed-map saves safely bank carried relics, preserve upgrades and return to the new entrance. Current-generation saves keep their normal position and expedition state. See docs/WORLD_GENERATION.md for the pipeline and remaining module limitations.
 
 Validation: 77 tests pass, including 200 seeds with all room centres reachable, topology/size/theme diversity, reward/spawn placement and migration. Twenty complete simulation expeditions passed extinction, active Hunt and sanctuary with the Stalker enabled. Browser seed 104729 passed the full escape with no warnings/errors; observed frame p95 18.1 ms, worst 35.0 ms in this short desktop run. Production build succeeds with the existing Three.js chunk warning.
+
+## 2026-10-19 — Torchbearer arm motion and upper-body binding repair
+
+Found and removed the adapter's frozen midpoint replacement for the right clavicle, upper arm, elbow, wrist and fingers during locomotion. The preserved Mesh2Motion Idle_Torch motion now supplies an animated grip with bounded source-gait shoulder/elbow sway. The fix transfers 120 arm rotation tracks onto the shipped asset without replacing its geometry, bind matrices, original skeleton or grounded non-locomotion clips.
+
+A deformation diagnostic also found thigh weights on ribcage vertices and finger weights above the wrist. Spatial tapers now keep torso cloth with the torso, maintain shoulder transitions and transfer stray sleeve finger influence to the forearm. Four sampled crouch-walk phases reduced worst tested edge stretch from 4.92x to 3.11x; sprint reduced from 4.26x to 3.67x. These are diagnostic ratios on edges over 5 mm, not a claim that all deformation is eliminated. The original neural mesh and raw site export remain preserved.
+
+The stronger regression samples 12 phases per idle/walk/sprint/crouch-walk clip, prohibits leg influence on the ribcage, requires both hands to move relative to the chest and keeps a tighter 4.5x maximum edge envelope. All 77 tests pass. Production build succeeds. Runtime GLB URL is versioned to fetch the corrected asset.

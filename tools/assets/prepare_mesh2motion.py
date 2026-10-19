@@ -8,6 +8,7 @@ import json
 import struct
 import sys
 from pathlib import Path
+from torch_arm_motion import motion_rows
 
 source, destination = map(Path, sys.argv[1:3])
 kind = sys.argv[3] if len(sys.argv) > 3 else 'torchbearer'
@@ -63,7 +64,7 @@ for channel in original.get('Idle_Torch', {'channels': []})['channels']:
                 ('thumb', 'index', 'middle', 'ring', 'pinky'))):
         sampler = original['Idle_Torch']['samplers'][channel['sampler']]
         samples = values(sampler['output'])
-        carry[node] = samples[len(samples)//2]
+        carry[node] = (values(sampler['input']), samples)
 
 animations = []
 for name, site_name in mapping.items():
@@ -81,8 +82,8 @@ for name, site_name in mapping.items():
                 # shorter torso. Keep vertical gait bounce and crouch movement.
                 if kind == 'torchbearer':
                     row[2] -= 0.03 if name.startswith('crouch') else 0.11
-        elif name in loops and target['node'] in carry:
-            rows = [carry[target['node']][:] for _ in rows]
+        elif kind == 'torchbearer' and name in loops and target['path'] == 'rotation' and target['node'] in carry:
+            rows = motion_rows(name, doc['nodes'][target['node']]['name'], values(sampler['input']), rows, carry[target['node']])
         if name in loops: rows[-1] = rows[0][:]
         sampler['output'] = append_values(rows, 'VEC3' if target['path'] == 'translation' else 'VEC4')
     animation['extras'] = {'source_clip': site_name, 'source': 'Mesh2Motion',
