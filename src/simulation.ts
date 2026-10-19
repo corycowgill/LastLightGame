@@ -1,4 +1,4 @@
-import { environmentBlocks } from "./crypt-layout";
+import { blockedByProp, propSegmentClear } from "./crypt-layout";
 export type Point = { x: number; z: number };
 export type World = {
   cells: (Point & { kind: string })[];
@@ -70,20 +70,21 @@ export type Upgrade = keyof typeof UPGRADES;
 const key = (x: number, z: number) => `${x},${z}`;
 const dist = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.z - b.z);
 const grids = new WeakMap<World, Set<string>>();
+const floors = new WeakMap<World, Set<string>>();
+function floorGrid(w: World) {
+  let floor = floors.get(w);
+  if (!floor) {
+    floor = new Set(w.cells.map((c) => key(c.x, c.z)));
+    floors.set(w, floor);
+  }
+  return floor;
+}
 function grid(w: World) {
   let s = grids.get(w);
   if (!s) {
-    const blocks = environmentBlocks(w);
     s = new Set(
       w.cells
-        .filter(
-          (c) =>
-            !blocks.some(
-              (b) =>
-                Math.abs(c.x * 2 - b.x) < b.halfX + 0.35 &&
-                Math.abs(c.z * 2 - b.z) < b.halfZ + 0.35,
-            ),
-        )
+        .filter((c) => !blockedByProp(w, c.x * 2, c.z * 2, 0.45))
         .map((c) => key(c.x, c.z)),
     );
     grids.set(w, s);
@@ -140,7 +141,26 @@ export function generateWorld(seed = 1): World {
   };
 }
 export function walkable(w: World, x: number, z: number) {
-  return grid(w).has(key(Math.round(x / 2), Math.round(z / 2)));
+  return (
+    floorGrid(w).has(key(Math.round(x / 2), Math.round(z / 2))) &&
+    !blockedByProp(w, x, z)
+  );
+}
+const edgeCaches = new WeakMap<World, Map<string, boolean>>();
+function clearEdge(w: World, a: Point, b: Point) {
+  let cache = edgeCaches.get(w);
+  if (!cache) {
+    cache = new Map();
+    edgeCaches.set(w, cache);
+  }
+  const first = key(a.x, a.z),
+    second = key(b.x, b.z);
+  const id = first < second ? `${first}:${second}` : `${second}:${first}`;
+  const saved = cache.get(id);
+  if (saved !== undefined) return saved;
+  const clear = propSegmentClear(w, a.x * 2, a.z * 2, b.x * 2, b.z * 2);
+  cache.set(id, clear);
+  return clear;
 }
 export function lineOfSight(w: World, a: Point, b: Point) {
   const n = Math.max(1, Math.ceil(dist(a, b) * 5));
@@ -202,7 +222,7 @@ function solvePath(w: World, a: Point, b: Point): Point[] {
     ]) {
       const n = { x: p.x + dx, z: p.z + dz },
         nk = key(n.x, n.z);
-      if (allowed.has(nk) && !prev.has(nk)) {
+      if (allowed.has(nk) && !prev.has(nk) && clearEdge(w, p, n)) {
         prev.set(nk, k);
         q.push(n);
       }
@@ -522,6 +542,7 @@ export class Game {
     const clear = (x: number, z: number) =>
       dist({ x, z }, this.start) > 0.85 &&
       dist({ x, z }, this.destination) > 0.85 &&
+      !blockedByProp(this.world, x, z, 0.3) &&
       [
         [-0.3, -0.3],
         [0.3, -0.3],
@@ -611,8 +632,10 @@ export class Game {
     const candidates = this.world.cells
       .map((c) => ({ x: c.x * 2, z: c.z * 2 }))
       .filter((p) => {
-        const d = dist(p, this.player),
-          visible = lineOfSight(this.world, p, this.player),
+        const d = dist(p, this.player);
+        if (d <= 18 || d >= 45 || !grid(this.world).has(key(p.x / 2, p.z / 2)))
+          return false;
+        const visible = lineOfSight(this.world, p, this.player),
           front =
             ((p.x - this.player.x) * direction.x +
               (p.z - this.player.z) * direction.z) /
@@ -625,7 +648,9 @@ export class Game {
         );
       })
       .sort((a, b) => dist(a, this.player) - dist(b, this.player));
-    const p = candidates[0];
+    const p = candidates.find(
+      (candidate) => findPath(this.world, candidate, this.player).length > 0,
+    );
     if (!p) {
       this.timer = 1;
       this.phase = "HUNT_GRACE";
@@ -655,7 +680,7 @@ export class Game {
     const move = Math.min(length, dt * speed),
       x = enemy.x + ((next.x - enemy.x) / length) * move,
       z = enemy.z + ((next.z - enemy.z) / length) * move;
-    if (walkable(this.world, x, z)) {
+    if (walkable(this.world, x, z) && !blockedByProp(this.world, x, z, 0.3)) {
       enemy.x = x;
       enemy.z = z;
       if (move >= length - 0.001) route.points.shift();

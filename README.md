@@ -149,3 +149,7 @@ Crypt horror scenes are selected deterministically by `cryptStory(world, room)` 
 ### Performance profiling
 
 See [the performance report](docs/PERFORMANCE.md) for measured frame pacing, CPU comparisons, remaining hardware limits and reproduction commands. Run `npx tsx tools/performance-benchmark.ts` for focused camera/path benchmarks. Expeditions now prepare models, shaders and the first render before play begins; this keeps initial loading separate from movement and fuel consumption. Camera collision remains exact after spatial filtering; cached navigation preserves the same route rules.
+
+### Solid prop pipeline
+
+`room-props.ts` and `dungeon-props.ts` are shared placement plans for GLB rendering and physical obstacles. `prop-bounds.ts` stores bounds and source hashes generated from shipped models. After replacing a solid GLB, run `npx tsx tools/assets/collision-bounds.ts`, then `npm test` and `npm run build`. Collision preserves each model's yaw and scale. Arch posts and lintels are separate so open doorways remain usable. Player movement, Hunter routes and camera avoidance consume the same solids; small debris and decals stay passable. The solid-prop tests verify source hashes, rotated footprints, arch openings, sprint collision and navigation detours.

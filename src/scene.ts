@@ -1,3 +1,4 @@
+import { roomProps } from "./room-props";
 import { addHunterEyes } from "./hunter-eyes";
 import { CameraIndex } from "./camera-index";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
@@ -548,10 +549,11 @@ export class GameScene {
     addCryptDecals(this.scene, world);
     for (const block of environmentBlocks(world)) {
       const collider = new THREE.Mesh(
-        new THREE.BoxGeometry(block.halfX * 2, 2.85, block.halfZ * 2),
+        new THREE.BoxGeometry(block.halfX * 2, block.height, block.halfZ * 2),
         stone,
       );
-      collider.position.set(block.x, 1.425, block.z);
+      collider.position.set(block.x, block.bottom + block.height / 2, block.z);
+      collider.rotation.y = block.yaw;
       collider.visible = false;
       this.scene.add(collider);
       this.walls.push(collider);
@@ -662,32 +664,8 @@ export class GameScene {
     trim: THREE.Material,
     bronze: THREE.Material,
   ) {
-    // Dressing stays off the clear central route; simulation owns collision.
-    this.catalog.add("pro_barrel", this.scene, x - 6.8, 0, z + 5.8);
-    this.catalog.add("pro_supply_crate", this.scene, x - 6, 0, z + 5.8, 1, 0.3);
-    // Decorative pillars stay against room boundaries, away from the navigation floor.
-    for (const sx of [-1, 1])
-      for (const sz of [-1, 1]) {
-        const p = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.34, 0.46, 3.8, 8),
-          trim,
-        );
-        p.position.set(x + sx * 7.8, 1.8, z + sz * 7.8);
-        p.castShadow = true;
-        this.scene.add(p);
-        this.catalog.add(
-          "pro_pillar",
-          this.scene,
-          x + sx * 7.8,
-          0,
-          z + sz * 7.8,
-          1,
-          0,
-          () => {
-            p.visible = false;
-          },
-        );
-      }
+    for (const p of roomProps(x, z, kind))
+      this.catalog.add(p.id, this.scene, p.x, p.y, p.z, p.scale, p.yaw);
     for (const side of [-1, 1]) {
       this.archPlacements.push(
         new THREE.Matrix4().makeTranslation(x, 0, z + side * 7.7),
@@ -719,127 +697,7 @@ export class GameScene {
         upright.userData.archShell = true;
       }
     }
-    if (kind === "sanctuary") {
-      // Recessed landmark beside the fire; never put an unvalidated arch over a route.
-      this.catalog.add(
-        "lan_sanctuary_arch_hero",
-        this.scene,
-        x + 8.2,
-        0,
-        z,
-        1,
-        -Math.PI / 2,
-      );
-      this.catalog.add(
-        "lan_processional_statue",
-        this.scene,
-        x - 7.8,
-        0,
-        z - 5.5,
-        1,
-        Math.PI / 2,
-      );
-    } else if (kind === "flooded") {
-      this.catalog.add("lan_fallen_bell", this.scene, x + 7.7, 0, z - 5.8);
-      this.catalog.add(
-        "lan_split_pillar_relief",
-        this.scene,
-        x - 7.8,
-        0,
-        z - 5.5,
-        1,
-        Math.PI / 2,
-      );
-    } else if (kind === "archive") {
-      this.catalog.add(
-        "lan_sealed_sun_door",
-        this.scene,
-        x + 8.3,
-        0,
-        z - 4.5,
-        1,
-        -Math.PI / 2,
-      );
-      for (const side of [-1, 1]) {
-        this.catalog.add(
-          "pro_crypt_door",
-          this.scene,
-          x + side * 5.5,
-          0,
-          z + 8.5,
-          1,
-          Math.PI,
-        );
-        this.catalog.add(
-          "pro_journal",
-          this.scene,
-          x + side * 5.1,
-          0.1,
-          z + 5.3,
-          0.9,
-        );
-      }
-    } else if (kind === "crypt") {
-      for (const side of [-1, 1])
-        for (const i of [-1, 1]) {
-          const coffin = new THREE.Mesh(
-            new RoundedBoxGeometry(1, 0.8, 1.9, 1, 0.04),
-            stone,
-          );
-          coffin.position.set(x + side * 5.5, 0.4, z + i * 5.7);
-          this.scene.add(coffin);
-          this.catalog.add(
-            i === 1 ? "lan_hiding_tomb" : "pro_sarcophagus",
-            this.scene,
-            x + side * 5.5,
-            0,
-            z + i * 5.7,
-            1,
-            Math.PI / 2,
-            () => {
-              coffin.visible = false;
-            },
-          );
-        }
-    } else if (kind === "landmark") {
-      const obelisk = new THREE.Mesh(new THREE.ConeGeometry(0.6, 3, 4), trim);
-      obelisk.position.set(x + 7.8, 1.5, z);
-      this.scene.add(obelisk);
-      this.catalog.add(
-        "lan_processional_statue",
-        this.scene,
-        x + 7.8,
-        0,
-        z,
-        1,
-        -Math.PI / 2,
-        () => {
-          obelisk.visible = false;
-        },
-      );
-      this.catalog.add(
-        "lan_split_pillar_relief",
-        this.scene,
-        x - 7.8,
-        0,
-        z + 5,
-        1,
-        Math.PI / 2,
-      );
-      this.catalog.add(
-        "lan_broken_processional_dais",
-        this.scene,
-        x - 7.7,
-        0,
-        z - 5.5,
-      );
-      this.catalog.add(
-        "lan_artifact_pedestal",
-        this.scene,
-        x - 7.7,
-        0.55,
-        z - 5.5,
-      );
+    if (kind === "landmark") {
       const rune = new THREE.Mesh(
         new THREE.TorusGeometry(0.35, 0.025, 4, 24),
         new THREE.MeshBasicMaterial({ color: 0x83a8b0 }),

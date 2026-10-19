@@ -43,7 +43,9 @@ export class ExpeditionCheck {
       )
     )
       game.interact();
-    if (!this.forced && this.cursor > this.path.length * 0.58) {
+    // Force the deterministic QA encounter on the final approach. Earlier
+    // fractions depended on routes through what used to be non-solid props.
+    if (!this.forced && this.cursor > this.path.length * 0.8) {
       game.matches = 0;
       game.forceHunt();
       this.forced = true;

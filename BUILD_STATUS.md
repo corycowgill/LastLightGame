@@ -328,3 +328,11 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - New worst-frame/p95/long-frame telemetry distinguishes gameplay from preparation. Local dense crypt and accelerated Hunt/escape validation held 60 FPS, p95 16.8ms; sampled post-warm-up gameplay worst ~33.4ms. Preparation still takes time.
 - Focused camera/path benchmarks improved ~22x / ~45x; these are CPU operation measurements, not whole-game FPS claims. See docs/PERFORMANCE.md and tools/performance-benchmark.ts.
 - Production build and all 67 tests pass. Browser fixed-seed extinction/Hunt/escape/sanctuary check passes with all 33 catalog types loaded. Physical-device profiling remains outstanding.
+
+## 2026-10-19 — solid GLB furniture and arch supports
+
+Large props now share placement data between rendering, player collision, Hunter navigation and camera avoidance. Rotated bounds are generated from the shipped GLBs: crates, barrels, coffins, tombs, doors, statues, bells, urns and pillars block movement. Arches use separate posts and overhead blocks so their openings remain traversable. Small flat debris remains passable. A landmark statue was moved out of a portal after enabling its solid footprint.
+
+Regenerate metadata after changing source GLBs with `npx tsx tools/assets/collision-bounds.ts`. Bounds include source hashes; tests catch stale metadata. Collision checks use a spatial hash and navigation edges are cached. The diagnostic Hunt now starts on the final approach because older routes crossed non-solid furniture; gameplay Hunt timing is unchanged.
+
+Validation: 71 tests pass and production build succeeds. Browser expedition check passed extinction, active Hunt, navigated escape and sanctuary in 1:02 simulated expedition time. Observed local frame p95 18.2 ms, worst 36.4 ms; these are a short desktop checkpoint, not a hardware guarantee.
