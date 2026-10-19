@@ -24,11 +24,15 @@ export const CONFIG = {
   grace: 8,
   relight: 2,
   fuel: 720,
+  burnMultiplier: 6,
+  flameRates: [0.55, 1, 3.5],
+  fuelPickup: 180,
+  matchFuel: 120,
   lightRepel: [2.8, 6, 11],
   fireRepel: 8,
   hunterFlee: 5.8,
   retreatDuration: 2.8,
-  burstCost: 45,
+  burstCost: 90,
   burstCooldown: 18,
   staminaRecoveryDelay: 0.65,
   staminaRecovery: 0.2,
@@ -199,7 +203,7 @@ export class Game {
     taken: boolean;
   }[] = [];
   chalk: Point[] = [];
-  matches = 3;
+  matches = 2;
   artifacts = 0;
   banked = 0;
   upgrades: Record<Upgrade, number> = {
@@ -258,7 +262,7 @@ export class Game {
     this.phase = "EXPLORING";
     this.hunter = { x: 0, z: 0, state: "DORMANT" };
     this.chalk = [];
-    this.matches = 3;
+    this.matches = 2;
     this.artifacts = 0;
     this.elapsed = 0;
     this.completed = false;
@@ -313,7 +317,8 @@ export class Game {
   }
   get fuelRate() {
     return (
-      [0.35, 1, 3.5][this.mode] *
+      CONFIG.flameRates[this.mode] *
+      CONFIG.burnMultiplier *
       (1 - 0.08 * this.upgrades.wick) *
       (1 + this.depth * 0.3)
     );
@@ -420,7 +425,7 @@ export class Game {
     if (item) {
       item.taken = true;
       if (item.kind === "fuel") {
-        this.fuel = Math.min(this.maxFuel, this.fuel + 180);
+        this.fuel = Math.min(this.maxFuel, this.fuel + CONFIG.fuelPickup);
         if (this.fuel > 0 && this.phase !== "EXPLORING") {
           this.phase = "RELIGHTING";
           this.timer = this.relightDuration;
@@ -525,7 +530,10 @@ export class Game {
           this.timer = CONFIG.grace;
           this.say("Something is waking. E to strike a match.");
         } else if (this.phase === "RELIGHTING") {
-          this.fuel = Math.max(this.fuel, Math.min(this.maxFuel, 120));
+          this.fuel = Math.max(
+            this.fuel,
+            Math.min(this.maxFuel, CONFIG.matchFuel),
+          );
           this.phase = "EXPLORING";
           if (!["DORMANT", "BANISHED"].includes(this.hunter.state))
             this.retreatFrom(this.player);

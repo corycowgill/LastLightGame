@@ -36,7 +36,7 @@ Optional Capture Mouse enables free look when supported; dragging remains availa
 For an iPhone, use the deployed HTTPS site. PC localhost is not reachable from the phone. For same-Wi-Fi development, explicitly run `npm run dev:lan` and use the PC LAN address on port 5173; controller APIs may require HTTPS. Physical Xbox/iPhone validation remains pending; automated input tests are not a substitute.
 
 - Ember conserves fuel, Steady supports exploration, and Blaze spends fuel quickly for stronger light. Deeper rooms increase fuel pressure.
-- A full basic torch holds 720 Steady fuel-seconds before depth modifiers. Extinction gives an eight-second grace period, followed by an active searching Hunter.
+- A full basic torch burns for about 120 seconds in Steady, 218 seconds in Ember, or 34 seconds in Blaze before depth modifiers. Fuel pickups add about 30 base Steady seconds; matches provide about 20. Extinction gives an eight-second grace period, followed by an active searching Hunter.
 - Relighting consumes a match, takes two seconds before upgrades, restores reserve fuel, slows movement and prevents sprinting. Find cover first.
 - Crouching quiets footsteps and reduces Hunter visual range; close detection and remembered positions still matter. Corners break line of sight.
 - Sprint stamina recovers after a brief rest. Flame Burst costs fuel and cannot repel creatures through masonry.

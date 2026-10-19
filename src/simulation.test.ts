@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   Game,
+  CONFIG,
   generateWorld,
   findPath,
   lineOfSight,
@@ -71,9 +72,9 @@ test("camera yaw and movement agree on the forward direction", () => {
 });
 test("fuel modes consume exact deterministic amounts", () => {
   for (const [mode, rate] of [
-    [0, 0.35],
-    [1, 1],
-    [2, 3.5],
+    [0, 3.3],
+    [1, 6],
+    [2, 21],
   ]) {
     const g = new Game();
     g.setMode(mode);
@@ -91,9 +92,9 @@ test("invalid modes do not break fuel simulation", () => {
 test("burst costs fuel and obeys cooldown", () => {
   const g = new Game();
   g.burst();
-  assert.equal(g.fuel, 675);
+  assert.equal(g.fuel, CONFIG.fuel - CONFIG.burstCost);
   g.burst();
-  assert.equal(g.fuel, 675);
+  assert.equal(g.fuel, CONFIG.fuel - CONFIG.burstCost);
   advance(g, 19);
   g.burst();
   assert.ok(g.fuel < 620);
@@ -139,7 +140,7 @@ test("match relight takes two seconds, consumes match and banishes Hunter", () =
   advance(g, 1.1);
   assert.equal(g.phase, "EXPLORING");
   assert.equal(g.hunter.state, "BANISHED");
-  assert.equal(g.matches, 2);
+  assert.equal(g.matches, 1);
   assert.ok(g.fuel > 100);
 });
 test("starting sanctuary protects player without completing expedition", () => {
@@ -388,7 +389,12 @@ test("wick reduces all flame rates without preventing depletion and spark speeds
     advance(g, 1);
     assert.ok(
       Math.abs(
-        g.fuel - (100 - [0.35, 1, 3.5][mode] * 0.76 * (1 + g.depth * 0.3)),
+        g.fuel -
+          (100 -
+            CONFIG.flameRates[mode] *
+              CONFIG.burnMultiplier *
+              0.76 *
+              (1 + g.depth * 0.3)),
       ) < 0.00001,
     );
   }

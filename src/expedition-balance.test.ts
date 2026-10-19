@@ -13,6 +13,30 @@ function expedition() {
   return g;
 }
 
+test("a full torch naturally reaches the Hunt quickly and oil buys a short escape window", () => {
+  const g = expedition();
+  const seconds = g.maxFuel / g.fuelRate;
+  assert.ok(seconds > 90 && seconds <= 120);
+  advance(g, seconds - 1);
+  assert.equal(g.phase, "EXPLORING");
+  assert.ok(g.fuel < g.maxFuel * 0.02);
+  advance(g, 11);
+  assert.equal(g.phase, "HUNT_ACTIVE");
+  g.items = [
+    { id: 1000, x: g.player.x, z: g.player.z, kind: "fuel", taken: false },
+  ];
+  g.interact();
+  assert.equal(g.phase, "RELIGHTING");
+  advance(g, g.relightDuration + 0.1);
+  assert.equal(g.phase, "EXPLORING");
+  assert.ok(g.fuel / g.fuelRate > 20 && g.fuel / g.fuelRate <= 30);
+  const blaze = new Game(104729);
+  blaze.mode = 2;
+  assert.ok(blaze.maxFuel / blaze.fuelRate < 35);
+  blaze.mode = 0;
+  assert.ok(blaze.maxFuel / blaze.fuelRate < 220);
+});
+
 test("sprint taps cannot immediately regenerate stamina; rest restores it", () => {
   const g = expedition();
   advance(g, 1, { ...idle, forward: 1, sprint: true });
@@ -40,8 +64,8 @@ test("relighting requires a slow exposed movement window even with sprint held",
   assert.equal(g.player.stamina, 1);
   advance(g, 1.1);
   assert.equal(g.phase, "EXPLORING");
-  assert.equal(g.matches, 2);
-  assert.ok(g.fuel > 119);
+  assert.equal(g.matches, 1);
+  assert.ok(g.fuel > CONFIG.matchFuel - 2);
 });
 
 test("crouching avoids distant visual detection but close Hunter still sees player", () => {

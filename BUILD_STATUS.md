@@ -297,3 +297,11 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - One shared obstacle layout drives player/Hunter walkability, line of sight, and camera avoidance. Pillars provide real cover rather than decoration that actors can pass through.
 - Layout regression verifies all pillars block traversal/sight, paths can route around them, and the full sanctuary route remains connected.
 - Validation: all 63 tests and production build pass. Browser expedition check passed extinction, Hunt, escape and sanctuary on regression seed 104729. An initial unseeded scripted run was caught; the driver is not a guarantee of survival on every encounter layout.
+
+## 2026-10-18 — fuel pressure rebalance
+
+- Base full torch: Steady 120s (was 720s), Ember ~218s, Blaze ~34s; depth still increases burn by up to 30%. Ember now burns at 0.55x Steady rather than 0.35x.
+- Oil adds 30 base Steady seconds; a match restores 20. New expeditions start with two matches. Burst costs 90 fuel units (~15 Steady seconds); reservoir upgrades add ~15 base seconds. Wick/reservoir progression and existing saves are preserved.
+- HUD displays approximate remaining time at the current mode, depth and efficiency. Journal, upgrade label and field guide explain the new units. Warning audio begins below 20% and accelerates toward extinction.
+- All 64 tests and production build pass. New regression reaches HUNT_ACTIVE through natural depletion, then recovers with oil and verifies the short refill window. Browser Blaze run naturally reached HUNT_ACTIVE and subsequently caught an exposed stationary player.
+- Browser match recovery check also returned to EXPLORING/BANISHED with a short visible countdown remaining.

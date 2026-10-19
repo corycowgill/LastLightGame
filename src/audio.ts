@@ -174,11 +174,13 @@ export class GameAudio {
     }
     if (
       game.fuel > 0 &&
-      game.fuel / game.maxFuel < 0.1 &&
+      game.fuel / game.maxFuel < 0.2 &&
       this.elapsed > this.nextWarning
     ) {
       this.tone(440, 0.25, 0.035, 220);
-      this.nextWarning = this.elapsed + 10;
+      this.nextWarning =
+        this.elapsed +
+        Math.max(1.2, Math.min(6, game.fuel / game.fuelRate / 3));
     }
     const player = game.player;
     if (!player) return;
