@@ -30,3 +30,37 @@ export function burialBlocks(world: World) {
     halfZ: 1.1,
   }));
 }
+
+/** Four roof supports frame each chamber without closing its central cross. */
+export function pillarRows(world: World) {
+  return world.cells
+    .filter(
+      (c) =>
+        c.x % 14 === 0 &&
+        c.z % 14 === 0 &&
+        ["crypt", "archive", "flooded", "landmark", "sanctuary"].includes(
+          c.kind,
+        ),
+    )
+    .flatMap((room) =>
+      [-1, 1].flatMap((side) =>
+        [-1, 1].map((end) => ({
+          x: room.x * 2 + side * 4,
+          z: room.z * 2 + end * 6,
+          yaw: (side * Math.PI) / 2,
+        })),
+      ),
+    );
+}
+
+export function environmentBlocks(world: World) {
+  return [
+    ...burialBlocks(world),
+    ...pillarRows(world).map((p) => ({
+      x: p.x,
+      z: p.z,
+      halfX: 0.6,
+      halfZ: 0.6,
+    })),
+  ];
+}

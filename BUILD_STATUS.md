@@ -290,3 +290,10 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Reduced warm-mode ambient fill, smoothed torch mode range changes, added subtle flame-tip movement/color variation and independent sanctuary flicker. Hunt dark adaptation remains unchanged.
 - Torch housing and solid-backed reconstructed webs no longer project oversized opaque shadows.
 - Validation: production build and all 63 tests pass; browser driver completed extinction, active Hunt, escape and sanctuary with the new dressing and lighting. Observed 60 FPS at the completed sanctuary on the local desktop browser; hardware and room views will vary.
+
+## 2026-10-18 — interior catacomb pillars
+
+- Added four 3.85m-high catalog GLB pillars inside every chamber (44 total), arranged along the side aisles with clear central crossings and doorway approaches. Regional instancing shares the existing pillar geometry and materials.
+- One shared obstacle layout drives player/Hunter walkability, line of sight, and camera avoidance. Pillars provide real cover rather than decoration that actors can pass through.
+- Layout regression verifies all pillars block traversal/sight, paths can route around them, and the full sanctuary route remains connected.
+- Validation: all 63 tests and production build pass. Browser expedition check passed extinction, Hunt, escape and sanctuary on regression seed 104729. An initial unseeded scripted run was caught; the driver is not a guarantee of survival on every encounter layout.

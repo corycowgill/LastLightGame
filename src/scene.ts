@@ -2,7 +2,7 @@ import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.j
 import { AnimatedCharacter, movementClip, smoothFacing } from "./character";
 import { CatalogAssets } from "./catalog-assets";
 import { dressDungeon } from "./dungeon-dressing";
-import { burialBlocks } from "./crypt-layout";
+import { environmentBlocks, pillarRows } from "./crypt-layout";
 import { addCryptDecals } from "./crypt-decals";
 import * as THREE from "three";
 import type { World, Game } from "./simulation";
@@ -528,8 +528,19 @@ export class GameScene {
       },
     );
     dressDungeon(this.scene, this.catalog, world);
+    this.catalog.batch(
+      "pro_pillar",
+      this.scene,
+      pillarRows(world).map((p) =>
+        new THREE.Matrix4()
+          .makeTranslation(p.x, 0, p.z)
+          .multiply(new THREE.Matrix4().makeRotationY(p.yaw)),
+      ),
+      [1.2, 3.85, 1.2],
+      () => {},
+    );
     addCryptDecals(this.scene, world);
-    for (const block of burialBlocks(world)) {
+    for (const block of environmentBlocks(world)) {
       const collider = new THREE.Mesh(
         new THREE.BoxGeometry(block.halfX * 2, 2.85, block.halfZ * 2),
         stone,
