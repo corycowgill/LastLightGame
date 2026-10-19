@@ -62,5 +62,26 @@ export function environmentBlocks(world: World) {
       halfX: 0.6,
       halfZ: 0.6,
     })),
+    ...world.cells
+      .filter(
+        (c) =>
+          c.x % 14 === 0 &&
+          c.z % 14 === 0 &&
+          ["crypt", "archive", "flooded", "landmark"].includes(c.kind) &&
+          cryptStory(world, c).type === 0,
+      )
+      .map((room) => ({
+        x: room.x * 2 + cryptStory(world, room).side * 5.5,
+        z: room.z * 2 + 2.8,
+        halfX: 0.95,
+        halfZ: 0.5,
+      })),
   ];
+}
+
+export function cryptStory(world: World, room: { x: number; z: number }) {
+  return {
+    type: Math.abs(world.seed + room.x * 7 + room.z * 13) % 3,
+    side: (world.seed ^ (room.x * 13) ^ (room.z * 31)) & 1 ? -1 : 1,
+  };
 }

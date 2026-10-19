@@ -311,3 +311,12 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Added red emissive-style eye cores with small additive halos to the loaded Hunter's head bone, using source mesh positions transformed by its actual inverse bind matrix. Also changed fallback eyes from teal to red.
 - Glow is depth-tested and casts no gameplay light: it cannot reveal the Hunter through walls or affect perception. Normal Hunter visibility/banishment hides the eyes with the actor. Shared helper also exposes the effect in catalog asset review.
 - Visual review confirmed placement during the search clip. Production build and all 64 tests pass.
+
+## 2026-10-18 — crypt horror composition
+
+- Added three seeded burial scenes: disturbed sarcophagi with spilled remains and displaced lids; ordered skull memorials; chained recesses veiled in torn webs. Reuses original catalog GLBs and regional instancing.
+- Filled multiple real loculus tiers with irregular rows of skulls, leaving empty bays. Added damp wall runs, patches and floor scuffs at grave entrances using the existing decal atlas.
+- New large sarcophagi share physical/navigation/camera blockers through `cryptStory` and `environmentBlocks`. Central crossings remain clear; sanctuaries receive no new human remains.
+- Quiet, widely spaced panned stone/metal resonances add unease during exploration. They stop near sanctuary fire and during the Hunt so they do not obscure actual threats. No resource manipulation, fake enemy spawns or jump-scare stingers.
+- Production build and all 64 tests pass, including connectivity and the full fixed-seed simulation escape driver.
+- Browser validation: regression seed 104729 passed extinction, active Hunt, physical escape and sanctuary. Loaded art-review room ran at 60 FPS / ~170 draws on the local desktop browser. Also fixed fuel countdown overflow in the touch HUD.

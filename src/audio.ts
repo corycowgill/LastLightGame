@@ -218,8 +218,15 @@ export class GameAudio {
       this.nextStep = this.elapsed + (h.state === "PURSUING" ? 0.43 : 0.8);
     }
     if (this.elapsed > this.nextAmbient) {
-      this.air(0.8, 0.025, 190, Math.sin(this.elapsed));
-      this.nextAmbient = this.elapsed + 14 + Math.random() * 15;
+      // Quiet masonry/metal resonance, distinct from actual enemy footsteps.
+      // Keep the Hunt and safe fires free of these decorative distractions.
+      if (!nearFire && game.phase === "EXPLORING") {
+        const pan = Math.sin(this.elapsed * 0.73);
+        this.air(1.6, 0.018, 260, pan);
+        this.tone(137, 1.8, 0.012, 83, pan);
+        this.tone(411, 1.1, 0.006, 243, pan);
+      }
+      this.nextAmbient = this.elapsed + 18 + Math.random() * 17;
     }
   }
   dispose() {

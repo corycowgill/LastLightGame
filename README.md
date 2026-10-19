@@ -143,3 +143,5 @@ Rebuild from preserved exports with `prepare_mesh2motion.py SOURCE DESTINATION [
 ### Crypt dressing and lighting
 
 Room dressing reuses catalog image-to-3D GLBs and the generated decal atlas. Seeded offering clusters sit in side aisles, clear of central crossing routes. `CatalogAssets.scatter` instances repeated source meshes in room-sized batches, preserving source materials and geometry. Firelight uses one torch shadow map plus nearby sanctuary shadow maps; low graphics disables them. Flame motion changes rendered shadows only, not enemy detection, fuel use or navigation.
+
+Crypt horror scenes are selected deterministically by `cryptStory(world, room)` and assembled from preserved neural GLBs. The same story data supplies large-coffin navigation/camera blockers. Small skulls and remains use regional instancing, while generated-atlas decals add damp runs and grave scuffs. Decorative stone/metal audio is quiet and suppressed during Hunt states and near sanctuary fire, preserving enemy-audio readability.

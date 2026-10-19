@@ -105,13 +105,21 @@ footer {
 }
 .fuel {
   width: 270px;
+  max-width: 100%;
+  min-width: 0;
 }
 .label {
   display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   justify-content: space-between;
   font-size: 9px;
   letter-spacing: 2px;
   color: #d7b879;
+}
+#fuelText {
+  white-space: nowrap;
+  letter-spacing: 1px;
 }
 .meter {
   height: 4px;
