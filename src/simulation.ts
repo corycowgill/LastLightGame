@@ -1,3 +1,4 @@
+import { buildLabyrinth, type Layout } from "./worldgen";
 import { blockedByProp, propSegmentClear } from "./crypt-layout";
 export type Point = { x: number; z: number };
 export type World = {
@@ -5,6 +6,7 @@ export type World = {
   start: Point;
   exit: Point;
   seed: number;
+  layout?: Layout;
 };
 export type Input = {
   forward: number;
@@ -92,53 +94,7 @@ function grid(w: World) {
   return s;
 }
 export function generateWorld(seed = 1): World {
-  let s = seed >>> 0;
-  const rand = () =>
-    (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296;
-  const cells = new Map<string, Point & { kind: string }>(),
-    centers: Point[] = [];
-  const add = (x: number, z: number, kind = "floor") =>
-    cells.set(key(x, z), { x, z, kind });
-  for (let i = 0; i < 11; i++) {
-    const row = Math.floor(i / 4),
-      col = row % 2 ? 3 - (i % 4) : i % 4;
-    centers.push({ x: col * 14, z: row * 14 });
-  }
-  const connect = (a: Point, b: Point) => {
-    let x = a.x,
-      z = a.z;
-    while (x !== b.x || z !== b.z) {
-      const horizontal = x !== b.x;
-      if (horizontal) x += Math.sign(b.x - x);
-      else z += Math.sign(b.z - z);
-      for (let n = -1; n <= 1; n++)
-        if (!cells.has(key(x + (horizontal ? 0 : n), z + (horizontal ? n : 0))))
-          add(x + (horizontal ? 0 : n), z + (horizontal ? n : 0), "corridor");
-    }
-  };
-  centers.forEach((p, i) => {
-    const kind =
-      i === 0 || i === 10
-        ? "sanctuary"
-        : ["crypt", "archive", "flooded", "landmark"][Math.floor(rand() * 4)];
-    for (let x = -4; x <= 4; x++)
-      for (let z = -4; z <= 4; z++) add(p.x + x, p.z + z, kind);
-    if (i) connect(centers[i - 1], p);
-  });
-  // Seeded cross-links create alternate routes while preserving the guaranteed spine.
-  for (const [a, b] of [
-    [1, 6],
-    [2, 5],
-    [5, 10],
-    [6, 9],
-  ])
-    if (rand() > 0.46) connect(centers[a], centers[b]);
-  return {
-    seed,
-    cells: [...cells.values()],
-    start: { ...centers[0] },
-    exit: { ...centers[10] },
-  };
+  return buildLabyrinth(seed);
 }
 export function walkable(w: World, x: number, z: number) {
   return (
@@ -328,27 +284,46 @@ export class Game {
     this.noise = this.noiseTimer = 0;
     this.director = 25;
     this.say("Seek the far golden fire. E to gather supplies.");
-    const centers = this.world.cells.filter(
-      (c) => c.x % 14 === 0 && c.z % 14 === 0 && (c.x || c.z),
+    const rooms = this.world.layout!.rooms.filter(
+      (r) => r.kind !== "sanctuary",
     );
-    this.items = centers.flatMap((c, i) => [
-      {
-        id: i * 2,
-        x: c.x * 2 + 2,
-        z: c.z * 2,
-        kind: (i % 3 === 0 ? "artifact" : i % 3 === 1 ? "fuel" : "match") as
-          "fuel" | "artifact" | "match",
-        taken: false,
-      },
-      {
-        id: i * 2 + 1,
-        x: c.x * 2 - 4,
-        z: c.z * 2 + 4,
-        kind: (i % 2 === 0 ? "fuel" : "artifact") as "fuel" | "artifact",
-        taken: false,
-      },
-    ]);
-    this.enemies = [{ x: 84, z: 24, kind: "stalker", state: "LISTENING" }];
+    this.items = rooms.flatMap((r, i) => {
+      const variant =
+        ((this.world.seed >>> 0) ^ Math.imul(i + 1, 2654435761)) >>> 0;
+      const p = [
+        [2, 0],
+        [-2, 0],
+        [0, 2],
+        [0, -2],
+      ][variant % 4];
+      return [
+        {
+          id: i * 2,
+          x: r.x * 2 + p[0],
+          z: r.z * 2 + p[1],
+          kind: (r.reward ? "artifact" : i % 3 === 0 ? "match" : "fuel") as
+            "fuel" | "artifact" | "match",
+          taken: false,
+        },
+        {
+          id: i * 2 + 1,
+          x: r.x * 2 + 2,
+          z: r.z * 2 + 2,
+          kind: (r.reward ? "fuel" : "artifact") as
+            "fuel" | "artifact" | "match",
+          taken: false,
+        },
+      ];
+    });
+    const lair =
+      rooms
+        .filter((r) => r.depth >= 0.4)
+        .sort(
+          (a, b) => Math.abs(a.depth - 0.65) - Math.abs(b.depth - 0.65),
+        )[0] ?? rooms[rooms.length - 1];
+    this.enemies = [
+      { x: lair.x * 2, z: lair.z * 2 + 2, kind: "stalker", state: "LISTENING" },
+    ];
   }
   sanctuaryBearing(cameraYaw: number) {
     if (!this.upgrades.compass) return null;
@@ -380,7 +355,8 @@ export class Game {
       if (dist(p, this.player) < dist(this.roomCenters[closest], this.player))
         closest = i;
     });
-    return closest / Math.max(1, this.roomCenters.length - 1);
+    const room = this.world.layout?.rooms[closest];
+    return room?.depth ?? closest / Math.max(1, this.roomCenters.length - 1);
   }
   footstepNoise(sprint: boolean, crouch: boolean) {
     return (crouch ? 1 : sprint ? 11 : 5) * (1 - 0.12 * this.upgrades.boots);
@@ -450,6 +426,16 @@ export class Game {
     } else if (this.fuel === 0 && this.matches === 0)
       this.say("No matches remain. Find sanctuary fire.");
   }
+  get nearbyItem() {
+    return this.items
+      .filter(
+        (i) =>
+          !i.taken &&
+          dist(i, this.player) < 2.6 &&
+          lineOfSight(this.world, this.player, i),
+      )
+      .sort((a, b) => dist(a, this.player) - dist(b, this.player))[0];
+  }
   interact() {
     if (dist(this.player, this.destination) < 4) {
       this.banked += this.artifacts;
@@ -469,7 +455,7 @@ export class Game {
       this.say("The first fire shelters you. The far sanctuary awaits.");
       return;
     }
-    const item = this.items.find((i) => !i.taken && dist(i, this.player) < 2.6);
+    const item = this.nearbyItem;
     if (item) {
       item.taken = true;
       if (item.kind === "fuel") {
@@ -858,7 +844,12 @@ export class Game {
         e.state = "LISTENING";
       }
       if (e.state === "REPELLED") {
-        this.moveEnemy(e, { x: 84, z: 24 }, 2.5, dt);
+        this.moveEnemy(
+          e,
+          this.roomCenters[Math.floor(this.roomCenters.length * 0.65)],
+          2.5,
+          dt,
+        );
         if (d > 10) e.state = "LISTENING";
         continue;
       }
@@ -889,6 +880,7 @@ export class Game {
         "lastlight-save",
         JSON.stringify({
           version: 1,
+          generation: 2,
           seed: this.world.seed,
           banked: this.banked,
           maxFuel: this.maxFuel,
@@ -923,6 +915,12 @@ export class Game {
           : 0;
       }
       this.reset(Number(d.seed) || 1);
+      if (d.generation !== 2) {
+        this.banked += Math.max(0, Number(d.artifacts) || 0);
+        this.say("The passages have shifted. Your banked discoveries endure.");
+        this.save();
+        return true;
+      }
       if (!["DEAD", "SANCTUARY"].includes(d.phase)) {
         if (d.player && walkable(this.world, d.player.x, d.player.z))
           this.player = { ...this.player, ...d.player };

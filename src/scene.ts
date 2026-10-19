@@ -86,6 +86,14 @@ export class GameScene {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
     this.scene.fog = new THREE.FogExp2(0x101a2a, 0.038);
+    const theme = world.layout?.theme;
+    if (theme === "THE DROWNED TOMBS") {
+      this.scene.fog.color.setHex(0x102126);
+      this.ambient.color.setHex(0x729f9d);
+    } else if (theme === "THE ASHEN ARCHIVE") {
+      this.scene.fog.color.setHex(0x191728);
+      this.ambient.color.setHex(0x9589ac);
+    }
     this.scene.add(this.ambient);
     const stone = new THREE.MeshStandardMaterial({
         color: 0x59636b,

@@ -357,3 +357,11 @@ Animated character surfaces retain their generated texture maps but cap metallic
 Compact HUD guidance explains visible Stalker fear and critical-fuel survival actions. Directional accessibility cues now include Stalker pursuit. The menu shows a Git build ID and checks `build.json` for a newer release, offering a manual reload without interrupting an expedition. Render header rules request revalidation for HTML, build identity and mutable model paths; an existing service must sync its Blueprint to adopt those rules. Reference: https://render.com/docs/static-site-headers and https://render.com/docs/blueprint-spec.
 
 Validation: 74 tests pass; production build succeeds. Physical iPhone/Xbox verification and broader rig/art acceptance remain outstanding.
+
+## 2026-10-19 — varied expedition layouts
+
+Replaced the fixed eleven-room snake with 12–18 seeded chambers, branching graphs, optional loop routes, rewarded dead ends and a farthest-by-route destination. Three themed Catacombs mixes alter room weighting and ambient palette: Bone Warrens, Drowned Tombs and Ashen Archive. Existing catalog GLBs remain the art source; this does not add three independently authored biomes. Resource positions and the Stalker lair now follow the generated rooms. Depth uses graph distance rather than room insertion order. Pickup prompts and interactions select the nearest visible item.
+
+Old fixed-map saves safely bank carried relics, preserve upgrades and return to the new entrance. Current-generation saves keep their normal position and expedition state. See docs/WORLD_GENERATION.md for the pipeline and remaining module limitations.
+
+Validation: 77 tests pass, including 200 seeds with all room centres reachable, topology/size/theme diversity, reward/spawn placement and migration. Twenty complete simulation expeditions passed extinction, active Hunt and sanctuary with the Stalker enabled. Browser seed 104729 passed the full escape with no warnings/errors; observed frame p95 18.1 ms, worst 35.0 ms in this short desktop run. Production build succeeds with the existing Three.js chunk warning.

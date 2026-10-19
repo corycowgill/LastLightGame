@@ -4,6 +4,8 @@
 
 This repository documents the development process as well as the game: prompts, generated asset provenance, rejected experiments, animation tools, deterministic tests and actual browser checks. The shipped game runs on static hosting without inference services, API keys or a backend.
 
+Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
+
 ![Title-screen artwork](public/art/title-background-v1.png)
 
 ## Play and build locally

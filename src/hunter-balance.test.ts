@@ -8,7 +8,8 @@ test("visible torch makes Hunter flee along navigation before banishment", () =>
   g.player.z = 0;
   g.phase = "HUNT_ACTIVE";
   g.fuel = 0;
-  g.hunter = { x: 42, z: 0, state: "PURSUING" };
+  g.enemies = [];
+  g.hunter = { x: 16, z: 0, state: "PURSUING" };
   g.relight();
   for (let i = 0; i < 121; i++) g.step(1 / 60, idle);
   assert.equal(g.phase, "EXPLORING");
@@ -73,7 +74,7 @@ test("torch cannot repel Hunter through stone walls", () => {
 test("late rooms increase fuel pressure while preserving sprint escape speed", () => {
   const g = new Game(1);
   const early = g.fuelRate;
-  Object.assign(g.player, { x: 56, z: 56 });
+  Object.assign(g.player, g.destination);
   assert.equal(g.depth, 1);
   assert.ok(g.fuelRate > early * 1.25);
   assert.ok(CONFIG.hunterChase + 0.55 < CONFIG.sprint);

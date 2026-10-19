@@ -250,6 +250,8 @@ function menu() {
 }
 function rebuild() {
   draw = true;
+  document.querySelector(".brand span")!.textContent =
+    game.world.layout?.theme ?? "THE FORGOTTEN CATACOMBS";
   view?.dispose();
   $("scene").replaceChildren();
   view = new GameScene($("scene"), game.world);
@@ -406,7 +408,7 @@ function journal() {
   running = false;
   cameraControls.release();
   panel(
-    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>What remains of us.</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (CONFIG.burnMultiplier * (1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><div id="actions"></div>`,
+    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (CONFIG.burnMultiplier * (1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><div id="actions"></div>`,
   );
   button("resume", "CLOSE JOURNAL", resume);
 }
@@ -727,10 +729,7 @@ function updateHUD() {
       : "";
   document.body.classList.toggle("hunt", hunt);
   document.body.classList.toggle("lowfuel", pct < 0.1);
-  const nearby = game.items.find(
-    (i) =>
-      !i.taken && Math.hypot(i.x - game.player.x, i.z - game.player.z) < 2.5,
-  );
+  const nearby = game.nearbyItem;
   $("prompt").textContent = nearby
     ? `${useLabel} · COLLECT ${nearby.kind.toUpperCase()}`
     : game.fuel <= 0

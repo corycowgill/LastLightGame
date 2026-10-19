@@ -9,15 +9,15 @@ test("burial rows have matching navigation blockers and preserve sanctuary route
     const world = generateWorld(seed);
     const rows = burialRows(world);
     const pillars = pillarRows(world);
-    assert.equal(pillars.length, 44);
+    assert.equal(pillars.length, world.layout!.rooms.length * 4);
     for (const pillar of pillars) {
       assert.equal(
         walkable(world, pillar.x, pillar.z),
         false,
         "pillars block player and Hunter navigation",
       );
-      assert.ok(Math.abs(pillar.x % 28) >= 4);
-      assert.ok(Math.abs(pillar.z % 28) >= 6);
+      assert.ok(Math.abs(pillar.x / 28 - Math.round(pillar.x / 28)) > 0.1);
+      assert.ok(Math.abs(pillar.z / 28 - Math.round(pillar.z / 28)) > 0.1);
       const a = { x: pillar.x, z: pillar.z - 0.9 };
       const b = { x: pillar.x, z: pillar.z + 0.9 };
       assert.equal(

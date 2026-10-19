@@ -43,13 +43,15 @@ export class ExpeditionCheck {
       )
     )
       game.interact();
-    // Force the deterministic QA encounter on the final approach. Earlier
-    // fractions depended on routes through what used to be non-solid props.
-    if (!this.forced && this.cursor > this.path.length * 0.8) {
+    // Use the final 24 metres instead of a fixed fraction of a variable map.
+    if (!this.forced && this.path.length - this.cursor < 13) {
       game.matches = 0;
       game.forceHunt();
       this.forced = true;
     }
+    // Wait through extinction/grace so every layout exercises an active Hunt
+    // before following the final escape route. This is QA-only behavior.
+    if (this.forced && !this.sawHunt) return idle;
     let target = this.path[this.cursor];
     while (
       target &&
