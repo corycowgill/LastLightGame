@@ -1,0 +1,18 @@
+{
+  "space": "tencent/HY-Motion-1.0",
+  "model": "tencent/HY-Motion-1.0",
+  "api": "/generate_motion_func",
+  "status": "complete",
+  "submitted_at": 1792445216.049677,
+  "request": {
+    "original_text": "A person moves forward slowly in a low crouch with bent knees, holding a torch upright in the right hand near the right shoulder. Left hand stays forward for balance. Repeated quiet low crouching steps, no standing up, no crawling on hands, no turning.",
+    "rewritten_text": "A person moves forward slowly in a low crouch with bent knees, holding a torch upright in the right hand near the right shoulder. Left hand stays forward for balance. Repeated quiet low crouching steps, no standing up, no crawling on hands, no turning.",
+    "seed_input": "211023",
+    "motion_duration": 4.0,
+    "cfg_scale": 5.0
+  },
+  "file": "art-source/torchbearer-rebuild/motions/raw/crouch_walk.fbx",
+  "sha256": "8861186a0f7d4d7cf0320862717fedab602a29c47979cbb98c5fa0fc2c6ed9ce",
+  "bytes": 16825808,
+  "completed_at": 1792445221.391029
+}

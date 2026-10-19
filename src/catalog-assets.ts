@@ -8,7 +8,9 @@ export class CatalogAssets {
   private templates = new Map<string, Promise<THREE.Group | undefined>>();
   private roots = new Set<THREE.Object3D>();
   private disposed = false;
-  private manifest = fetch("/models/catalog/manifest.json")
+  private manifest = fetch("/models/catalog/manifest.json", {
+    cache: "no-cache",
+  })
     .then((r) => (r.ok ? r.json() : { assets: [] }))
     .catch(() => ({ assets: [] }));
   loaded = 0;
@@ -40,7 +42,9 @@ export class CatalogAssets {
         try {
           const gltf = await loads.run(async () => {
             if (this.disposed) return undefined;
-            return new GLTFLoader().loadAsync(`/models/catalog/${entry.file}`);
+            return new GLTFLoader().loadAsync(
+              `/models/catalog/${entry.file}?v=${entry.sha256}`,
+            );
           });
           if (!gltf) return undefined;
           this.roots.add(gltf.scene);

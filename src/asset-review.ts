@@ -31,15 +31,18 @@ const animations = document.querySelector<HTMLSelectElement>("#animation")!;
 const status = document.querySelector("#status")!;
 let root: THREE.Group | undefined, mixer: THREE.AnimationMixer | undefined;
 const rigReview = new URLSearchParams(location.search).has("rigs");
+const rebuildReview = new URLSearchParams(location.search).has("rebuild");
+const assetBase = rigReview ? "/models/rig-review/" : "/models/catalog/";
 const entries = (
-  await (
-    await fetch(
-      rigReview
-        ? "/models/rig-review/manifest.json"
-        : "/models/catalog/manifest.json",
-    )
-  ).json()
-).assets;
+  await (await fetch(assetBase + "manifest.json")).json()
+).assets.filter(
+  (entry: { id: string }) => !rebuildReview || entry.id === "cha_torchbearer",
+);
+if (rebuildReview) {
+  document.querySelector("h1")!.textContent = "Rebuilt Torchbearer";
+  document.querySelector("header p")!.textContent =
+    "New neural body / separate hand-held torch / HF generated motion";
+}
 if (rigReview) {
   document.querySelector("h1")!.textContent = "Mesh2Motion rig review";
   document.querySelector("header p")!.textContent =
@@ -68,9 +71,7 @@ async function select() {
   const entry = entries.find((a: { id: string }) => a.id === selector.value);
   status.textContent = "Loading " + entry.name + "…";
   const gltf = await new GLTFLoader().loadAsync(
-    (rigReview ? "/models/rig-review/" : "/models/catalog/") +
-      entry.file +
-      `?v=${entry.sha256 ?? "review"}`,
+    assetBase + entry.file + `?v=${entry.sha256 ?? "review"}`,
   );
   if (version !== generation) {
     release(gltf.scene);
@@ -89,6 +90,15 @@ async function select() {
         prepareCharacterSurface(node as THREE.Mesh);
     });
   if (!rigReview && entry.id === "cha_hunter") addHunterEyes(root);
+  if (entry.id === "cha_torchbearer" || rebuildReview) {
+    const socket = root.getObjectByName("torch_socket");
+    if (socket) {
+      const torch = await new GLTFLoader().loadAsync(
+        "/models/catalog/pro_torch.glb?v=separate-v2",
+      );
+      socket.add(torch.scene);
+    }
+  }
   scene.add(root);
   mixer = new THREE.AnimationMixer(root);
   animations.replaceChildren(new Option("Rest pose", ""));

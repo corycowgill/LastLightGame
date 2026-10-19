@@ -1,0 +1,18 @@
+{
+  "space": "tencent/HY-Motion-1.0",
+  "model": "tencent/HY-Motion-1.0",
+  "api": "/generate_motion_func",
+  "status": "complete",
+  "submitted_at": 1792445204.9031909,
+  "request": {
+    "original_text": "A person runs forward urgently while carefully carrying a torch upright in the right hand. The right elbow stays bent, right wrist held outside the shoulder, right forearm pointing up. The left arm pumps naturally. Smooth repeated running strides, no turning, no stopping, no jumping.",
+    "rewritten_text": "A person runs forward urgently while carefully carrying a torch upright in the right hand. The right elbow stays bent, right wrist held outside the shoulder, right forearm pointing up. The left arm pumps naturally. Smooth repeated running strides, no turning, no stopping, no jumping.",
+    "seed_input": "211021",
+    "motion_duration": 4.0,
+    "cfg_scale": 5.0
+  },
+  "file": "art-source/torchbearer-rebuild/motions/raw/sprint.fbx",
+  "sha256": "bd0057f680a9c3cdc84d33abafef1f75fb02e532b580751e1bcbcc726b3132c4",
+  "bytes": 16825808,
+  "completed_at": 1792445210.647723
+}

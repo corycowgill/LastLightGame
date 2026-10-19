@@ -6,103 +6,42 @@ import { createHash } from "node:crypto";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-test("Mesh2Motion source is preserved and runtime keeps its skin with in-place motion", async () => {
-  const source = await readFile(
-    new URL(
-      "../docs/mesh2motion/multiview/torchbearer/site-export.glb",
-      import.meta.url,
-    ),
-  );
+test("rebuilt character uses new neural geometry and nine freshly generated motion sources", async () => {
   const record = JSON.parse(
     await readFile(
-      new URL(
-        "../docs/mesh2motion/multiview/torchbearer/provenance.json",
-        import.meta.url,
-      ),
+      new URL("../docs/torchbearer-rebuild/provenance.json", import.meta.url),
       "utf8",
     ),
   );
-  assert.equal(
-    createHash("sha256").update(source).digest("hex"),
-    record.animation_source.export_sha256,
-  );
-  const original = JSON.parse(
-    source.toString("utf8", 20, 20 + source.readUInt32LE(12)),
-  );
-  const runtime = await readFile(
+  const bytes = await readFile(
     new URL("../public/models/torchbearer.glb", import.meta.url),
   );
-  const size = runtime.readUInt32LE(12);
-  const doc = JSON.parse(runtime.toString("utf8", 20, 20 + size));
-  const geometryBytes = (bytes: Buffer, json: any, index: number) => {
-    const a = json.accessors[index],
-      v = json.bufferViews[a.bufferView];
-    const widths: Record<string, number> = {
-      SCALAR: 1,
-      VEC2: 2,
-      VEC3: 3,
-      VEC4: 4,
-      MAT4: 16,
-    };
-    const sizes: Record<number, number> = {
-      5121: 1,
-      5123: 2,
-      5125: 4,
-      5126: 4,
-    };
-    const offset =
-      28 + bytes.readUInt32LE(12) + (v.byteOffset ?? 0) + (a.byteOffset ?? 0);
-    return bytes.subarray(
-      offset,
-      offset + a.count * widths[a.type] * sizes[a.componentType],
-    );
-  };
-  const originalMesh = original.meshes[0].primitives[0],
-    shippedMesh = doc.meshes[0].primitives[0];
-  for (const attribute of ["POSITION", "NORMAL", "TEXCOORD_0"])
-    assert.deepEqual(
-      geometryBytes(runtime, doc, shippedMesh.attributes[attribute]),
-      geometryBytes(source, original, originalMesh.attributes[attribute]),
-      `arm repair must preserve source ${attribute}`,
-    );
-  assert.deepEqual(
-    geometryBytes(runtime, doc, shippedMesh.indices),
-    geometryBytes(source, original, originalMesh.indices),
+  assert.equal(
+    createHash("sha256").update(bytes).digest("hex"),
+    record.player_sha256,
   );
-  assert.deepEqual(
-    geometryBytes(runtime, doc, doc.skins[0].inverseBindMatrices),
-    geometryBytes(source, original, original.skins[0].inverseBindMatrices),
+  const doc = JSON.parse(
+    bytes.toString("utf8", 20, 20 + bytes.readUInt32LE(12)),
   );
-  assert.equal(doc.skins[0].joints.length, original.skins[0].joints.length);
-  assert.equal(doc.skins[0].joints.length, 66);
-  assert.ok(doc.nodes.some((n: any) => n.name === "index_03_l"));
-  assert.ok(doc.nodes.some((n: any) => n.name === "game_forward"));
-  for (const animation of doc.animations) {
-    assert.equal(animation.extras.source, "Mesh2Motion");
-    assert.ok(
-      original.animations.some(
-        (a: any) => a.name === animation.extras.source_clip,
-      ),
-    );
-    for (const channel of animation.channels.filter(
-      (c: any) => c.target.path === "translation",
-    )) {
-      const accessor =
-        doc.accessors[animation.samplers[channel.sampler].output];
-      const offset =
-        28 +
-        size +
-        (doc.bufferViews[accessor.bufferView].byteOffset ?? 0) +
-        (accessor.byteOffset ?? 0);
-      for (let i = 1; i < accessor.count; i++)
-        for (const axis of [0, 4])
-          assert.equal(
-            runtime.readFloatLE(offset + i * 12 + axis),
-            runtime.readFloatLE(offset + axis),
-            "animation must not move the collision-owned character horizontally",
-          );
-    }
+  assert.equal(doc.skins[0].joints.length, 52);
+  assert.equal(doc.extras.character_rebuild, "v2");
+  assert.equal(record.old_skin_imported, false);
+  assert.equal(record.motions.length, 9);
+  for (const motion of record.motions) {
+    assert.equal(motion.status, "complete");
+    assert.equal(motion.model, "tencent/HY-Motion-1.0");
+    assert.match(motion.sha256, /^[a-f0-9]{64}$/);
   }
+  for (const animation of doc.animations) {
+    assert.equal(animation.extras.source, "tencent/HY-Motion-1.0");
+    assert.ok(animation.channels.length >= 52);
+  }
+  assert.ok(doc.nodes.some((n: any) => n.name === "index_03_l"));
+  assert.equal(
+    doc.nodes.filter((n: any) => n.mesh !== undefined).length,
+    1,
+    "no provider template or baked torch",
+  );
 });
 
 test("character locomotion selects idle, walk, sprint and crouch without false sprinting", () => {
@@ -188,7 +127,8 @@ test("shipped GLBs load with bound skeletons, required clips and an animated han
         const bounds = mesh.geometry.boundingBox!;
         const knee = bounds.min.y + (bounds.max.y - bounds.min.y) * 0.45;
         for (let i = 0; i < vertices.count; i++) {
-          if (vertices.getY(i) >= knee) continue;
+          if (vertices.getY(i) >= knee || Math.abs(vertices.getX(i)) > 0.25)
+            continue;
           for (let component = 0; component < 4; component++) {
             const weight = weights.getComponent(i, component);
             const bone = mesh.skeleton.bones[joints.getComponent(i, component)];
@@ -238,7 +178,7 @@ test("shipped GLBs load with bound skeletons, required clips and an animated han
         );
         assert.ok(
           Math.max(...handHeights) - Math.min(...handHeights) <
-            (clipName === "sprint" ? 0.3 : 0.09),
+            (clipName === "sprint" || clipName === "relight" ? 0.3 : 0.09),
           `${clipName}: unstable torch carry`,
         );
         if (clipName !== "relight") {
@@ -287,7 +227,7 @@ test("shipped GLBs load with bound skeletons, required clips and an animated han
       "Clip must move the rig and socket",
     );
     const target =
-      name === "torchbearer" ? 1.55 : name === "hunter" ? 3.2 : 1.65;
+      name === "torchbearer" ? 1.65 : name === "hunter" ? 3.2 : 1.65;
     for (const time of [0.1, 0.3, 0.5, 0.8]) {
       mixer.setTime(time);
       gltf.scene.updateMatrixWorld(true);

@@ -1,0 +1,39 @@
+{
+  "asset_id": "pro_torch_unlit_v2",
+  "job_id": "f8c1d84dcb4a4bf885eff99f486f6cea",
+  "stage": "mesh",
+  "backend": "hf",
+  "seed": 211020,
+  "file": "generated/pro_torch_unlit_v2/f8c1d84dcb4a4bf885eff99f486f6cea/source.glb",
+  "sha256": "9430a0a53d257ca87ef88fcea423c01fbbcabca8354442159817ed5b281a7ff6",
+  "reference_sha256": "d80d1bebd422bcc77fe705b3064a3f23ef165311a2c35f6af6a3e47d55cdb7ee",
+  "metrics": {
+    "triangles": 96184,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.09963901340961456,
+        -0.5019551515579224,
+        -0.10008511692285538
+      ],
+      [
+        0.09982576221227646,
+        0.5013042688369751,
+        0.09978075325489044
+      ]
+    ],
+    "extents": [
+      0.19946477562189102,
+      1.0032594203948975,
+      0.19986587017774582
+    ],
+    "surface_area_m2": 0.6982346679144265,
+    "surface_area_ratio": 0.693705144721426,
+    "file_bytes": 3609736
+  },
+  "target_size_m": 0.65,
+  "scale_applied": false,
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "created_unix": 1792444910.0041862
+}

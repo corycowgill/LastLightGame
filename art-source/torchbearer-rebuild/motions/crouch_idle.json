@@ -1,0 +1,18 @@
+{
+  "space": "tencent/HY-Motion-1.0",
+  "model": "tencent/HY-Motion-1.0",
+  "api": "/generate_motion_func",
+  "status": "complete",
+  "submitted_at": 1792445210.6487312,
+  "request": {
+    "original_text": "A person stays in a low crouch with both feet planted and knees bent, carefully holding a torch upright in the right hand in front of the right shoulder. The left hand stays near the left knee for balance. Small breathing movement, no stepping and no standing up.",
+    "rewritten_text": "A person stays in a low crouch with both feet planted and knees bent, carefully holding a torch upright in the right hand in front of the right shoulder. The left hand stays near the left knee for balance. Small breathing movement, no stepping and no standing up.",
+    "seed_input": "211022",
+    "motion_duration": 4.0,
+    "cfg_scale": 5.0
+  },
+  "file": "art-source/torchbearer-rebuild/motions/raw/crouch_idle.fbx",
+  "sha256": "a99192aa6d6c088b8ea073a22649bfca18984418192ffa5749611db9d4aaec1c",
+  "bytes": 16825808,
+  "completed_at": 1792445216.0476522
+}

@@ -1,0 +1,37 @@
+{
+  "player_sha256": "35f52c8931bf7c32f75fd9c3dcc098443a4941ac8e3feee850c7289d2432a4d8",
+  "torch_sha256": "cda8ac3e08890ab420884115c0cf8210a80b1328a1f175b352521b0df64acd59",
+  "automated_tests": {
+    "passed": 78,
+    "failed": 0,
+    "skin_phases_per_clip": 12,
+    "unique_motion_sources": 9,
+    "attachment_phases_per_carry_clip": 24,
+    "peak_edge_stretch_limit": 3.6,
+    "fraction_edges_over_2_5_limit": 0.001,
+    "grip_surface_distance_limit_m": 0.035
+  },
+  "browser": {
+    "build": "production Vite preview",
+    "seed": 104729,
+    "result": "PASS: extinction, active Hunt, navigated escape, sanctuary",
+    "reviewed_views": [
+      "front",
+      "back",
+      "side"
+    ],
+    "reviewed_gaits": [
+      "idle",
+      "walk",
+      "sprint",
+      "crouch_walk"
+    ],
+    "observed_fps": "56-62 during desktop browser checks; not a cross-device guarantee"
+  },
+  "remaining": [
+    "Independent finger skin articulation",
+    "Terrain-aware foot IK",
+    "Final user visual acceptance",
+    "Physical iPhone and Xbox-controller validation for this asset replacement"
+  ]
+}

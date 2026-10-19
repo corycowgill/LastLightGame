@@ -1,0 +1,70 @@
+{
+  "asset_id": "cha_torchbearer_clean_v2",
+  "version": "v001",
+  "file": "assets/cha_torchbearer_clean_v2/v001/model.glb",
+  "sha256": "49217560a14daa62a7b544dfd3a7d2256987d3b6eada5e4402b23a9f1d66eba4",
+  "source": "generated/cha_torchbearer_clean_v2/ad92e118c2de4a2cabe318e7a467683d/source.glb",
+  "source_sha256": "e85a4b7714e02de2473eb85f93f6742557a3211426c6eb11ab855acf98bbddd6",
+  "metrics": {
+    "triangles": 18000,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.45700852009146326,
+        0.0,
+        -0.1792203933250306
+      ],
+      [
+        0.45700852009146326,
+        1.65,
+        0.1792203933250306
+      ]
+    ],
+    "extents": [
+      0.9140170401829265,
+      1.65,
+      0.3584407866500612
+    ],
+    "surface_area_m2": 4.614218545456615,
+    "surface_area_ratio": 1.6948461140336513,
+    "file_bytes": 2094840
+  },
+  "scale_factor": 1.6439782978096427,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/cha_torchbearer_clean_v2/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/cha_torchbearer_clean_v2/v001/lod1.glb",
+      "triangles": 8999
+    },
+    {
+      "file": "assets/cha_torchbearer_clean_v2/v001/lod2.glb",
+      "triangles": 3600
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "rig_and_animation_required",
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/cha_torchbearer_clean_v2/v001/previews/view_0.png",
+    "assets/cha_torchbearer_clean_v2/v001/previews/view_1.png",
+    "assets/cha_torchbearer_clean_v2/v001/previews/view_2.png",
+    "assets/cha_torchbearer_clean_v2/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 99414,
+    "lod0_triangles": 18000,
+    "lod1_triangles": 8999,
+    "lod2_triangles": 3600,
+    "method": "Blender decimate; requires visual review"
+  }
+}

@@ -8,6 +8,12 @@ Expeditions now generate **12–18 chambers** with changing routes, branches, lo
 
 ![Title-screen artwork](public/art/title-background-v1.png)
 
+## Rebuilt Torchbearer (2026-10-19)
+
+The player is a **new TRELLIS image-to-3D body**, with a separate generated torch GLB, a fresh 52-joint bind and nine torch-specific motions generated through the authenticated Hugging Face HY-Motion service. The old player mesh, skin and Mesh2Motion clips are no longer used by gameplay. The right-hand socket drives the prop's position and rotation; a prop tip socket drives the runtime flame. Hunter and Stalker are unchanged by this rebuild.
+
+Review the shipped player with its separate torch at `/asset-review.html?rebuild`. Select idle, walk, sprint, crouch, relight or other motions and drag to orbit. [Rebuild guide](docs/torchbearer-rebuild/README.md) includes the reference images, prompts, source hashes, failed approaches, carry IK, licensing and reproduction commands. Gloves follow the wrist as a unit; individual finger skin articulation and terrain-aware foot placement remain future work.
+
 ## Play and build locally
 
 Node.js 22+ recommended. Install dependencies, then choose a command:
@@ -107,7 +113,7 @@ Prompting lesson: specify the intended use, silhouette, material, pose, scale an
 
 ### Rigging and animation: actual status
 
-Current Torchbearer/Hunter/Stalker meshes are neural outputs. The Torchbearer now uses a fitted Mesh2Motion rig, corrected site skin weights and site-derived motion; Hunter/Stalker retain the earlier authored rigs and clips. The player pass corrected lower-leg weights and fitted locomotion/torch carry; the Hunter pass added navigated fleeing and new state clips. [Player animation notes](docs/CHARACTER_ANIMATION.md) and [Hunter notes](docs/HUNTER_BALANCE.md) explain the implementation and limitations.
+Current Torchbearer/Hunter/Stalker meshes are neural outputs. The Torchbearer now uses the new HF-generated motion rebuild described above; Hunter/Stalker retain their existing rigs and clips. Earlier player revisions below are preserved as development history. The player pass corrected lower-leg weights and fitted locomotion/torch carry; the Hunter pass added navigated fleeing and new state clips. [Player animation notes](docs/CHARACTER_ANIMATION.md) and [Hunter notes](docs/HUNTER_BALANCE.md) explain the implementation and limitations.
 
 `build_characters.py` creates legacy donors; `bind_generated_character.py`, `player_motion.py`, `hunter_motion.py` and `promote_character.py` bind, bake and promote generated characters. This is **not** a successful NVIDIA-generated animation pipeline. Kimodo export stalled; no verified output was integrated. The Torchbearer Mesh2Motion export is integrated, with the original file and reproduction scripts preserved; Hunter/Stalker replacement remains pending: [handoff](docs/MESH2MOTION_STATUS.md). [Earlier model research](docs/AI_ASSET_PIPELINE.md) is historical, not the current shipped mesh source.
 
@@ -138,7 +144,7 @@ Open `/asset-review.html?rigs` to inspect the new 66-joint Torchbearer and Hunte
 
 ## 2026-10-18 — multi-view rigs installed in gameplay
 
-The main game now loads the 66-joint All Fingers Torchbearer and Hunter exports. Runtime adapters map the player library to 14 gameplay clips and the Hunter library to idle, search, pursuit, flee, capture and banishment. The full 103 original clips remain available at `/asset-review.html?rigs`.
+At this historical checkpoint, the main game loaded the 66-joint All Fingers Torchbearer and Hunter exports. The October 19 player rebuild supersedes that Torchbearer rig. Runtime adapters map the player library to 14 gameplay clips and the Hunter library to idle, search, pursuit, flee, capture and banishment. The full 103 original clips remain available at `/asset-review.html?rigs`.
 
 Rebuild from preserved exports with `prepare_mesh2motion.py SOURCE DESTINATION [hunter]`, then `smooth_mesh2motion_weights.py DESTINATION`. The weight repair uses 48 welded adjacency diffusion passes, a hand-local finger influence taper, and 240 projected passes under the GPU four-influence limit. Ground the player's death motion using `npx tsx tools/assets/ground_mesh2motion.ts DESTINATION`, then run `promote_character.py` with the per-model provenance JSON. This changes weights and clip adapters, not source mesh geometry. Raw site exports remain immutable. Stalker and Hollow still use their previous assets.
 

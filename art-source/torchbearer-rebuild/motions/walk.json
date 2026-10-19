@@ -1,0 +1,14 @@
+{
+  "space": "tencent/HY-Motion-1.0",
+  "api": "/generate_motion_func",
+  "original_text": "A person walks forward steadily for the entire sequence while carrying a handheld torch in the right hand. The right elbow stays bent around 90 degrees, the right forearm points upward, and the right hand stays just outside the right shoulder at shoulder height. The left arm swings naturally. Upright relaxed torso, smooth alternating steps, feet plant on the ground. Continuous walking, no turning, no waving, no reaching, no stopping.",
+  "rewritten_text": "A person walks forward steadily for the entire sequence while carrying a handheld torch in the right hand. The right elbow stays bent around 90 degrees, the right forearm points upward, and the right hand stays just outside the right shoulder at shoulder height. The left arm swings naturally. Upright relaxed torso, smooth alternating steps, feet plant on the ground. Continuous walking, no turning, no waving, no reaching, no stopping.",
+  "seed_input": "211019",
+  "motion_duration": 4.0,
+  "cfg_scale": 5.0,
+  "status": "complete",
+  "model": "tencent/HY-Motion-1.0",
+  "file": "art-source/torchbearer-rebuild/motions/raw/walk.fbx",
+  "sha256": "05efeb40c009a1db76fe81ae158e5d5dbce3e6ece552313fdf0ab981c8a129eb",
+  "bytes": 16825808
+}

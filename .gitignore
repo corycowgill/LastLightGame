@@ -6,3 +6,8 @@ dist/
 
 __pycache__/
 *.pyc
+
+# Preserve downloaded motion sources locally; ship the retargeted GLB and provenance.
+art-source/torchbearer-rebuild/motions/raw/
+art-source/torchbearer-rebuild/motions/downloads/
+art-source/torchbearer-rebuild/motions/*.fbx

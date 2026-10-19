@@ -1,3 +1,4 @@
+import { TorchAttachment } from "./torch-attachment";
 import { roomProps } from "./room-props";
 import { flameFlicker } from "./flame";
 import { addHunterEyes } from "./hunter-eyes";
@@ -67,7 +68,7 @@ export class GameScene {
   private kit: { root: THREE.Group; offset: THREE.Vector3 }[] = [];
   private chalkStick?: THREE.Group;
   private attachmentPoint = new THREE.Vector3();
-  private socketPoint = new THREE.Vector3();
+  private torchAttachment = new TorchAttachment();
   private initialized = false;
   private elapsed = 0;
   private locomotionSpeed = 0;
@@ -336,7 +337,7 @@ export class GameScene {
     stick.rotation.z = -0.15;
     this.player.add(stick);
     this.flame = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(0.105, 1),
+      new THREE.IcosahedronGeometry(0.052, 1),
       new THREE.MeshBasicMaterial({ color: 0xffd58a }),
     );
     const iron = new THREE.MeshStandardMaterial({
@@ -448,7 +449,7 @@ export class GameScene {
         c !== this.stick,
     );
     this.actor = new AnimatedCharacter(
-      "/models/torchbearer.glb?v=arm-repair-v2",
+      "/models/torchbearer.glb?v=rebuild-v2",
       () => {
         playerFallback.forEach((c) => (c.visible = false));
         this.container.dataset.character = "rigged";
@@ -787,6 +788,7 @@ export class GameScene {
                 ),
       dt,
       this.locomotionSpeed,
+      game.phase === "RELIGHTING" ? game.relightDuration : undefined,
     );
     this.container.dataset.animation = this.actor?.clip ?? "fallback";
     this.player.updateMatrixWorld(true);
@@ -808,18 +810,17 @@ export class GameScene {
         this.chalkStick.position.copy(this.attachmentPoint);
       }
     }
-    if (this.actor?.ready && this.actor.socket) {
-      this.actor.socket.getWorldPosition(this.socketPoint);
-      this.player.worldToLocal(this.socketPoint);
-      this.flame.position
-        .copy(this.socketPoint)
-        // Tilt the carried torch out from the shoulder rather than driving
-        // its flame vertically through the hood during relaxed animations.
-        .add(new THREE.Vector3(-0.28, 0.37, -0.08));
+    if (this.actor?.ready && this.actor.socket && this.torchHardware) {
+      // Both grip position and rotation come from the animated hand. The
+      // independently generated prop supplies the flame tip, without offsets
+      // guessed from the character silhouette.
+      this.torchAttachment.update(
+        this.player,
+        this.actor.socket,
+        this.torchHardware,
+        this.flame,
+      );
       this.torch.position.copy(this.flame.position);
-      this.stick?.position
-        .copy(this.socketPoint)
-        .add(new THREE.Vector3(0, 0.12, 0));
     }
     this.player.children
       .filter((c) => c.name === "leg")
@@ -829,12 +830,6 @@ export class GameScene {
           : 0;
       });
     this.torchBasket.position.copy(this.flame.position);
-    if (this.torchHardware) {
-      this.torchHardware.position
-        .copy(this.flame.position)
-        .add(new THREE.Vector3(0.39, -0.52, 0));
-      this.torchHardware.rotation.z = 0.65;
-    }
     const burning =
       game.fuel > 0 && ["EXPLORING", "SANCTUARY"].includes(game.phase);
     if (this.lastFuel - game.fuel > 35) this.burst = 1;

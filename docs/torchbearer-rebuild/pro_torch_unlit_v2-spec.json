@@ -1,0 +1,29 @@
+{
+  "id": "pro_torch_unlit_v2",
+  "name": "Separate unlit hand torch rebuild",
+  "category": "props",
+  "biome": "shared",
+  "priority": "slice",
+  "method": "image_to_3d",
+  "target_size_m": 0.65,
+  "scale_axis": "y",
+  "triangle_budget": 2500,
+  "pivot": "ground_center",
+  "sockets": [
+    "grip",
+    "flame"
+  ],
+  "dependencies": [],
+  "reference": "references/props/torch-unlit-v2.png",
+  "prompt": "Single unlit handheld wood and iron torch, isolated object. No character, no hand, no fire, smoke or glow.",
+  "seed": 211020,
+  "license_status": "review_required",
+  "qa_status": "not_reviewed",
+  "deliverables": [
+    "GLB",
+    "collision",
+    "LOD",
+    "preview"
+  ],
+  "replaces_asset_id": "pro_torch"
+}

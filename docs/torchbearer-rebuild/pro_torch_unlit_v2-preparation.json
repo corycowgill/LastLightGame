@@ -1,0 +1,69 @@
+{
+  "asset_id": "pro_torch_unlit_v2",
+  "version": "v001",
+  "file": "assets/pro_torch_unlit_v2/v001/model.glb",
+  "sha256": "3f74f64f072cd261445bb517f2c4eeca5b05084a76b7a644540665c11f562fcb",
+  "source": "generated/pro_torch_unlit_v2/f8c1d84dcb4a4bf885eff99f486f6cea/source.glb",
+  "source_sha256": "9430a0a53d257ca87ef88fcea423c01fbbcabca8354442159817ed5b281a7ff6",
+  "metrics": {
+    "triangles": 2500,
+    "geometry_count": 1,
+    "bounds": [
+      [
+        -0.06461544318377604,
+        0.0,
+        -0.06474537541067854
+      ],
+      [
+        0.06461544318377604,
+        0.6500000000000001,
+        0.06474537541067854
+      ]
+    ],
+    "extents": [
+      0.1292308863675521,
+      0.6500000000000001,
+      0.12949075082135708
+    ],
+    "surface_area_m2": 0.29309042364480253,
+    "surface_area_ratio": 0.6937051447214259,
+    "file_bytes": 2741744
+  },
+  "scale_factor": 0.647888259792418,
+  "units": "meters",
+  "up_axis": "Y",
+  "forward_axis": "must_verify",
+  "pivot": "ground_center",
+  "sockets": {},
+  "collision": "assets/pro_torch_unlit_v2/v001/collision.json",
+  "lods": [
+    {
+      "file": "assets/pro_torch_unlit_v2/v001/lod1.glb",
+      "triangles": 1250
+    },
+    {
+      "file": "assets/pro_torch_unlit_v2/v001/lod2.glb",
+      "triangles": 522
+    }
+  ],
+  "qa_status": "needs_review",
+  "license_status": "review_required",
+  "flags": [
+    "visual_turntable_review_required",
+    "collision_and_sockets_required",
+    "license_review_required"
+  ],
+  "previews": [
+    "assets/pro_torch_unlit_v2/v001/previews/view_0.png",
+    "assets/pro_torch_unlit_v2/v001/previews/view_1.png",
+    "assets/pro_torch_unlit_v2/v001/previews/view_2.png",
+    "assets/pro_torch_unlit_v2/v001/previews/view_3.png"
+  ],
+  "optimization": {
+    "source_triangles": 96184,
+    "lod0_triangles": 2500,
+    "lod1_triangles": 1250,
+    "lod2_triangles": 522,
+    "method": "Blender decimate; requires visual review"
+  }
+}

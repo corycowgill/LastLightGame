@@ -1,0 +1,280 @@
+{
+  "player": {
+    "bone": "hand_R",
+    "socket": "torch_socket",
+    "translation": [
+      -0.02675152465004449,
+      0.04049850090116447,
+      -0.08629203861300327
+    ],
+    "rotation": [
+      -0.16148436241518097,
+      -0.3325100339618348,
+      0.39044689243397346,
+      0.8431554640747183
+    ]
+  },
+  "torch": {
+    "grip": "grip_socket",
+    "flame": "flame_socket",
+    "height_m": 0.6512082366969736
+  },
+  "player_sha256": "35f52c8931bf7c32f75fd9c3dcc098443a4941ac8e3feee850c7289d2432a4d8",
+  "torch_sha256": "cda8ac3e08890ab420884115c0cf8210a80b1328a1f175b352521b0df64acd59",
+  "old_skin_imported": false,
+  "motions": [
+    {
+      "space": "tencent/HY-Motion-1.0",
+      "model": "tencent/HY-Motion-1.0",
+      "api": "/generate_motion_func",
+      "status": "complete",
+      "submitted_at": 1792445232.2015996,
+      "request": {
+        "original_text": "A person carrying a torch in the bent right arm thrusts the torch forward once defensively, recoils slightly from the flash, and brings the right arm back to a steady upright torch carrying position near the right shoulder. Feet stay planted, left hand shields the face briefly.",
+        "rewritten_text": "A person carrying a torch in the bent right arm thrusts the torch forward once defensively, recoils slightly from the flash, and brings the right arm back to a steady upright torch carrying position near the right shoulder. Feet stay planted, left hand shields the face briefly.",
+        "seed_input": "211026",
+        "motion_duration": 4.0,
+        "cfg_scale": 5.0
+      },
+      "file": "art-source/torchbearer-rebuild/motions/raw/burst.fbx",
+      "sha256": "6438be52c592e91edfe2f6444d592ff603ff61603f378fed574f34fca8a53fe4",
+      "bytes": 16825808,
+      "completed_at": 1792445237.6921608
+    },
+    {
+      "space": "tencent/HY-Motion-1.0",
+      "model": "tencent/HY-Motion-1.0",
+      "api": "/generate_motion_func",
+      "status": "complete",
+      "submitted_at": 1792445210.6487312,
+      "request": {
+        "original_text": "A person stays in a low crouch with both feet planted and knees bent, carefully holding a torch upright in the right hand in front of the right shoulder. The left hand stays near the left knee for balance. Small breathing movement, no stepping and no standing up.",
+        "rewritten_text": "A person stays in a low crouch with both feet planted and knees bent, carefully holding a torch upright in the right hand in front of the right shoulder. The left hand stays near the left knee for balance. Small breathing movement, no stepping and no standing up.",
+        "seed_input": "211022",
+        "motion_duration": 4.0,
+        "cfg_scale": 5.0
+      },
+      "file": "art-source/torchbearer-rebuild/motions/raw/crouch_idle.fbx",
+      "sha256": "a99192aa6d6c088b8ea073a22649bfca18984418192ffa5749611db9d4aaec1c",
+      "bytes": 16825808,
+      "completed_at": 1792445216.0476522
+    },
+    {
+      "space": "tencent/HY-Motion-1.0",
+      "model": "tencent/HY-Motion-1.0",
+      "api": "/generate_motion_func",
+      "status": "complete",
+      "submitted_at": 1792445216.049677,
+      "request": {
+        "original_text": "A person moves forward slowly in a low crouch with bent knees, holding a torch upright in the right hand near the right shoulder. Left hand stays forward for balance. Repeated quiet low crouching steps, no standing up, no crawling on hands, no turning.",
+        "rewritten_text": "A person moves forward slowly in a low crouch with bent knees, holding a torch upright in the right hand near the right shoulder. Left hand stays forward for balance. Repeated quiet low crouching steps, no standing up, no crawling on hands, no turning.",
+        "seed_input": "211023",
+        "motion_duration": 4.0,
+        "cfg_scale": 5.0
+      },
+      "file": "art-source/torchbearer-rebuild/motions/raw/crouch_walk.fbx",
+      "sha256": "8861186a0f7d4d7cf0320862717fedab602a29c47979cbb98c5fa0fc2c6ed9ce",
+      "bytes": 16825808,
+      "completed_at": 1792445221.391029
+    },
+    {
+      "space": "tencent/HY-Motion-1.0",
+      "model": "tencent/HY-Motion-1.0",
+      "api": "/generate_motion_func",
+      "status": "complete",
+      "submitted_at": 1792445237.6931534,
+      "request": {
+        "original_text": "A person holding a torch in the right hand stumbles, falls to both knees, then collapses onto the ground and stays down. The person does not get back up. One continuous natural fall.",
+        "rewritten_text": "A person holding a torch in the right hand stumbles, falls to both knees, then collapses onto the ground and stays down. The person does not get back up. One continuous natural fall.",
+        "seed_input": "211027",
+        "motion_duration": 4.0,
+        "cfg_scale": 5.0
+      },
+      "file": "art-source/torchbearer-rebuild/motions/raw/death.fbx",
+      "sha256": "79627de5670c0c9db014f5e0703a05de3b54c97589c180d55d192b3687a8a9e9",
+      "bytes": 16825808,
+      "completed_at": 1792445243.7858207
+    },
+    {
+      "space": "tencent/HY-Motion-1.0",
+      "model": "tencent/HY-Motion-1.0",
+      "api": "/generate_motion_func",
+      "status": "complete",
+      "submitted_at": 1792445183.1193619,
+      "request": {
+        "original_text": "A person stands still, breathing gently and looking forward. The right elbow is bent, holding a torch upright in the right hand just outside the right shoulder. The left arm rests naturally beside the body. Keep both feet planted. No stepping, turning, pointing, reaching or waving.",
+        "rewritten_text": "A person stands still, breathing gently and looking forward. The right elbow is bent, holding a torch upright in the right hand just outside the right shoulder. The left arm rests naturally beside the body. Keep both feet planted. No stepping, turning, pointing, reaching or waving.",
+        "seed_input": "211019",
+        "motion_duration": 4.0,
+        "cfg_scale": 5.0
+      },
+      "file": "art-source/torchbearer-rebuild/motions/raw/idle.fbx",
+      "sha256": "02e61ff1e3a45a895a8e2f709f88244dac4adbc6133471289ef2371a793e6807",
+      "bytes": 16825808,
+      "completed_at": 1792445204.9016798
+    },
+    {
+      "space": "tencent/HY-Motion-1.0",
+      "model": "tencent/HY-Motion-1.0",
+      "api": "/generate_motion_func",
+      "status": "complete",
+      "submitted_at": 1792445221.3920293,
+      "request": {
+        "original_text": "A person stands holding a torch upright in the right hand near the right shoulder. The person reaches forward once with the left hand, picks up a small item at waist height, and brings the left arm back to the side. The right hand continues holding the torch upright. Feet stay planted.",
+        "rewritten_text": "A person stands holding a torch upright in the right hand near the right shoulder. The person reaches forward once with the left hand, picks up a small item at waist height, and brings the left arm back to the side. The right hand continues holding the torch upright. Feet stay planted.",
+        "seed_input": "211024",
+        "motion_duration": 4.0,
+        "cfg_scale": 5.0
+      },
+      "file": "art-source/torchbearer-rebuild/motions/raw/interact.fbx",
+      "sha256": "a414541c58f5a12a1e2a049ef5db74f1bd7775b38cd72a1ca3b1555be8d8913c",
+      "bytes": 16825808,
+      "completed_at": 1792445226.7650106
+    },
+    {
+      "space": "tencent/HY-Motion-1.0",
+      "model": "tencent/HY-Motion-1.0",
+      "api": "/generate_motion_func",
+      "status": "complete",
+      "submitted_at": 1792445226.7662416,
+      "request": {
+        "original_text": "A person holds an unlit torch upright in the right hand at chest height. The left hand strikes a match and brings it carefully toward the top of the torch, pauses briefly, then returns to the side while the right hand raises the relit torch near shoulder height. Feet stay planted.",
+        "rewritten_text": "A person holds an unlit torch upright in the right hand at chest height. The left hand strikes a match and brings it carefully toward the top of the torch, pauses briefly, then returns to the side while the right hand raises the relit torch near shoulder height. Feet stay planted.",
+        "seed_input": "211025",
+        "motion_duration": 4.0,
+        "cfg_scale": 5.0
+      },
+      "file": "art-source/torchbearer-rebuild/motions/raw/relight.fbx",
+      "sha256": "750485bbc93dcb4e589b7e27cedf3994e6922c05e9a182ec510894f468597849",
+      "bytes": 16825808,
+      "completed_at": 1792445232.2015996
+    },
+    {
+      "space": "tencent/HY-Motion-1.0",
+      "model": "tencent/HY-Motion-1.0",
+      "api": "/generate_motion_func",
+      "status": "complete",
+      "submitted_at": 1792445204.9031909,
+      "request": {
+        "original_text": "A person runs forward urgently while carefully carrying a torch upright in the right hand. The right elbow stays bent, right wrist held outside the shoulder, right forearm pointing up. The left arm pumps naturally. Smooth repeated running strides, no turning, no stopping, no jumping.",
+        "rewritten_text": "A person runs forward urgently while carefully carrying a torch upright in the right hand. The right elbow stays bent, right wrist held outside the shoulder, right forearm pointing up. The left arm pumps naturally. Smooth repeated running strides, no turning, no stopping, no jumping.",
+        "seed_input": "211021",
+        "motion_duration": 4.0,
+        "cfg_scale": 5.0
+      },
+      "file": "art-source/torchbearer-rebuild/motions/raw/sprint.fbx",
+      "sha256": "bd0057f680a9c3cdc84d33abafef1f75fb02e532b580751e1bcbcc726b3132c4",
+      "bytes": 16825808,
+      "completed_at": 1792445210.647723
+    },
+    {
+      "space": "tencent/HY-Motion-1.0",
+      "api": "/generate_motion_func",
+      "original_text": "A person walks forward steadily for the entire sequence while carrying a handheld torch in the right hand. The right elbow stays bent around 90 degrees, the right forearm points upward, and the right hand stays just outside the right shoulder at shoulder height. The left arm swings naturally. Upright relaxed torso, smooth alternating steps, feet plant on the ground. Continuous walking, no turning, no waving, no reaching, no stopping.",
+      "rewritten_text": "A person walks forward steadily for the entire sequence while carrying a handheld torch in the right hand. The right elbow stays bent around 90 degrees, the right forearm points upward, and the right hand stays just outside the right shoulder at shoulder height. The left arm swings naturally. Upright relaxed torso, smooth alternating steps, feet plant on the ground. Continuous walking, no turning, no waving, no reaching, no stopping.",
+      "seed_input": "211019",
+      "motion_duration": 4.0,
+      "cfg_scale": 5.0,
+      "status": "complete",
+      "model": "tencent/HY-Motion-1.0",
+      "file": "art-source/torchbearer-rebuild/motions/raw/walk.fbx",
+      "sha256": "05efeb40c009a1db76fe81ae158e5d5dbce3e6ece552313fdf0ab981c8a129eb",
+      "bytes": 16825808
+    }
+  ],
+  "bind_report": {
+    "rig": "Fresh 52-joint bind from generated HY-Motion SMPLH skeleton",
+    "mesh": "C:\\Users\\coryc\\Documents\\Codex\\2026-10-17\\cre\\outputs\\last-light-asset-library\\assets\\cha_torchbearer_clean_v2\\v001\\model.glb",
+    "clips": [
+      {
+        "clip": "idle",
+        "frames": 101,
+        "source_frames": [
+          10,
+          110
+        ],
+        "ground_offset": -0.009047690778970718
+      },
+      {
+        "clip": "walk",
+        "frames": 36,
+        "source_frames": [
+          20,
+          55
+        ],
+        "ground_offset": -0.006105933338403702
+      },
+      {
+        "clip": "sprint",
+        "frames": 26,
+        "source_frames": [
+          20,
+          45
+        ],
+        "ground_offset": -0.033762961626052856
+      },
+      {
+        "clip": "crouch_idle",
+        "frames": 101,
+        "source_frames": [
+          10,
+          110
+        ],
+        "ground_offset": -0.011374576948583126
+      },
+      {
+        "clip": "crouch_walk",
+        "frames": 56,
+        "source_frames": [
+          25,
+          80
+        ],
+        "ground_offset": 0.05466020852327347
+      },
+      {
+        "clip": "interact",
+        "frames": 120,
+        "source_frames": [
+          1,
+          120
+        ],
+        "ground_offset": -0.011765778064727783
+      },
+      {
+        "clip": "relight",
+        "frames": 120,
+        "source_frames": [
+          1,
+          120
+        ],
+        "ground_offset": -0.007111717015504837
+      },
+      {
+        "clip": "burst",
+        "frames": 120,
+        "source_frames": [
+          1,
+          120
+        ],
+        "ground_offset": -0.007030175998806953
+      },
+      {
+        "clip": "death",
+        "frames": 120,
+        "source_frames": [
+          1,
+          120
+        ],
+        "ground_offset": -0.009868860244750977
+      }
+    ],
+    "old_skin_imported": false
+  },
+  "notes": [
+    "Original neural surface retained; temporary solve proxy is not exported",
+    "Provider template body is removed; raw FBX stays local and ignored",
+    "Generated motion is retargeted, made in-place, loop closed and floor adjusted",
+    "Right arm uses two-bone carry envelope; wrist orientation stabilized",
+    "Gloved fingers follow wrist; source finger joints retained, not individual finger skin articulation"
+  ]
+}

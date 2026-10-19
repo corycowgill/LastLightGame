@@ -1,0 +1,18 @@
+{
+  "space": "tencent/HY-Motion-1.0",
+  "model": "tencent/HY-Motion-1.0",
+  "api": "/generate_motion_func",
+  "status": "complete",
+  "submitted_at": 1792445237.6931534,
+  "request": {
+    "original_text": "A person holding a torch in the right hand stumbles, falls to both knees, then collapses onto the ground and stays down. The person does not get back up. One continuous natural fall.",
+    "rewritten_text": "A person holding a torch in the right hand stumbles, falls to both knees, then collapses onto the ground and stays down. The person does not get back up. One continuous natural fall.",
+    "seed_input": "211027",
+    "motion_duration": 4.0,
+    "cfg_scale": 5.0
+  },
+  "file": "art-source/torchbearer-rebuild/motions/raw/death.fbx",
+  "sha256": "79627de5670c0c9db014f5e0703a05de3b54c97589c180d55d192b3687a8a9e9",
+  "bytes": 16825808,
+  "completed_at": 1792445243.7858207
+}

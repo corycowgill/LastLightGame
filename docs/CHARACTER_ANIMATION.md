@@ -1,3 +1,7 @@
+# Current player animation
+
+The October 19 full rebuild replaces the earlier player described below. See [the rebuild guide](torchbearer-rebuild/README.md) for the new neural body, separate torch, fresh bind and HF-generated motions. The remainder of this document records the superseded implementation.
+
 # Torchbearer animation revision
 
 The generated Torchbearer mesh is retained. This pass changes its skinning, baked skeletal clips and runtime blending, not its geometry source. Motions are authored for the fitted skeleton; they are not NVIDIA/Kimodo-generated motion.

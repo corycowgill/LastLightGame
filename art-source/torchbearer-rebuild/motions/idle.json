@@ -1,0 +1,18 @@
+{
+  "space": "tencent/HY-Motion-1.0",
+  "model": "tencent/HY-Motion-1.0",
+  "api": "/generate_motion_func",
+  "status": "complete",
+  "submitted_at": 1792445183.1193619,
+  "request": {
+    "original_text": "A person stands still, breathing gently and looking forward. The right elbow is bent, holding a torch upright in the right hand just outside the right shoulder. The left arm rests naturally beside the body. Keep both feet planted. No stepping, turning, pointing, reaching or waving.",
+    "rewritten_text": "A person stands still, breathing gently and looking forward. The right elbow is bent, holding a torch upright in the right hand just outside the right shoulder. The left arm rests naturally beside the body. Keep both feet planted. No stepping, turning, pointing, reaching or waving.",
+    "seed_input": "211019",
+    "motion_duration": 4.0,
+    "cfg_scale": 5.0
+  },
+  "file": "art-source/torchbearer-rebuild/motions/raw/idle.fbx",
+  "sha256": "02e61ff1e3a45a895a8e2f709f88244dac4adbc6133471289ef2371a793e6807",
+  "bytes": 16825808,
+  "completed_at": 1792445204.9016798
+}

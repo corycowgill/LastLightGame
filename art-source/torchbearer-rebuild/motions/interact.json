@@ -1,0 +1,18 @@
+{
+  "space": "tencent/HY-Motion-1.0",
+  "model": "tencent/HY-Motion-1.0",
+  "api": "/generate_motion_func",
+  "status": "complete",
+  "submitted_at": 1792445221.3920293,
+  "request": {
+    "original_text": "A person stands holding a torch upright in the right hand near the right shoulder. The person reaches forward once with the left hand, picks up a small item at waist height, and brings the left arm back to the side. The right hand continues holding the torch upright. Feet stay planted.",
+    "rewritten_text": "A person stands holding a torch upright in the right hand near the right shoulder. The person reaches forward once with the left hand, picks up a small item at waist height, and brings the left arm back to the side. The right hand continues holding the torch upright. Feet stay planted.",
+    "seed_input": "211024",
+    "motion_duration": 4.0,
+    "cfg_scale": 5.0
+  },
+  "file": "art-source/torchbearer-rebuild/motions/raw/interact.fbx",
+  "sha256": "a414541c58f5a12a1e2a049ef5db74f1bd7775b38cd72a1ca3b1555be8d8913c",
+  "bytes": 16825808,
+  "completed_at": 1792445226.7650106
+}

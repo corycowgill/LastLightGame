@@ -26,6 +26,15 @@ export function smoothFacing(current: number, target: number, dt: number) {
   return current + delta * (1 - Math.exp(-14 * Math.max(0, Math.min(dt, 0.1))));
 }
 
+const PLAYER_GESTURE_SECONDS: Record<string, number> = {
+  death: 2.1,
+  relight: 2,
+  burst: 0.7,
+  interact: 0.85,
+  chalk: 0.85,
+  refill: 0.85,
+};
+
 /** One owned GLB/mixer; late loads are disposed if an expedition was replaced. */
 export class AnimatedCharacter {
   root = new THREE.Group();
@@ -121,7 +130,7 @@ export class AnimatedCharacter {
       },
     );
   }
-  update(name: string, dt: number, speed?: number) {
+  update(name: string, dt: number, speed?: number, gestureDuration?: number) {
     if (!this.mixer) return;
     const action = this.actions.get(name) ?? this.actions.get("idle");
     if (action && name !== this.current) {
@@ -193,7 +202,12 @@ export class AnimatedCharacter {
               ? 1.6
               : 0;
       action.setEffectiveTimeScale(
-        reference ? THREE.MathUtils.clamp(speed / reference, 0.65, 2.2) : 1,
+        reference
+          ? THREE.MathUtils.clamp(speed / reference, 0.65, 2.2)
+          : action.getClip().duration /
+              (gestureDuration ??
+                PLAYER_GESTURE_SECONDS[name] ??
+                action.getClip().duration),
       );
     }
     if (this.stalkerMotion)

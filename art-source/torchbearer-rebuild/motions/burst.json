@@ -1,0 +1,18 @@
+{
+  "space": "tencent/HY-Motion-1.0",
+  "model": "tencent/HY-Motion-1.0",
+  "api": "/generate_motion_func",
+  "status": "complete",
+  "submitted_at": 1792445232.2015996,
+  "request": {
+    "original_text": "A person carrying a torch in the bent right arm thrusts the torch forward once defensively, recoils slightly from the flash, and brings the right arm back to a steady upright torch carrying position near the right shoulder. Feet stay planted, left hand shields the face briefly.",
+    "rewritten_text": "A person carrying a torch in the bent right arm thrusts the torch forward once defensively, recoils slightly from the flash, and brings the right arm back to a steady upright torch carrying position near the right shoulder. Feet stay planted, left hand shields the face briefly.",
+    "seed_input": "211026",
+    "motion_duration": 4.0,
+    "cfg_scale": 5.0
+  },
+  "file": "art-source/torchbearer-rebuild/motions/raw/burst.fbx",
+  "sha256": "6438be52c592e91edfe2f6444d592ff603ff61603f378fed574f34fca8a53fe4",
+  "bytes": 16825808,
+  "completed_at": 1792445237.6921608
+}

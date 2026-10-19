@@ -1,5 +1,15 @@
 # The Last Light — build status
 
+## Current player rebuild — 2026-10-19
+
+- New image-to-3D Torchbearer with separated sleeves and short cowl; new separate unlit torch GLB. Previous player mesh and skin are replaced.
+- Fresh 52-joint bind, anatomical garment weights and nine HF HY-Motion outputs: idle, walk, sprint, crouch idle/walk, interaction, relight, burst and death. Right-arm carry IK and wrist stabilization keep fire clear of the hood. Five gameplay names alias source clips rather than claiming additional generations.
+- Full animated hand rotation/position attachment, grip and flame tip sockets; flame is a runtime effect. Player GLB is approximately 2.94 MiB versus the previous 5.59 MiB.
+- 78 automated tests pass, including twelve deformation phases for all nine motions, 24 attachment phases per carry motion, loop seams, foot bounds, source hashes, AI and expedition checks. Production build passes; Three.js chunk warning remains.
+- Reproduction, provenance and limitations: [rebuild guide](docs/torchbearer-rebuild/README.md). Individual gloved fingers remain wrist-weighted; final visual acceptance and physical-device validation remain open.
+
+The sections below retain earlier milestone history; older player rig descriptions are superseded by this rebuild.
+
 Updated 2026-10-17. Version 0.1: playable Catacombs checkpoint for review. The full master specification is not complete.
 
 ## Implemented

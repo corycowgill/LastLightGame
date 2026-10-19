@@ -1,0 +1,18 @@
+{
+  "space": "tencent/HY-Motion-1.0",
+  "model": "tencent/HY-Motion-1.0",
+  "api": "/generate_motion_func",
+  "status": "complete",
+  "submitted_at": 1792445226.7662416,
+  "request": {
+    "original_text": "A person holds an unlit torch upright in the right hand at chest height. The left hand strikes a match and brings it carefully toward the top of the torch, pauses briefly, then returns to the side while the right hand raises the relit torch near shoulder height. Feet stay planted.",
+    "rewritten_text": "A person holds an unlit torch upright in the right hand at chest height. The left hand strikes a match and brings it carefully toward the top of the torch, pauses briefly, then returns to the side while the right hand raises the relit torch near shoulder height. Feet stay planted.",
+    "seed_input": "211025",
+    "motion_duration": 4.0,
+    "cfg_scale": 5.0
+  },
+  "file": "art-source/torchbearer-rebuild/motions/raw/relight.fbx",
+  "sha256": "750485bbc93dcb4e589b7e27cedf3994e6922c05e9a182ec510894f468597849",
+  "bytes": 16825808,
+  "completed_at": 1792445232.2015996
+}

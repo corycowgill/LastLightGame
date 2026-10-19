@@ -36,6 +36,26 @@ test("Torchbearer skin does not tear at shoulder and waist weight boundaries", a
           "ribcage must not follow leg bones",
         );
       }
+  let gloveVertices = 0;
+  for (let i = 0; i < positions.count; i++) {
+    if (Math.abs(positions.getX(i)) <= 0.37 || positions.getY(i) >= 0.82)
+      continue;
+    gloveVertices++;
+    let wristWeight = 0;
+    for (let k = 0; k < 4; k++)
+      if (
+        mesh.skeleton.bones[joints.getComponent(i, k)].name.startsWith("hand_")
+      )
+        wristWeight += weights.getComponent(i, k);
+    assert.ok(
+      wristWeight > 0.999,
+      "glove must follow the wrist and gripped prop",
+    );
+  }
+  assert.ok(
+    gloveVertices > 200,
+    "both gloves must be included in the grip regression",
+  );
   const edges: [number, number, number][] = [];
   const a = new THREE.Vector3(),
     b = new THREE.Vector3();
@@ -48,7 +68,17 @@ test("Torchbearer skin does not tear at shoulder and waist weight boundaries", a
         .distanceTo(b.fromBufferAttribute(positions, second));
       if (length > 0.005) edges.push([first, second, length]);
     }
-  for (const name of ["idle", "walk", "sprint", "crouch_walk"]) {
+  for (const name of [
+    "idle",
+    "walk",
+    "sprint",
+    "crouch_idle",
+    "crouch_walk",
+    "interact",
+    "relight",
+    "burst",
+    "death",
+  ]) {
     const clip = gltf.animations.find((c) => c.name === name)!;
     const mixer = new THREE.AnimationMixer(gltf.scene);
     mixer.clipAction(clip).play();
@@ -82,12 +112,12 @@ test("Torchbearer skin does not tear at shoulder and waist weight boundaries", a
       }
     }
     // The rejected site weights had thousands of 2.5x edges and 14–18x peaks.
-    assert.ok(worst < 4.5, `${name}: edge stretched ${worst.toFixed(2)}x`);
+    assert.ok(worst < 3.6, `${name}: edge stretched ${worst.toFixed(2)}x`);
     assert.ok(
       excessive / (edges.length * phases.length) < 0.001,
       `${name}: widespread skin tearing`,
     );
-    if (name !== "idle")
+    if (["walk", "sprint", "crouch_walk"].includes(name))
       for (const side of ["L", "R"]) {
         const travel = Math.max(
           ...hands[side].map((p) => p.distanceTo(hands[side][0])),
