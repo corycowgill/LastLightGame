@@ -42,15 +42,54 @@ for mesh in doc['meshes']:
         edges = np.unique(np.sort(edges, axis=1), axis=0)
         a, b = edges[:, 0], edges[:, 1]
         degree = np.bincount(np.concatenate([a, b]), minlength=count)
-        for _ in range(48):
+        for _ in range(int(sys.argv[2]) if len(sys.argv) > 2 else 48):
             neighbor = np.zeros_like(dense)
             np.add.at(neighbor, a, dense[b]); np.add.at(neighbor, b, dense[a])
             dense = 0.35*dense + 0.65*neighbor/np.maximum(1, degree[:, None])
         dense = dense[weld]
+        # Finger influences from automatic binding can leak up the sleeves.
+        # Taper them outside each hand and transfer their mass to that wrist.
+        skin = doc['skins'][0]
+        inverse_bind = array(skin['inverseBindMatrices'], 16)
+        bone_names = [doc['nodes'][n]['name'] for n in skin['joints']]
+        for side in ('l', 'r'):
+            hand = next((i for i,n in enumerate(bone_names)
+                         if n.lower() == 'hand_'+side), None)
+            fingers = [i for i,n in enumerate(bone_names)
+                       if n.endswith('_'+side) and any(f in n for f in
+                           ('thumb', 'index', 'middle', 'ring', 'pinky'))]
+            if hand is None or not fingers: continue
+            center = np.linalg.inv(inverse_bind[hand].reshape(4,4).T)[:3,3]
+            radius = np.ptp(p[:,1])*0.065
+            keep = np.clip((radius*1.5-np.linalg.norm(p-center,axis=1))/(radius*0.5),0,1)
+            removed = dense[:,fingers]*(1-keep[:,None])
+            dense[:,fingers] *= keep[:,None]
+            dense[:,hand] += removed.sum(axis=1)
         # No influence from upper limbs may cross into the lower-leg region.
         arm = [i for i,n in enumerate(doc['skins'][0]['joints'])
                if any(part in doc['nodes'][n]['name'] for part in ('arm', 'hand', 'head'))]
+        before_exclusion = dense.copy()
         dense[np.ix_(p[:, 1] < p[:, 1].min()+np.ptp(p[:, 1])*0.45, arm)] = 0
+        empty = dense.sum(axis=1) < 1e-12
+        dense[empty] = before_exclusion[empty]
+        # Solve again under the GPU's four-influence constraint. A single
+        # final truncation otherwise introduces fresh discontinuities where
+        # adjacent vertices choose different fourth and fifth bones.
+        welded = np.zeros((count, influences), dtype=np.float64)
+        np.add.at(welded, weld, dense)
+        welded /= np.bincount(weld)[:,None]
+        for _ in range(240):
+            top = np.argsort(welded,axis=1)[:,-4:]
+            sparse = np.zeros_like(welded)
+            np.put_along_axis(sparse,top,np.take_along_axis(welded,top,axis=1),axis=1)
+            sparse /= np.maximum(sparse.sum(axis=1,keepdims=True),1e-12)
+            neighbor = np.zeros_like(sparse)
+            np.add.at(neighbor,a,sparse[b]); np.add.at(neighbor,b,sparse[a])
+            welded = 0.8*sparse+0.2*neighbor/np.maximum(1,degree[:,None])
+        dense = welded[weld]
+        dense[np.ix_(p[:,1] < p[:,1].min()+np.ptp(p[:,1])*0.45,arm)] = 0
+        empty = dense.sum(axis=1) < 1e-12
+        dense[empty] = before_exclusion[empty]
         top = np.argsort(dense, axis=1)[:, -4:]
         selected = np.take_along_axis(dense, top, axis=1)
         selected /= selected.sum(axis=1, keepdims=True)

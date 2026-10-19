@@ -133,3 +133,9 @@ This is a playable Catacombs checkpoint. Intended session pacing, physical devic
 ## Mesh2Motion candidate review (2026-10-18)
 
 Open `/asset-review.html?rigs` to inspect the new 66-joint Torchbearer and Hunter site exports. Orbit front/back/both sides and select any of their 59 / 44 library animations. These raw candidates are published for user validation and do not replace gameplay models yet. Stalker export and Hollow fitting remain pending after the browser connection stalled. Fitting evidence, exact clip names and hashes are in `docs/mesh2motion/multiview/`.
+
+## 2026-10-18 — multi-view rigs installed in gameplay
+
+The main game now loads the 66-joint All Fingers Torchbearer and Hunter exports. Runtime adapters map the player library to 14 gameplay clips and the Hunter library to idle, search, pursuit, flee, capture and banishment. The full 103 original clips remain available at `/asset-review.html?rigs`.
+
+Rebuild from preserved exports with `prepare_mesh2motion.py SOURCE DESTINATION [hunter]`, then `smooth_mesh2motion_weights.py DESTINATION`. The weight repair uses 48 welded adjacency diffusion passes, a hand-local finger influence taper, and 240 projected passes under the GPU four-influence limit. Ground the player's death motion using `npx tsx tools/assets/ground_mesh2motion.ts DESTINATION`, then run `promote_character.py` with the per-model provenance JSON. This changes weights and clip adapters, not source mesh geometry. Raw site exports remain immutable. Stalker and Hollow still use their previous assets.

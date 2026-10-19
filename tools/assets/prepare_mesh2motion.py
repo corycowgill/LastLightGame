@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 source, destination = map(Path, sys.argv[1:3])
+kind = sys.argv[3] if len(sys.argv) > 3 else 'torchbearer'
 raw = source.read_bytes()
 size = struct.unpack_from('<I', raw, 12)[0]
 doc = json.loads(raw[20:20+size])
@@ -48,10 +49,18 @@ mapping = {'idle': 'Idle_Torch', 'walk': 'Walk', 'sprint': 'Sprint',
            'death': 'Death_A', 'quick_turn': 'Turn_Left_90', 'chalk': 'PickUp_Table',
            'refill': 'PickUp_Table', 'extinguish': 'Idle_Listening', 'fear': 'Shivering'}
 loops = {'idle', 'walk', 'sprint', 'crouch_idle', 'crouch_walk'}
+if kind == 'hunter':
+    mapping = {'idle': 'Zombie_Idle', 'search': 'Zombie_Walk',
+               'pursue': 'Sprint', 'flee': 'Run_Stealth',
+               'capture': 'Melee_Hook', 'banish': 'Death_A'}
+    loops = {'idle', 'search', 'pursue', 'flee'}
 carry = {}
-for channel in original['Idle_Torch']['channels']:
+for channel in original.get('Idle_Torch', {'channels': []})['channels']:
     node = channel['target']['node']
-    if doc['nodes'][node]['name'] in ('clavicle_R', 'upperarm_R', 'forearm_R', 'hand_R'):
+    bone_name = doc['nodes'][node]['name']
+    if bone_name in ('clavicle_R', 'upperarm_R', 'forearm_R', 'hand_R') or (
+            bone_name.endswith('_r') and any(f in bone_name for f in
+                ('thumb', 'index', 'middle', 'ring', 'pinky'))):
         sampler = original['Idle_Torch']['samplers'][channel['sampler']]
         samples = values(sampler['output'])
         carry[node] = samples[len(samples)//2]
@@ -70,7 +79,8 @@ for name, site_name in mapping.items():
                 row[0], row[1] = rows[0][0], rows[0][1]
                 # Correct the library's original pelvis height after fitting this
                 # shorter torso. Keep vertical gait bounce and crouch movement.
-                row[2] -= 0.03 if name.startswith('crouch') else 0.11
+                if kind == 'torchbearer':
+                    row[2] -= 0.03 if name.startswith('crouch') else 0.11
         elif name in loops and target['node'] in carry:
             rows = [carry[target['node']][:] for _ in rows]
         if name in loops: rows[-1] = rows[0][:]

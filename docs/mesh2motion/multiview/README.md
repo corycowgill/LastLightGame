@@ -28,3 +28,7 @@ Selected library clips include locomotion, crouching, turns, listening, fear, in
 Chrome Mesh2Motion tabs: Torchbearer 14524399, Stalker 14524401, Hollow 14524404. Browser control repeatedly timed out or reported detached tabs; do not reload an unfinished tab until its work is recovered or deliberately abandoned. Hunter export is already saved locally.
 
 Recover Stalker and Hollow sessions, finish multi-angle fitting and export their applicable library motions. Recheck symmetry, clavicles, knees, feet and finger placement on all candidates. Then adapt bone names/root motion, preserve finger weights during corrective skinning, test sampled animation deformation and ground contact, inspect in the game, and only then promote runtime models. Update provenance, README and BUILD_STATUS before committing and deploying.
+
+## Gameplay integration update
+
+Torchbearer and Hunter candidates are now installed in the game's runtime model paths for user validation. The table above records the earlier export checkpoint. Raw exports remain unchanged; runtime weights, root motion, facing, clip aliases and player carry pose are adapted by the documented pipeline. Stalker and Hollow remain pending.

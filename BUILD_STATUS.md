@@ -273,3 +273,11 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - Preserved multi-angle screenshots, immutable raw exports and hash/bind-position audit under `docs/mesh2motion/multiview/`.
 - Gameplay assets unchanged. Candidate symmetry, deformation and ground contact review still pending; Stalker export and Hollow fitting unfinished due to browser detachment.
 - Production build and all 63 tests passed. Existing Three.js bundle size warning remains.
+
+## 2026-10-18 — gameplay integration of multi-view rigs
+
+- Replaced active Torchbearer and Hunter GLBs and catalog aliases with 66-joint Mesh2Motion All Fingers versions. Full original animation libraries retained separately; gameplay maps 14 player and six Hunter clips.
+- Fixed finger influence leaking up sleeves and discontinuities introduced by final four-weight truncation. Added hand-local taper and projected sparse diffusion; existing skin-deformation thresholds unchanged.
+- Kept in-place root motion, torch hand socket, stable carry pose, facing conversion and player death grounding.
+- Stalker and Hollow are not part of this replacement; their unfinished website sessions still need recovery.
+- Validation: all 63 tests and production build passed; browser expedition driver reported PASS for extinction, active Hunt, navigated escape and sanctuary; separate Hunter retreat recovered to EXPLORING/BANISHED. Runtime URLs versioned to avoid stale cached GLBs.

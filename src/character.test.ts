@@ -8,11 +8,11 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 test("Mesh2Motion source is preserved and runtime keeps its skin with in-place motion", async () => {
   const source = await readFile(
-    new URL("../docs/mesh2motion/torchbearer-site-export.glb", import.meta.url),
+    new URL("../docs/mesh2motion/multiview/torchbearer/site-export.glb", import.meta.url),
   );
   const record = JSON.parse(
     await readFile(
-      new URL("../docs/mesh2motion/torchbearer.json", import.meta.url),
+      new URL("../docs/mesh2motion/multiview/torchbearer/provenance.json", import.meta.url),
       "utf8",
     ),
   );
@@ -29,6 +29,8 @@ test("Mesh2Motion source is preserved and runtime keeps its skin with in-place m
   const size = runtime.readUInt32LE(12);
   const doc = JSON.parse(runtime.toString("utf8", 20, 20 + size));
   assert.equal(doc.skins[0].joints.length, original.skins[0].joints.length);
+  assert.equal(doc.skins[0].joints.length, 66);
+  assert.ok(doc.nodes.some((n: any) => n.name === 'index_03_l'));
   assert.ok(doc.nodes.some((n: any) => n.name === "game_forward"));
   for (const animation of doc.animations) {
     assert.equal(animation.extras.source, "Mesh2Motion");

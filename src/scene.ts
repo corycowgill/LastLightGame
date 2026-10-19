@@ -420,13 +420,13 @@ export class GameScene {
         c !== this.torchBasket &&
         c !== this.stick,
     );
-    this.actor = new AnimatedCharacter("/models/torchbearer.glb", () => {
+    this.actor = new AnimatedCharacter("/models/torchbearer.glb?v=multiview-66", () => {
       playerFallback.forEach((c) => (c.visible = false));
       this.container.dataset.character = "rigged";
     });
     this.player.add(this.actor.root);
     const hunterFallback = [...this.hunter.children];
-    this.hunterActor = new AnimatedCharacter("/models/hunter.glb", () =>
+    this.hunterActor = new AnimatedCharacter("/models/hunter.glb?v=multiview-66", () =>
       hunterFallback.forEach((c) => (c.visible = false)),
     );
     this.hunter.add(this.hunterActor.root);
