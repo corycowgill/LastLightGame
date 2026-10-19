@@ -1,3 +1,4 @@
+import { addHunterEyes } from "./hunter-eyes";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -29,11 +30,19 @@ const animations = document.querySelector<HTMLSelectElement>("#animation")!;
 const status = document.querySelector("#status")!;
 let root: THREE.Group | undefined, mixer: THREE.AnimationMixer | undefined;
 const rigReview = new URLSearchParams(location.search).has("rigs");
-const entries = (await (await fetch(rigReview ? "/models/rig-review/manifest.json" : "/models/catalog/manifest.json")).json())
-  .assets;
+const entries = (
+  await (
+    await fetch(
+      rigReview
+        ? "/models/rig-review/manifest.json"
+        : "/models/catalog/manifest.json",
+    )
+  ).json()
+).assets;
 if (rigReview) {
   document.querySelector("h1")!.textContent = "Mesh2Motion rig review";
-  document.querySelector("header p")!.textContent = "Candidate rigs · not installed in gameplay. Drag to orbit front, back and sides; pinch or scroll to zoom. Select a motion below.";
+  document.querySelector("header p")!.textContent =
+    "Candidate rigs · not installed in gameplay. Drag to orbit front, back and sides; pinch or scroll to zoom. Select a motion below.";
 }
 for (const entry of entries) selector.add(new Option(entry.name, entry.id));
 let generation = 0;
@@ -71,6 +80,7 @@ async function select() {
     release(root);
   }
   root = gltf.scene;
+  if (!rigReview && entry.id === "cha_hunter") addHunterEyes(root);
   scene.add(root);
   mixer = new THREE.AnimationMixer(root);
   animations.replaceChildren(new Option("Rest pose", ""));

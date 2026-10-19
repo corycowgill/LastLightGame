@@ -1,3 +1,4 @@
+import { addHunterEyes } from "./hunter-eyes";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { AnimatedCharacter, movementClip, smoothFacing } from "./character";
 import { CatalogAssets } from "./catalog-assets";
@@ -385,7 +386,7 @@ export class GameScene {
       this.hunter.add(arm);
       const eye = new THREE.Mesh(
         new THREE.SphereGeometry(0.033, 6, 6),
-        new THREE.MeshBasicMaterial({ color: 0xb6dfdb }),
+        new THREE.MeshBasicMaterial({ color: 0xff160c, toneMapped: false }),
       );
       eye.position.set(side * 0.075, 2.73, -0.17);
       this.hunter.add(eye);
@@ -444,7 +445,10 @@ export class GameScene {
     const hunterFallback = [...this.hunter.children];
     this.hunterActor = new AnimatedCharacter(
       "/models/hunter.glb?v=multiview-66",
-      () => hunterFallback.forEach((c) => (c.visible = false)),
+      () => {
+        hunterFallback.forEach((c) => (c.visible = false));
+        if (this.hunterActor) addHunterEyes(this.hunterActor.root);
+      },
     );
     this.hunter.add(this.hunterActor.root);
     const stalkerFallback = [...this.stalker.children];

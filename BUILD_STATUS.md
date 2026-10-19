@@ -305,3 +305,9 @@ Browser verification: all nine audio buffers decoded; listening-page playback ad
 - HUD displays approximate remaining time at the current mode, depth and efficiency. Journal, upgrade label and field guide explain the new units. Warning audio begins below 20% and accelerates toward extinction.
 - All 64 tests and production build pass. New regression reaches HUNT_ACTIVE through natural depletion, then recovers with oil and verifies the short refill window. Browser Blaze run naturally reached HUNT_ACTIVE and subsequently caught an exposed stationary player.
 - Browser match recovery check also returned to EXPLORING/BANISHED with a short visible countdown remaining.
+
+## 2026-10-18 — glowing Hunter eyes
+
+- Added red emissive-style eye cores with small additive halos to the loaded Hunter's head bone, using source mesh positions transformed by its actual inverse bind matrix. Also changed fallback eyes from teal to red.
+- Glow is depth-tested and casts no gameplay light: it cannot reveal the Hunter through walls or affect perception. Normal Hunter visibility/banishment hides the eyes with the actor. Shared helper also exposes the effect in catalog asset review.
+- Visual review confirmed placement during the search clip. Production build and all 64 tests pass.
