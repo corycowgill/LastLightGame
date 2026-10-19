@@ -36,6 +36,13 @@ export class AnimatedCharacter {
   private disposed = false;
   private playerMotion = false;
   private hunterMotion = false;
+  private stalkerMotion = false;
+  private fearPose = 0;
+  private poseBones: {
+    bone: THREE.Object3D;
+    rotation: THREE.Quaternion;
+    position: THREE.Vector3;
+  }[] = [];
   private finishLoading!: () => void;
   readonly settled = new Promise<void>((resolve) => {
     this.finishLoading = resolve;
@@ -46,6 +53,7 @@ export class AnimatedCharacter {
   constructor(path: string, loaded: () => void) {
     this.playerMotion = path.includes("torchbearer");
     this.hunterMotion = path.includes("hunter");
+    this.stalkerMotion = path.includes("stalker");
     new GLTFLoader().load(
       path,
       (gltf) => {
@@ -65,6 +73,42 @@ export class AnimatedCharacter {
         this.mixer = new THREE.AnimationMixer(gltf.scene);
         for (const clip of gltf.animations)
           this.actions.set(clip.name, this.mixer.clipAction(clip));
+        if (this.stalkerMotion) {
+          for (const [name, source] of [
+            ["cower", "recoil"],
+            ["crawl", "investigate"],
+          ]) {
+            const clip = gltf.animations
+              .find((c) => c.name === source)
+              ?.clone();
+            if (clip) {
+              clip.name = name;
+              this.actions.set(name, this.mixer.clipAction(clip));
+            }
+          }
+          for (const name of [
+            "hips",
+            "spine",
+            "chest",
+            "head",
+            "upperarm_L",
+            "upperarm_R",
+            "thigh_L",
+            "thigh_R",
+            "shin_L",
+            "shin_R",
+            "foot_L",
+            "foot_R",
+          ]) {
+            const bone = gltf.scene.getObjectByName(name);
+            if (bone)
+              this.poseBones.push({
+                bone,
+                rotation: bone.quaternion.clone(),
+                position: bone.position.clone(),
+              });
+          }
+        }
         this.ready = true;
         loaded();
         this.finishLoading();
@@ -114,6 +158,7 @@ export class AnimatedCharacter {
         "chalk",
         "refill",
         "recoil",
+        "cower",
         "extinguish",
         "fear",
         "quick_turn",
@@ -150,7 +195,41 @@ export class AnimatedCharacter {
         reference ? THREE.MathUtils.clamp(speed / reference, 0.65, 2.2) : 1,
       );
     }
+    if (this.stalkerMotion)
+      for (const p of this.poseBones) {
+        p.bone.quaternion.copy(p.rotation);
+        p.bone.position.copy(p.position);
+      }
     this.mixer.update(Math.min(dt, 0.1));
+    if (this.stalkerMotion) {
+      this.fearPose = THREE.MathUtils.damp(
+        this.fearPose,
+        name === "cower" || name === "crawl" ? 1 : 0,
+        8,
+        dt,
+      );
+      for (const p of this.poseBones) {
+        p.rotation.copy(p.bone.quaternion);
+        p.position.copy(p.bone.position);
+        const pitch =
+          p.bone.name === "spine"
+            ? 0.65
+            : p.bone.name === "chest"
+              ? 0.25
+              : p.bone.name === "head"
+                ? -0.15
+                : p.bone.name.startsWith("thigh")
+                  ? 0.55
+                  : p.bone.name.startsWith("shin")
+                    ? -0.9
+                    : p.bone.name.startsWith("foot")
+                      ? 0.35
+                      : 0;
+        p.bone.rotateX(pitch * this.fearPose);
+        if (p.bone.name === "hips") p.bone.position.y -= 0.2 * this.fearPose;
+      }
+      if (action && name === "crawl") action.setEffectiveTimeScale(0.8);
+    }
   }
   private release(root: THREE.Object3D) {
     const textures = new Set<THREE.Texture>();

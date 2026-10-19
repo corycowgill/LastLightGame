@@ -153,3 +153,7 @@ See [the performance report](docs/PERFORMANCE.md) for measured frame pacing, CPU
 ### Solid prop pipeline
 
 `room-props.ts` and `dungeon-props.ts` are shared placement plans for GLB rendering and physical obstacles. `prop-bounds.ts` stores bounds and source hashes generated from shipped models. After replacing a solid GLB, run `npx tsx tools/assets/collision-bounds.ts`, then `npm test` and `npm run build`. Collision preserves each model's yaw and scale. Arch posts and lintels are separate so open doorways remain usable. Player movement, Hunter routes and camera avoidance consume the same solids; small debris and decals stay passable. The solid-prop tests verify source hashes, rotated footprints, arch openings, sprint collision and navigation detours.
+
+### Stalker fire response and low fuel
+
+A burning torch now triggers a brief Stalker cower followed by a slow, hunched retreat using navigable routes; Ember has the shortest protection radius. Its existing recoil and investigate clips supply the motion, with a blended skeletal fear pose. It resumes pursuit in darkness. Below 10% fuel, `flame.ts` drives irregular light dips and flame contraction without changing simulation visibility or fuel. Review both at `/?debug&stalker&seed=104729`.

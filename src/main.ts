@@ -271,6 +271,12 @@ async function begin(load: boolean) {
   else game.player.yaw = cameraControls.pose.yaw;
   // Reproducible art-review position using the real world, light and game renderer.
   const query = new URLSearchParams(location.search);
+  if (!load && query.has("debug") && query.has("stalker")) {
+    Object.assign(game.player, { x: 28, z: 0 });
+    game.enemies = [{ x: 30, z: 0, kind: "stalker", state: "LISTENING" }];
+    game.fuel = game.maxFuel * 0.09;
+    game.player.yaw = cameraControls.pose.yaw = -Math.PI / 2;
+  }
   if (!load && query.has("debug") && query.has("dressing")) {
     const remains = dungeonDressing(game.world).find(
       (d) => d.id === "dre_small_bone_pile",

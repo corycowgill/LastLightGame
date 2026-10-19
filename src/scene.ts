@@ -1,4 +1,5 @@
 import { roomProps } from "./room-props";
+import { flameFlicker } from "./flame";
 import { addHunterEyes } from "./hunter-eyes";
 import { CameraIndex } from "./camera-index";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
@@ -839,16 +840,11 @@ export class GameScene {
     );
     const radius = [3, 9, 20][game.mode] || 9,
       intensity = [10, 26, 64][game.mode] || 35;
+    const flicker = flameFlicker(this.elapsed, game.fuel / game.maxFuel);
+    this.container.dataset.flameFlicker = flicker.toFixed(2);
     this.torch.intensity = THREE.MathUtils.damp(
       this.torch.intensity,
-      burning
-        ? intensity *
-            (1 +
-              (game.fuel / game.maxFuel < 0.25 ? 0.18 : 0.06) *
-                Math.sin(this.elapsed * 19) +
-              0.04 * Math.sin(this.elapsed * 31)) +
-            this.burst * 180
-        : 0,
+      burning ? intensity * flicker + this.burst * 180 : 0,
       8,
       dt,
     );
@@ -874,7 +870,7 @@ export class GameScene {
     this.flame.visible = burning;
     this.flame.scale.set(
       1 + 0.15 * Math.sin(this.elapsed * 21),
-      2.1 + 0.3 * Math.sin(this.elapsed * 15),
+      (2.1 + 0.3 * Math.sin(this.elapsed * 15)) * Math.sqrt(flicker),
       1,
     );
     this.flame.rotation.y = this.elapsed * 2;
@@ -917,19 +913,35 @@ export class GameScene {
       }
     }
     const e = game.enemies?.[0];
+    this.container.dataset.stalkerState = e?.state ?? "NONE";
     this.stalker.visible = !!e;
     if (e) {
+      const oldX = this.stalker.position.x,
+        oldZ = this.stalker.position.z;
       this.stalkerActor?.update(
-        e.state === "REPELLED"
-          ? "recoil"
-          : e.state === "LISTENING"
-            ? "idle"
-            : "investigate",
+        e.state === "COWERING" || e.state === "REPELLED"
+          ? "cower"
+          : e.state === "FLEEING"
+            ? "crawl"
+            : e.state === "LISTENING"
+              ? "idle"
+              : "investigate",
         dt,
       );
       this.stalker.position.set(e.x, Math.sin(this.elapsed * 4) * 0.02, e.z);
-      this.stalker.lookAt(game.player.x, 0, game.player.z);
-      this.stalker.rotation.y += Math.PI;
+      const fleeing = e.state === "FLEEING";
+      const dx = e.x - oldX,
+        dz = e.z - oldZ;
+      const facing = fleeing
+        ? Math.hypot(dx, dz) > 0.001
+          ? Math.atan2(dx, dz) + Math.PI
+          : this.stalker.rotation.y
+        : Math.atan2(game.player.x - e.x, game.player.z - e.z) + Math.PI;
+      this.stalker.rotation.y = smoothFacing(
+        this.stalker.rotation.y,
+        facing,
+        dt,
+      );
     }
     for (const item of game.items || []) {
       let mesh = this.items.get(String(item.id));

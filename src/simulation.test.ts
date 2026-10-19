@@ -416,7 +416,7 @@ test("soft boots reduce audible Stalker investigations without making footsteps 
     quiet = new Game(1);
   for (const g of [normal, quiet]) {
     away(g);
-    g.enemies = [{ x: 35, z: 0, state: "LISTENING", kind: "stalker" }];
+    g.enemies = [{ x: 38, z: 0, state: "LISTENING", kind: "stalker" }];
   }
   quiet.upgrades.boots = 3;
   assert.equal(normal.footstepNoise(false, false), 5);
@@ -491,4 +491,26 @@ test("sanctuary compass is locked until purchased and gives camera-relative bear
   assert.ok(a >= -Math.PI && a <= Math.PI);
   g.reset(44);
   assert.equal(g.upgrades.compass, 1);
+});
+
+test("Stalker cowers then retreats from every burning torch mode without draining fuel", () => {
+  for (const mode of [0, 1, 2]) {
+    const g = new Game(104729);
+    away(g);
+    g.setMode(mode);
+    g.enemies = [{ x: 30, z: 0, kind: "stalker", state: "LISTENING" }];
+    const fuel = g.fuel;
+    advance(g, 0.2);
+    assert.equal(g.enemies[0].state, "COWERING");
+    advance(g, 2);
+    assert.equal(g.enemies[0].state, "FLEEING");
+    assert.ok(
+      Math.hypot(g.enemies[0].x - g.player.x, g.enemies[0].z - g.player.z) >
+        2.5,
+    );
+    assert.ok(Math.abs(fuel - g.fuel - g.fuelRate * 2.2) < 0.001);
+    g.forceHunt();
+    advance(g, 0.1);
+    assert.ok(!["COWERING", "FLEEING"].includes(g.enemies[0].state));
+  }
 });

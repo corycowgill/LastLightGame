@@ -276,6 +276,10 @@ export class Game {
   private messageTime = 0;
   private retreatTime = 0;
   private retreatTarget: Point | undefined;
+  private stalkerRetreats = new WeakMap<
+    Point,
+    { target?: Point; cower: number; retry: number }
+  >();
   private roomCenters: Point[] = [];
   constructor(seed = 1) {
     this.world = generateWorld(seed);
@@ -607,7 +611,16 @@ export class Game {
       this.say("Sanctuary fire banishes the darkness.");
     }
     if (dist(this.player, this.destination) < 3) this.interact();
-    if (!safe && this.phase === "EXPLORING")
+    if (
+      !safe &&
+      [
+        "EXPLORING",
+        "EXTINGUISHING",
+        "HUNT_GRACE",
+        "HUNT_ACTIVE",
+        "RELIGHTING",
+      ].includes(this.phase)
+    )
       this.updateStalker(dt, input.crouch);
     this.director -= dt;
     if (this.director <= 0) {
@@ -794,6 +807,56 @@ export class Game {
   private updateStalker(dt: number, crouch: boolean) {
     for (const e of this.enemies) {
       const d = dist(e, this.player);
+      const lit =
+        this.fuel > 0 && ["EXPLORING", "SANCTUARY"].includes(this.phase);
+      const threatened =
+        lit &&
+        d < CONFIG.lightRepel[this.mode] + 2 &&
+        lineOfSight(this.world, e, this.player);
+      let retreat = this.stalkerRetreats.get(e);
+      if (
+        threatened ||
+        (lit && retreat && d < CONFIG.lightRepel[this.mode] + 5)
+      ) {
+        if (!retreat) {
+          retreat = { cower: 0.7, retry: 0 };
+          this.stalkerRetreats.set(e, retreat);
+          this.routes.delete(e);
+        }
+        retreat.cower -= dt;
+        retreat.retry -= dt;
+        e.state = retreat.cower > 0 ? "COWERING" : "FLEEING";
+        if (retreat.retry <= 0) {
+          retreat.retry = 1.5;
+          const options = this.world.cells
+            .map((c) => ({ x: c.x * 2, z: c.z * 2 }))
+            .filter(
+              (p) =>
+                dist(p, e) < 14 &&
+                dist(p, this.player) > d + 3 &&
+                walkable(this.world, p.x, p.z),
+            )
+            .sort((a, b) => dist(b, this.player) - dist(a, this.player));
+          retreat.target = options.find((p) => {
+            const path = findPath(this.world, e, p);
+            return (
+              path.length > 0 &&
+              path
+                .slice(0, 4)
+                .every((step) => dist(step, this.player) >= d - 0.5)
+            );
+          });
+          this.routes.delete(e);
+        }
+        if (retreat.cower <= 0 && retreat.target)
+          this.moveEnemy(e, retreat.target, 1.35, dt);
+        continue;
+      }
+      if (retreat) {
+        this.stalkerRetreats.delete(e);
+        this.routes.delete(e);
+        e.state = "LISTENING";
+      }
       if (e.state === "REPELLED") {
         this.moveEnemy(e, { x: 84, z: 24 }, 2.5, dt);
         if (d > 10) e.state = "LISTENING";
@@ -801,16 +864,22 @@ export class Game {
       }
       if (
         d < 15 + this.depth * 5 &&
-        this.noise > 3 &&
+        (this.noise > 3 || !lit) &&
         lineOfSight(this.world, e, this.player)
       ) {
-        e.state = "INVESTIGATING";
-        if (d > 2 || this.mode === 0)
-          this.moveEnemy(e, this.player, 1.8 + this.depth * 0.5, dt);
+        e.state = lit ? "INVESTIGATING" : "PURSUING";
+        if (!lit || d > 2 || this.mode === 0)
+          this.moveEnemy(
+            e,
+            this.player,
+            lit ? 1.8 + this.depth * 0.5 : 2.8,
+            dt,
+          );
       } else e.state = "LISTENING";
-      if (d < 1.4 && !crouch && this.mode !== 2) {
-        this.fuel = Math.max(0, this.fuel - dt * (this.mode === 0 ? 18 : 8));
-        this.say("A Stalker tears at the flame. Brighten it or retreat.");
+      if (!lit && this.phase === "HUNT_ACTIVE" && d < 1.1 && !crouch) {
+        this.phase = "DEAD";
+        this.artifacts = 0;
+        this.say("Without fire, the Stalker closes in.");
       }
     }
   }

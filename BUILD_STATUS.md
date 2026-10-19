@@ -341,3 +341,11 @@ Validation: 71 tests pass and production build succeeds. Browser expedition chec
 
 Removed decorative processional statues from sanctuary/landmark rooms and the floating landmark circle, which suggested an interaction without providing one. Shared placement removal also removes their collision blockers. Validation: 71 tests pass; production build succeeds.
 
+
+## 2026-10-19 — fire-sensitive Stalker and critical fuel sputter
+
+The Stalker now recoils for 0.7 seconds, then retreats at 1.35 m/s along collision-aware routes from a visible burning torch in every mode. Retreat has distance hysteresis and bounded replanning; it never drains a lit torch at contact. Runtime animation adapters reuse its recoil/investigate clips with a blended hunched, lowered skeletal pose and face it along its escape direction. This is an adaptation of the existing Stalker rig, not a newly authored motion-capture crawl. In darkness it can pursue by sight at 2.8 m/s; contact capture is enabled during the active Hunt, preserving the extinction grace period. Relighting restores its fear of fire.
+
+Below 10% fuel, irregular bounded light dips and matching flame contraction add visible sputtering. Fuel consumption, AI visibility and extinction timing remain independent of this effect. `/?debug&stalker&seed=104729` opens a repeatable low-fuel creature review. The screenshot's statue/circle belonged to the earlier build; those placements remain removed.
+
+Validation: 73 tests pass, including all torch modes repelling the Stalker, escape movement, no contact fuel drain, darkness state recovery and bounded critical-fuel flicker. Production build succeeds; existing Three.js chunk warning remains.
