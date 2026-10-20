@@ -1,4 +1,5 @@
 import { CONFIG, UPGRADES, type Upgrade } from "./simulation";
+import { relicIdentity } from "./relics";
 import "./style.css";
 import { CameraControls, orbit, zoom } from "./controls";
 import {
@@ -247,6 +248,18 @@ function menu() {
       game.relight();
       cameraControls.release();
     });
+  if (new URLSearchParams(location.search).has("debug"))
+    button("pack-check", "REVIEW SECOND HUNTER · PRIMARY HELD", async () => {
+      await begin(false);
+      const room = game.world.layout?.rooms.find((r) => r.design === "ossuary");
+      if (!room) return;
+      Object.assign(game.player, { x: room.x * 2, z: room.z * 2 });
+      game.enemies = [];
+      game.fuel = 0;
+      game.phase = "HUNT_ACTIVE";
+      game.hunter = { ...game.start, state: "BANISHED" };
+      cameraControls.release();
+    });
 }
 function rebuild() {
   draw = true;
@@ -452,6 +465,10 @@ function journal() {
   panel(
     `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (CONFIG.burnMultiplier * (1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
   );
+  const summary = document.createElement("p");
+  const votives = game.items.filter((i) => i.kind === "artifact");
+  summary.textContent = `Votives recovered: ${votives.filter((i) => i.taken).length}/${votives.length}. Search burial recesses and side chambers for glimmers; the sealed ossuary reliquary holds three names. Prolonged Hunts draw a second Hunter: find fire or relight before the answering footsteps arrive.`;
+  $("discoveries").append(summary);
   for (const discovery of [
     ...new Set([...game.archive, ...game.discoveries]),
   ]) {
@@ -573,6 +590,10 @@ function queueSave() {
 let hudTimer = 0;
 let hudPhase = "";
 let inventoryMarkup = "";
+let observedGame: Game | undefined;
+let observedSeed = 0;
+let seenRelics = new Set<number>();
+let relicRevealUntil = 0;
 const frameTimes = new Float32Array(240);
 let frameSample = 0;
 let worstFrame = 0;
@@ -697,6 +718,32 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 function updateHUD() {
+  if (
+    observedGame !== game ||
+    observedSeed !== game.world.seed ||
+    game.elapsed < 0.2
+  ) {
+    observedGame = game;
+    observedSeed = game.world.seed;
+    seenRelics = new Set(
+      game.items
+        .filter((i) => i.kind === "artifact" && i.taken)
+        .map((i) => i.id),
+    );
+    relicRevealUntil = 0;
+  }
+  for (const item of game.items) {
+    if (item.kind !== "artifact" || !item.taken || seenRelics.has(item.id))
+      continue;
+    seenRelics.add(item.id);
+    const relic = relicIdentity(game.world.seed, item);
+    $("relicName").textContent = relic.name;
+    $("relicStory").textContent = relic.story;
+    $("relicDiscovery").style.setProperty("--relic-color", relic.color);
+    relicRevealUntil = game.elapsed + 12;
+  }
+  $("relicDiscovery").hidden =
+    game.elapsed >= relicRevealUntil || game.phase !== "EXPLORING";
   $("scene").dataset.audioSamples = String(audio.sampleCount);
   $("audioUnlock").hidden = !audio.needsGesture;
   if (inputSource === "gamepad")
@@ -773,7 +820,13 @@ function updateHUD() {
   );
   const hunt = game.phase.includes("HUNT");
   $("phase").textContent = hunt
-    ? "THE HUNT"
+    ? game.hunterWarning
+      ? game.additionalHunters.some(
+          (h) => !["DORMANT", "BANISHED"].includes(h.state),
+        )
+        ? "TWO HUNTERS ROAM THE DARK"
+        : "ANOTHER HUNTER IS COMING"
+      : "THE HUNT"
     : game.phase === "RELIGHTING"
       ? "HOLD ON TO THE SPARK"
       : "";
@@ -802,12 +855,7 @@ function updateHUD() {
   $("scene").dataset.cameraDistance = cameraControls.pose.distance.toFixed(2);
   $("scene").dataset.playerX = game.player.x.toFixed(2);
   $("scene").dataset.playerZ = game.player.z.toFixed(2);
-  const threat =
-    hunt && game.hunter.state !== "DORMANT"
-      ? game.hunter
-      : game.enemies.find(
-          (e) => e.state === "INVESTIGATING" || e.state === "PURSUING",
-        );
+  const threat = audio.threatFootstep;
   let cue = "";
   if (settings.cues && threat) {
     const dx = threat.x - game.player.x,
@@ -849,12 +897,23 @@ function updateHUD() {
   }
   if (
     hunt &&
-    game.hunter.state === "PURSUING" &&
-    game.hunterReadiness < 1 &&
-    lineOfSight(game.world, game.player, game.hunter)
+    [
+      { ...game.hunter, readiness: game.hunterReadiness },
+      ...game.additionalHunters,
+    ].some(
+      (hunter) =>
+        hunter.state === "PURSUING" &&
+        (hunter.readiness ?? 0) < 1 &&
+        lineOfSight(game.world, game.player, hunter),
+    )
   )
     $("phase").textContent = "IT HAS SEEN YOU · BREAK SIGHT";
-  $("direction").textContent = cue;
+  $("direction").textContent = cue || game.hunterWarning;
+  if (game.phase === "DEAD" || game.completed) {
+    $("prompt").textContent = "";
+    $("survivalHint").textContent = "";
+    $("direction").textContent = "";
+  }
 }
 game.load();
 rebuild();

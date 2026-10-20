@@ -63,6 +63,9 @@ export class Soundscape {
   get loaded() {
     return this.buffers.size;
   }
+  has(name: Clip) {
+    return this.buffers.has(name);
+  }
   private loop(name: Clip, volume: number) {
     let entry = this.loops.get(name);
     if (!entry && volume > 0 && this.buffers.has(name)) {
@@ -82,15 +85,22 @@ export class Soundscape {
       entry.gain.gain.setTargetAtTime(volume, this.context.currentTime, 0.8);
     }
   }
-  update(mood: Mood, burning: boolean, blaze: boolean, quiet = false) {
+  update(
+    mood: Mood,
+    burning: boolean,
+    blaze: boolean,
+    quiet = false,
+    danger = false,
+  ) {
+    const bed = danger ? 0.45 : 1;
     this.loop(
       "exploration",
-      mood === "exploration" && !quiet ? 0.22 * this.musicVolume : 0,
+      mood === "exploration" && !quiet ? 0.22 * this.musicVolume * bed : 0,
     );
     // Leave the Hunt quiet enough for directional enemy footsteps and breathing.
-    this.loop("hunt", mood === "hunt" ? 0.1 * this.musicVolume : 0);
+    this.loop("hunt", mood === "hunt" ? 0.075 * this.musicVolume : 0);
     this.loop("sanctuary", mood === "sanctuary" ? 0.38 * this.musicVolume : 0);
-    this.loop("catacombs", quiet ? 0 : mood === "hunt" ? 0.025 : 0.055);
+    this.loop("catacombs", quiet ? 0 : mood === "hunt" ? 0.025 : 0.045 * bed);
     this.loop("torch", burning ? (blaze ? 0.14 : 0.08) : 0);
   }
   play(name: Clip, volume = 0.25, pan = 0) {

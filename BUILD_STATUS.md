@@ -1,5 +1,13 @@
 # The Last Light — build status
 
+## Team gameplay review — 2026-10-20
+
+The style, gameplay/balance and audio review produced a coordinated discoveries-and-danger pass. Relics now have authored names/stories, stronger real-GLB silhouettes, colored soul motes, named prompts and a recovery reveal. The sealed reliquary displays a relic crest; your journal tracks recovered votives and banked stories.
+
+A sustained Hunt now warns at 12 seconds and can add a **second Hunter at 22 seconds**. There are at most two, with independent perception/memory, fair off-camera navigable spawns, and shared fire/sanctuary protection. No additional fuel drain was added. Every Hunter and Stalker now makes footsteps from actual traveled distance, with directional stereo and wall muffling; water/gravel contacts, restrained reflections, quieter threat beds and flame sputtering improve sound readability.
+
+See [team findings, design decisions, tests and limitations](docs/TEAM_GAMEPLAY_REVIEW.md). Validation: 105 tests, 100 seeded escape routes and production build pass. Full subjective difficulty, headphone and physical-device validation remain open.
+
 ## Rendering stability pass — 2026-10-20
 
 Point-light shadows now refresh on a staggered budget: at most one six-face map per rendered frame, torch at up to 20 Hz and nearby sanctuary maps at up to 4 Hz. Cached maps continue shading between updates; light intensity and flame animation still update every frame. Shadow-caster counts remain stable between room transitions. This reduces repeated GPU work without changing fuel, AI perception, navigation or darkness adaptation.

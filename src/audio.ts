@@ -1,5 +1,6 @@
 import { Soundscape, audioMood } from "./soundscape";
-import type { Game } from "./simulation";
+import { lineOfSight, type Game } from "./simulation";
+import { FootstepTracker, spatialCue } from "./audio-spatial";
 export class GameAudio {
   private ctx?: AudioContext | OfflineAudioContext;
   captureTime?: number;
@@ -7,18 +8,29 @@ export class GameAudio {
   private hum?: GainNode;
   private oscillator?: OscillatorNode;
   private noise?: AudioBuffer;
+  private reflections?: GainNode;
+  private reflectionNodes: AudioNode[] = [];
   private level = 0.45;
   private elapsed = 0;
   private nextFire = 0;
-  private nextStep = 0;
   private nextBreath = 0;
   private nextWarning = 0;
-  private nextPlayerStep = 0;
-  private nextStalkerStep = 0;
   private nextSealScrape = 0;
   private lastArtifacts = 0;
   private lastAmbientEvent = -1;
-  private lastHunterState = "DORMANT";
+  private playerSteps = new FootstepTracker();
+  private threatSteps = new Map<object, FootstepTracker>();
+  private threatStates = new Map<object, string>();
+  private lastHunterWarning = "";
+  private lastWorld?: Game["world"];
+  private stepSide = 1;
+  private nextThreatVoice = 0;
+  private lastThreatContact?: { x: number; z: number; until: number };
+  get threatFootstep() {
+    return this.lastThreatContact && this.elapsed < this.lastThreatContact.until
+      ? this.lastThreatContact
+      : undefined;
+  }
   private phase = "";
   private samples?: Soundscape;
   private lastFuel = 720;
@@ -30,8 +42,6 @@ export class GameAudio {
   get sampleCount() {
     return this.samples?.loaded ?? 0;
   }
-  private lastX = 0;
-  private lastZ = 0;
   start(context?: AudioContext | OfflineAudioContext) {
     if (this.ctx) {
       if (this.ctx instanceof AudioContext) void this.ctx.resume();
@@ -41,6 +51,19 @@ export class GameAudio {
     this.master = c.createGain();
     this.master.gain.value = this.level;
     this.master.connect(c.destination);
+    // One shared, low-cost stone reflection bus; dry contacts retain their direction.
+    const reflections = (this.reflections = c.createGain()),
+      delay = c.createDelay(0.5),
+      lowpass = c.createBiquadFilter(),
+      feedback = c.createGain();
+    reflections.gain.value = 0.17;
+    delay.delayTime.value = 0.14;
+    lowpass.type = "lowpass";
+    lowpass.frequency.value = 1250;
+    feedback.gain.value = 0.22;
+    reflections.connect(delay).connect(lowpass).connect(this.master);
+    lowpass.connect(feedback).connect(delay);
+    this.reflectionNodes = [reflections, delay, lowpass, feedback];
     if (c instanceof AudioContext)
       this.samples = new Soundscape(c, this.master);
     if (this.samples) this.samples.musicVolume = this.musicLevel;
@@ -87,6 +110,7 @@ export class GameAudio {
     g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
     p.pan.value = Math.max(-1, Math.min(1, pan));
     o.connect(g).connect(p).connect(this.master);
+    if (this.reflections) p.connect(this.reflections);
     o.start(t);
     o.stop(t + duration + 0.01);
     o.onended = () => {
@@ -104,6 +128,7 @@ export class GameAudio {
       g = c.createGain(),
       p = c.createStereoPanner();
     s.buffer = this.noise;
+    s.loop = true;
     f.type = "bandpass";
     f.frequency.value = frequency;
     f.Q.value = 0.6;
@@ -112,7 +137,9 @@ export class GameAudio {
     g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
     p.pan.value = Math.max(-1, Math.min(1, pan));
     s.connect(f).connect(g).connect(p).connect(this.master);
-    s.start(t, Math.random() * 0.2, Math.min(duration, 0.8));
+    if (this.reflections) p.connect(this.reflections);
+    s.start(t, Math.random() * 0.2);
+    s.stop(t + duration + 0.01);
     s.onended = () => {
       s.disconnect();
       f.disconnect();
@@ -123,6 +150,23 @@ export class GameAudio {
   update(game: Game, dt: number) {
     if (!this.ctx || !this.hum) return;
     this.elapsed += Math.min(0.1, dt);
+    if (this.lastWorld !== game.world) {
+      this.lastWorld = game.world;
+      this.playerSteps = new FootstepTracker();
+      this.threatSteps.clear();
+      this.threatStates.clear();
+      this.lastAmbientEvent = -1;
+      this.lastArtifacts = game.artifacts;
+      this.lastFuel = game.fuel;
+      this.lastHunterWarning = "";
+      this.lastThreatContact = undefined;
+    }
+    const threats = [game.hunter, ...game.additionalHunters, ...game.enemies];
+    const nearbyThreat = threats.some(
+      (threat) =>
+        !["DORMANT", "BANISHED", "IDLE"].includes(threat.state) &&
+        Math.hypot(threat.x - game.player.x, threat.z - game.player.z) < 14,
+    );
     const nearFire =
       Math.min(
         Math.hypot(game.player.x - game.start.x, game.player.z - game.start.z),
@@ -136,6 +180,7 @@ export class GameAudio {
       game.fuel > 0 && game.phase === "EXPLORING",
       game.mode === 2,
       game.elapsed < game.quietUntil,
+      nearbyThreat,
     );
     if (this.lastFuel - game.fuel >= 35 && game.phase === "EXPLORING")
       this.samples?.play("burst", 0.28);
@@ -143,7 +188,7 @@ export class GameAudio {
     const phase = String(game.phase),
       hunt = phase === "HUNT_ACTIVE" || phase === "HUNT_GRACE";
     this.hum.gain.setTargetAtTime(
-      hunt ? 0.055 : 0.005,
+      hunt ? 0.022 : 0.003,
       this.captureTime ?? this.ctx.currentTime,
       1,
     );
@@ -169,7 +214,11 @@ export class GameAudio {
       if (phase === "DEAD") this.tone(110, 1.3, 0.15, 20);
       this.phase = phase;
     }
-    if (game.fuel > 0 && this.elapsed > this.nextFire) {
+    if (
+      game.fuel > 0 &&
+      !this.samples?.has("torch") &&
+      this.elapsed > this.nextFire
+    ) {
       this.air(
         0.06,
         game.mode === 2 ? 0.035 : 0.018,
@@ -182,7 +231,9 @@ export class GameAudio {
       game.fuel / game.maxFuel < 0.2 &&
       this.elapsed > this.nextWarning
     ) {
-      this.tone(440, 0.25, 0.035, 220);
+      // Sputtering communicates failing fire without an electronic warning beep.
+      this.air(0.2, 0.045, 1400);
+      if (game.fuel / game.maxFuel < 0.1) this.air(0.35, 0.035, 350);
       this.nextWarning =
         this.elapsed +
         Math.max(1.2, Math.min(6, game.fuel / game.fuelRate / 3));
@@ -193,35 +244,87 @@ export class GameAudio {
       this.air(0.65, 0.035, 650);
       this.nextBreath = this.elapsed + (player.stamina < 0.25 ? 1.1 : 1.9);
     }
-    const moved = Math.hypot(player.x - this.lastX, player.z - this.lastZ);
-    this.lastX = player.x;
-    this.lastZ = player.z;
-    if (moved > 0.004 && this.elapsed > this.nextPlayerStep) {
-      const cell = game.world.cells.find(
-        (c: any) =>
-          c.x === Math.round(player.x / 2) && c.z === Math.round(player.z / 2),
+    if (this.playerSteps.sample(player, player.crouched ? 0.7 : 1.35)) {
+      this.stepSide *= -1;
+      const softness =
+        (player.crouched ? 0.3 : 1) * (1 - game.upgrades.boots * 0.12);
+      const pan = this.stepSide * 0.12;
+      this.tone(87 + this.stepSide * 6, 0.1, 0.03 * softness, 43, pan);
+      this.air(
+        0.09,
+        0.022 * softness,
+        game.surface === "gravel" ? 1800 : 1100,
+        pan,
       );
-      this.tone(95, 0.12, 0.035, 48);
-      if (cell?.surface === "water") this.air(0.2, 0.045, 900);
-      this.nextPlayerStep = this.elapsed + (moved / dt > 4 ? 0.3 : 0.47);
+      if (game.surface === "water") this.air(0.24, 0.06 * softness, 850, pan);
     }
-    const h = game.hunter;
-    if (
-      h &&
-      hunt &&
-      this.elapsed > this.nextStep &&
-      !["DORMANT", "BANISHED"].includes(h.state)
-    ) {
-      const dx = h.x - player.x,
-        dz = h.z - player.z,
-        d = Math.hypot(dx, dz),
-        volume = 0.13 * Math.max(0, 1 - d / 28),
-        yaw = game.cameraYaw ?? player.yaw ?? 0,
-        pan = (dx * Math.cos(yaw) - dz * Math.sin(yaw)) / Math.max(1, d);
-      this.tone(65, 0.25, volume, 28, pan);
-      this.air(0.2, volume * 0.4, 280, pan);
-      this.nextStep = this.elapsed + (h.state === "PURSUING" ? 0.43 : 0.8);
+    const liveThreats = new Set<object>(threats);
+    for (const tracked of this.threatSteps.keys()) {
+      if (!liveThreats.has(tracked)) {
+        this.threatSteps.delete(tracked);
+        this.threatStates.delete(tracked);
+      }
     }
+    for (const threat of threats) {
+      let tracker = this.threatSteps.get(threat);
+      if (!tracker) {
+        tracker = new FootstepTracker();
+        this.threatSteps.set(threat, tracker);
+      }
+      const hunter =
+        threat === game.hunter ||
+        game.additionalHunters.includes(
+          threat as (typeof game.additionalHunters)[number],
+        );
+      const active = !["DORMANT", "BANISHED", "IDLE"].includes(threat.state);
+      const contact = tracker.sample(threat, hunter ? 1.65 : 1.1);
+      const distance = Math.hypot(threat.x - player.x, threat.z - player.z);
+      // Trace only audible contacts/state changes, rather than every enemy on every frame.
+      const changed = this.threatStates.get(threat) !== threat.state;
+      this.threatStates.set(threat, threat.state);
+      if (!active || distance >= (hunter ? 28 : 18) || (!contact && !changed))
+        continue;
+      const cue = spatialCue(
+        player,
+        threat,
+        game.cameraYaw,
+        lineOfSight(game.world, player, threat),
+        hunter ? 28 : 18,
+      );
+      if (contact) {
+        if (cue.gain >= 0.035)
+          this.lastThreatContact = {
+            x: threat.x,
+            z: threat.z,
+            until: this.elapsed + 0.85,
+          };
+        if (hunter) {
+          this.tone(59, 0.28, 0.16 * cue.gain, 27, cue.pan);
+          this.air(0.23, 0.065 * cue.gain, cue.muffled ? 180 : 650, cue.pan);
+        } else {
+          this.air(0.14, 0.07 * cue.gain, cue.muffled ? 230 : 1100, cue.pan);
+          this.tone(130, 0.11, 0.035 * cue.gain, 72, cue.pan);
+        }
+      }
+      // A shared voice cooldown keeps multiple pursuers from drowning out their locations.
+      if (hunter && changed && this.elapsed > this.nextThreatVoice) {
+        if (threat.state === "PURSUING") {
+          if (!cue.muffled)
+            this.samples?.play("hunter", 0.18 * cue.gain, cue.pan);
+          this.air(0.55, 0.06 * cue.gain, 190, cue.pan);
+          this.nextThreatVoice = this.elapsed + 3.5;
+        } else if (threat.state === "INVESTIGATING") {
+          this.tone(125, 0.9, 0.03 * cue.gain, 95, cue.pan);
+        } else if (threat.state === "FLEEING") {
+          this.air(0.65, 0.06 * cue.gain, 380, cue.pan);
+        }
+      }
+    }
+    if (game.hunterWarning && game.hunterWarning !== this.lastHunterWarning) {
+      this.tone(54, 2.2, 0.045, 31);
+      this.air(1.4, 0.03, 160);
+    }
+    this.lastHunterWarning = game.hunterWarning;
     if (game.activeInteraction && this.elapsed > this.nextSealScrape) {
       this.air(0.25, 0.035, 950);
       this.tone(180, 0.22, 0.012, 110);
@@ -232,59 +335,37 @@ export class GameAudio {
       this.tone(990, 0.25, 0.015, 660);
     }
     this.lastArtifacts = game.artifacts;
-    const stalker = game.enemies.find((e) =>
-      ["INVESTIGATING", "PURSUING", "FLEEING"].includes(e.state),
-    );
-    if (stalker && this.elapsed > this.nextStalkerStep) {
-      const dx = stalker.x - player.x,
-        dz = stalker.z - player.z,
-        d = Math.hypot(dx, dz);
-      if (d < 18) {
-        const pan =
-          (dx * Math.cos(game.cameraYaw) - dz * Math.sin(game.cameraYaw)) /
-          Math.max(1, d);
-        this.air(0.18, 0.045 * (1 - d / 18), 500, pan);
-        this.tone(150, 0.13, 0.02 * (1 - d / 18), 85, pan);
-      }
-      this.nextStalkerStep = this.elapsed + 0.7;
-    }
     const event = game.ambientEvent;
     if (event && event.id !== this.lastAmbientEvent) {
       this.lastAmbientEvent = event.id;
-      const dx = event.x - player.x,
-        dz = event.z - player.z,
-        d = Math.max(1, Math.hypot(dx, dz));
-      const pan =
-        (dx * Math.cos(game.cameraYaw) - dz * Math.sin(game.cameraYaw)) / d;
+      const cue = spatialCue(
+        player,
+        event,
+        game.cameraYaw,
+        lineOfSight(game.world, player, event),
+        30,
+      );
+      const pan = cue.pan,
+        gain = cue.gain;
+      // Environmental sounds are stone and metal, never counterfeit approaching footsteps.
       if (event.kind === "stone") {
-        this.air(1.2, 0.04, 230, pan);
-        this.tone(110, 0.8, 0.02, 65, pan);
+        this.air(1.2, 0.07 * gain, 230, pan);
+        this.tone(110, 0.8, 0.035 * gain, 65, pan);
       }
       if (event.kind === "chain") {
-        this.tone(620, 0.8, 0.012, 380, pan);
-        this.air(0.5, 0.02, 1700, pan);
+        this.tone(cue.muffled ? 280 : 620, 0.8, 0.025 * gain, 180, pan);
+        this.air(0.5, 0.035 * gain, cue.muffled ? 450 : 1700, pan);
       }
-    }
-    if (game.hunter.state !== this.lastHunterState) {
-      this.lastHunterState = game.hunter.state;
-      const dx = game.hunter.x - player.x,
-        dz = game.hunter.z - player.z,
-        d = Math.max(1, Math.hypot(dx, dz));
-      const pan =
-        (dx * Math.cos(game.cameraYaw) - dz * Math.sin(game.cameraYaw)) / d;
-      if (d < 24 && game.hunter.state === "INVESTIGATING")
-        this.tone(125, 0.9, 0.025, 95, pan);
-      if (d < 24 && game.hunter.state === "PURSUING") {
-        this.samples?.play("hunter", 0.16, pan);
-        this.air(0.5, 0.05, 190, pan);
-      }
-      if (d < 24 && game.hunter.state === "FLEEING")
-        this.air(0.65, 0.05, 380, pan);
     }
   }
+
   dispose() {
     this.samples?.dispose();
     this.samples = undefined;
+    for (const node of this.reflectionNodes) node.disconnect();
+    this.reflectionNodes = [];
+    this.reflections = undefined;
+    this.lastThreatContact = undefined;
     this.oscillator?.stop();
     if (this.ctx instanceof AudioContext) void this.ctx.close();
     this.ctx = undefined;

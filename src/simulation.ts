@@ -1,6 +1,14 @@
+import { relicIdentity } from "./relics";
 import { ROOM_DESIGNS, roomAt } from "./room-design";
 import { buildLabyrinth, type Layout } from "./worldgen";
 import { blockedByProp, propSegmentClear } from "./crypt-layout";
+export type Hunter = {
+  x: number;
+  z: number;
+  state: string;
+  yaw?: number;
+  readiness?: number;
+};
 export type Point = { x: number; z: number };
 export type World = {
   cells: (Point & { kind: string; ceiling?: number; surface?: string })[];
@@ -21,6 +29,9 @@ export const CONFIG = {
   sprint: 5.5,
   crouch: 1.5,
   hunterSearch: 2.2,
+  reinforcementWarning: 12,
+  reinforcementArrival: 22,
+  reinforcementRetry: 3,
   hunterChase: 4.5,
   sight: 12,
   memory: 12,
@@ -200,6 +211,19 @@ export class Game {
     z: 0,
     state: "DORMANT",
   };
+  additionalHunters: Hunter[] = [];
+  hunterWarning = "";
+  private huntElapsed = 0;
+  private reinforcementAttempt = CONFIG.reinforcementArrival;
+  private reinforcementSpawned = false;
+  private updatingAdditional = false;
+  private secondaryBrain = {
+    target: { x: 0, z: 0 } as Point,
+    memory: 0,
+    searchTimer: 0,
+    retreatTime: 0,
+    retreatTarget: undefined as Point | undefined,
+  };
   items: {
     id: number;
     x: number;
@@ -288,6 +312,11 @@ export class Game {
     this.mode = 1;
     this.phase = "EXPLORING";
     this.hunter = { x: 0, z: 0, state: "DORMANT" };
+    this.additionalHunters = [];
+    this.hunterWarning = "";
+    this.huntElapsed = 0;
+    this.reinforcementAttempt = CONFIG.reinforcementArrival;
+    this.reinforcementSpawned = false;
     this.chalk = [];
     this.matches = 2;
     this.artifacts = 0;
@@ -447,11 +476,13 @@ export class Game {
       return `BANK ${this.artifacts} RELICS · END EXPEDITION SAFELY`;
     const item = this.nearbyItem;
     return item?.encounter === "reliquary"
-      ? "OPEN SEALED RELIQUARY · 3.5s · NOISY · 3 RELICS"
+      ? `OPEN ${relicIdentity(this.world.seed, item).name.toUpperCase()} · 3.5s · NOISY · 3 RELICS`
       : item?.encounter === "oil_cache"
         ? "TAKE OIL CACHE · +50s BASE LIGHT"
         : item
-          ? `COLLECT ${item.kind.toUpperCase()}`
+          ? item.kind === "artifact"
+            ? `CLAIM ${relicIdentity(this.world.seed, item).name.toUpperCase()} · ${item.value ?? 1} RELIC${(item.value ?? 1) > 1 ? "S" : ""}`
+            : `COLLECT ${item.kind.toUpperCase()}`
           : "";
   }
   sanctuaryBearing(cameraYaw: number) {
@@ -545,6 +576,11 @@ export class Game {
     this.phase = "EXTINGUISHING";
     this.timer = 1;
     this.hunter.state = "DORMANT";
+    this.additionalHunters = [];
+    this.hunterWarning = "";
+    this.huntElapsed = 0;
+    this.reinforcementAttempt = CONFIG.reinforcementArrival;
+    this.reinforcementSpawned = false;
     this.say("The last light dies. Something wakes.");
   }
   relight() {
@@ -579,6 +615,8 @@ export class Game {
       this.fuel = this.maxFuel;
       this.phase = "SANCTUARY";
       this.hunter.state = "BANISHED";
+      for (const hunter of this.additionalHunters) hunter.state = "BANISHED";
+      this.hunterWarning = "";
       this.completed = true;
       this.say("Your discoveries are safe in the golden light.");
       this.save();
@@ -594,6 +632,8 @@ export class Game {
         this.fuel = this.maxFuel;
         this.phase = "SANCTUARY";
         this.hunter.state = "BANISHED";
+        for (const hunter of this.additionalHunters) hunter.state = "BANISHED";
+        this.hunterWarning = "";
         this.completed = true;
         this.say("Your discoveries are safe in the golden light.");
         this.save();
@@ -602,6 +642,8 @@ export class Game {
       this.fuel = this.maxFuel;
       this.phase = "EXPLORING";
       this.hunter.state = "BANISHED";
+      for (const hunter of this.additionalHunters) hunter.state = "BANISHED";
+      this.hunterWarning = "";
       this.say("The first fire shelters you. The far sanctuary awaits.");
       return;
     }
@@ -631,6 +673,8 @@ export class Game {
       } else if (item.kind === "match") this.matches++;
       else {
         this.artifacts += item.value ?? 1;
+        const identity = relicIdentity(this.world.seed, item);
+        this.discoveries.push(`${identity.name}: ${identity.story}`);
         if (item.encounter === "reliquary")
           this.discoveries.push(
             "The sealed reliquary held three votive names: the fire was tended long after the crypt was abandoned.",
@@ -638,7 +682,7 @@ export class Game {
       }
       this.say(
         item.kind === "artifact"
-          ? "An ancient relic. Reach sanctuary to bank it."
+          ? `${relicIdentity(this.world.seed, item).name}. Reach sanctuary to bank it.`
           : item.kind === "fuel"
             ? "Oil recovered. A little longer in the light."
             : "A dry match recovered.",
@@ -785,6 +829,7 @@ export class Game {
             !["DORMANT", "BANISHED"].includes(this.hunter.state))))
     )
       this.updateHunter(dt);
+    this.updateReinforcements(dt, safe);
     if (safe && this.fuel === 0) {
       this.fuel = this.maxFuel;
       this.phase = "EXPLORING";
@@ -834,7 +879,7 @@ export class Game {
       }
     }
   }
-  private spawnHunter() {
+  private hunterSpawnPoint(extra = false) {
     const direction = {
       x: -Math.sin(this.cameraYaw),
       z: -Math.cos(this.cameraYaw),
@@ -854,7 +899,10 @@ export class Game {
           walkable(this.world, p.x, p.z) &&
           d > 18 &&
           d < 45 &&
-          (!visible || front < -0.3)
+          (!visible || front < -0.3) &&
+          (!extra ||
+            (dist(p, this.hunter) > 12 &&
+              navigationDistance(this.world, p, this.player) >= 24))
         );
       })
       .sort((a, b) => dist(a, this.player) - dist(b, this.player));
@@ -869,6 +917,10 @@ export class Game {
         navigationDistance(this.world, candidate, this.destination) >
           escapeDistance + 6,
     );
+    return p;
+  }
+  private spawnHunter() {
+    const p = this.hunterSpawnPoint();
     if (!p) {
       this.timer = 1;
       this.phase = "HUNT_GRACE";
@@ -880,8 +932,90 @@ export class Game {
       yaw: Math.atan2(-(this.player.x - p.x), -(this.player.z - p.z)),
     };
     this.target = { ...this.player };
+    this.hunterReadiness = 0;
     this.phase = "HUNT_ACTIVE";
     this.say("The Hunter searches. Break sight. Quiet your footsteps.");
+  }
+  private updateReinforcements(dt: number, safe: boolean) {
+    if (safe || this.phase === "SANCTUARY" || this.phase === "DEAD") {
+      this.hunterWarning = "";
+      for (const hunter of this.additionalHunters) hunter.state = "BANISHED";
+      return;
+    }
+    if (this.phase === "HUNT_ACTIVE") {
+      this.huntElapsed += dt;
+      if (
+        !this.reinforcementSpawned &&
+        this.huntElapsed >= CONFIG.reinforcementWarning
+      ) {
+        this.hunterWarning =
+          "A second set of footsteps answers. Find fire before it arrives.";
+        if (this.huntElapsed >= this.reinforcementAttempt) {
+          const p = this.hunterSpawnPoint(true);
+          this.reinforcementAttempt =
+            this.huntElapsed + CONFIG.reinforcementRetry;
+          if (p) {
+            this.additionalHunters.push({
+              ...p,
+              state: "SEARCHING",
+              yaw: Math.atan2(-(this.player.x - p.x), -(this.player.z - p.z)),
+              readiness: 0,
+            });
+            this.secondaryBrain = {
+              target: { ...this.player },
+              memory: 0,
+              searchTimer: 0,
+              retreatTime: 0,
+              retreatTarget: undefined,
+            };
+            this.reinforcementSpawned = true;
+            this.hunterWarning =
+              "Two Hunters roam the dark. Break sight and seek fire.";
+          }
+        }
+      }
+    } else this.hunterWarning = "";
+    for (const hunter of this.additionalHunters) {
+      if (["DORMANT", "BANISHED"].includes(hunter.state)) continue;
+      // Run the same perception/navigation machine with independent memory and route state.
+      const primary = {
+        hunter: this.hunter,
+        target: this.target,
+        memory: this.memory,
+        searchTimer: this.searchTimer,
+        retreatTime: this.retreatTime,
+        retreatTarget: this.retreatTarget,
+        readiness: this.hunterReadiness,
+      };
+      this.hunter = hunter;
+      Object.assign(this, this.secondaryBrain);
+      this.hunterReadiness = hunter.readiness ?? 0;
+      if (
+        this.fuel > 0 &&
+        this.phase === "EXPLORING" &&
+        hunter.state !== "FLEEING"
+      )
+        this.retreatFrom(this.player);
+      this.updatingAdditional = true;
+      this.updateHunter(dt);
+      this.updatingAdditional = false;
+      hunter.readiness = this.hunterReadiness;
+      this.secondaryBrain = {
+        target: this.target,
+        memory: this.memory,
+        searchTimer: this.searchTimer,
+        retreatTime: this.retreatTime,
+        retreatTarget: this.retreatTarget,
+      };
+      this.hunter = primary.hunter;
+      this.target = primary.target;
+      this.memory = primary.memory;
+      this.searchTimer = primary.searchTimer;
+      this.retreatTime = primary.retreatTime;
+      this.retreatTarget = primary.retreatTarget;
+      this.hunterReadiness = primary.readiness;
+      if (this.phase === "DEAD") this.save();
+    }
   }
   private moveEnemy(enemy: Point, target: Point, speed: number, dt: number) {
     let route = this.routes.get(enemy);
@@ -999,7 +1133,7 @@ export class Game {
       this.phase = "DEAD";
       this.artifacts = 0;
       this.say("The darkness found you. Banked relics remain safe.");
-      this.save();
+      if (!this.updatingAdditional) this.save();
     }
   }
   private retreatFrom(light: Point) {
@@ -1139,6 +1273,10 @@ export class Game {
           phase: this.phase,
           elapsed: this.elapsed,
           hunter: this.hunter,
+          additionalHunters: this.additionalHunters,
+          secondaryBrain: this.secondaryBrain,
+          huntElapsed: this.huntElapsed,
+          reinforcementSpawned: this.reinforcementSpawned,
           target: this.target,
           memory: this.memory,
           timer: this.timer,
@@ -1203,6 +1341,54 @@ export class Game {
         if (d.hunter && walkable(this.world, d.hunter.x, d.hunter.z))
           this.hunter = d.hunter;
         if (d.target) this.target = d.target;
+        this.huntElapsed = Math.max(0, Number(d.huntElapsed) || 0);
+        this.reinforcementAttempt = Math.max(
+          CONFIG.reinforcementArrival,
+          this.huntElapsed + 1,
+        );
+        this.reinforcementSpawned = Boolean(d.reinforcementSpawned);
+        if (Array.isArray(d.additionalHunters)) {
+          this.additionalHunters = d.additionalHunters
+            .filter(
+              (h: Hunter) =>
+                h &&
+                walkable(this.world, h.x, h.z) &&
+                [
+                  "SEARCHING",
+                  "INVESTIGATING",
+                  "PURSUING",
+                  "FLEEING",
+                  "BANISHED",
+                ].includes(h.state),
+            )
+            .slice(0, 1);
+          const brain = d.secondaryBrain;
+          const validPoint = (p: Point | undefined) =>
+            p &&
+            Number.isFinite(p.x) &&
+            Number.isFinite(p.z) &&
+            walkable(this.world, p.x, p.z);
+          this.secondaryBrain = {
+            target: validPoint(brain?.target)
+              ? brain.target
+              : { ...this.player },
+            memory: Math.max(0, Math.min(20, Number(brain?.memory) || 0)),
+            searchTimer: Math.max(
+              0,
+              Math.min(4, Number(brain?.searchTimer) || 0),
+            ),
+            retreatTime: Math.max(
+              0,
+              Math.min(
+                CONFIG.retreatDuration,
+                Number(brain?.retreatTime) || CONFIG.retreatDuration,
+              ),
+            ),
+            retreatTarget: validPoint(brain?.retreatTarget)
+              ? brain.retreatTarget
+              : undefined,
+          };
+        }
         if (this.fuel === 0 && this.phase === "EXPLORING") this.forceHunt();
       }
       return true;

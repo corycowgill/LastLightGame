@@ -860,3 +860,66 @@ body[data-touch="true"] #lookHint {
     max-width: 205px;
   }
 }
+
+/* A short discovery reveal; threat warnings always retain the centre of view. */
+#relicDiscovery {
+  position: absolute;
+  right: 24px;
+  top: 38%;
+  width: min(290px, 38vw);
+  padding: 16px 18px;
+  border-left: 2px solid var(--relic-color, #e5c586);
+  background: linear-gradient(90deg, #0a1018eb, #0a1018b0);
+  color: #d9d1c3;
+  box-shadow: 0 8px 28px #0005;
+  animation: discovery-arrival 0.35s ease-out;
+  pointer-events: none;
+}
+#relicDiscovery strong {
+  display: block;
+  color: var(--relic-color, #e5c586);
+  font:
+    19px/1.2 Georgia,
+    serif;
+  margin: 6px 0;
+}
+#relicDiscovery p {
+  font:
+    13px/1.5 Georgia,
+    serif;
+  margin: 8px 0;
+}
+#relicDiscovery small {
+  font-size: 9px;
+  color: #b6aca0;
+}
+@keyframes discovery-arrival {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (max-width: 850px) {
+  #relicDiscovery {
+    right: 16px;
+    top: 20%;
+    width: 225px;
+    padding: 10px 12px;
+  }
+  #relicDiscovery p,
+  #relicDiscovery small {
+    display: none;
+  }
+  #relicDiscovery strong {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #relicDiscovery {
+    animation: none;
+  }
+}

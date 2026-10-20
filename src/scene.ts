@@ -1,3 +1,9 @@
+import { relicIdentity } from "./relics";
+import {
+  relicMotes,
+  animateRelicMotes,
+  illuminateRelic,
+} from "./relic-visuals";
 import { RenderBudget, type GraphicsMode } from "./render-budget";
 import { roomAt, passageDoors } from "./room-design";
 import { TorchAttachment } from "./torch-attachment";
@@ -76,6 +82,7 @@ export class GameScene {
   private target = new THREE.Vector3();
   private actor?: AnimatedCharacter;
   private hunterActor?: AnimatedCharacter;
+  private additionalHunter?: { root: THREE.Group; actor: AnimatedCharacter };
   private stalkerActor?: AnimatedCharacter;
   private lastHunterState = "DORMANT";
   private banishTime = 0;
@@ -522,6 +529,19 @@ export class GameScene {
       },
     );
     this.hunter.add(this.hunterActor.root);
+    {
+      // Prepare the second body before an expedition, never during an ambush.
+      const root = new THREE.Group();
+      const actor = new AnimatedCharacter(
+        "/models/hunter.glb?v=crypt-motion-v3",
+        () => addHunterEyes(actor.root),
+      );
+      root.add(actor.root);
+      root.visible = false;
+      this.scene.add(root);
+      this.additionalHunter = { root, actor };
+    }
+
     const stalkerFallback = [...this.stalker.children];
     this.stalkerActor = new AnimatedCharacter("/models/stalker.glb", () => {
       stalkerFallback.forEach((c) => {
@@ -1074,6 +1094,44 @@ export class GameScene {
         this.hunter.rotation.y += delta * (1 - Math.exp(-dt * 10));
       }
     }
+    const extra = game.additionalHunters?.[0];
+    this.container.dataset.additionalHunter = extra?.state ?? "NONE";
+    if (this.additionalHunter) {
+      const { root, actor } = this.additionalHunter;
+      root.visible = !!extra && !["DORMANT", "BANISHED"].includes(extra.state);
+      if (extra && root.visible) {
+        const moving =
+          Math.hypot(extra.x - root.position.x, extra.z - root.position.z) >
+          0.005;
+        const ceiling =
+          this.ceilings.get(
+            `${Math.round(extra.x / 2)},${Math.round(extra.z / 2)}`,
+          ) ?? 2.7;
+        actor.update(
+          game.phase === "DEAD"
+            ? "capture"
+            : ceiling < 3.1
+              ? "crawl"
+              : extra.state === "FLEEING"
+                ? "flee"
+                : extra.state === "PURSUING"
+                  ? "pursue"
+                  : moving
+                    ? "search"
+                    : "listen",
+          dt *
+            (extra.state === "PURSUING" && (extra.readiness ?? 1) < 1
+              ? 0.4
+              : 1),
+        );
+        root.position.set(extra.x, 0, extra.z);
+        root.rotation.y = smoothFacing(
+          root.rotation.y,
+          extra.yaw ?? root.rotation.y,
+          dt,
+        );
+      }
+    }
     const e = game.enemies?.[0];
     this.container.dataset.stalkerState = e?.state ?? "NONE";
     this.stalker.visible = !!e;
@@ -1137,12 +1195,44 @@ export class GameScene {
           0,
           -0.15,
           0,
-          item.encounter === "reliquary" ? 0.55 : 1,
+          item.encounter === "reliquary" ? 0.55 : artifact ? 1.45 : 1,
           0,
           () => {
             fallback.visible = false;
           },
         );
+        if (artifact) {
+          const identity = relicIdentity(game.world.seed, item);
+          const motes = relicMotes(
+            item.encounter === "reliquary",
+            identity.color,
+          );
+          mesh.add(motes);
+          mesh.userData.relicMotes = motes;
+          if (item.encounter === "reliquary") {
+            // A real catalog relic forms the seal above the heavy supply casket.
+            const crest = this.catalog.add(
+              "pro_artifact",
+              mesh,
+              0,
+              1.25,
+              0,
+              0.9,
+              0,
+              () => {
+                if (!this.scene.userData.disposed)
+                  illuminateRelic(crest, identity.color);
+              },
+            );
+            mesh.userData.relicCrest = crest;
+          } else {
+            // Wait for catalog ready rather than tinting a shared template.
+            void this.catalog.ready().then(() => {
+              if (!this.scene.userData.disposed)
+                illuminateRelic(mesh!, identity.color);
+            });
+          }
+        }
         this.items.set(String(item.id), mesh);
         this.scene.add(mesh);
       }
@@ -1157,6 +1247,15 @@ export class GameScene {
       mesh.rotation.y =
         item.encounter === "reliquary" ? 0 : this.elapsed * 0.45;
       if (item.encounter === "reliquary") mesh.scale.setScalar(1);
+      if (mesh.visible && mesh.userData.relicMotes) {
+        animateRelicMotes(
+          mesh.userData.relicMotes,
+          this.elapsed + item.x,
+          item.opening ?? 0,
+        );
+        const crest = mesh.userData.relicCrest as THREE.Object3D | undefined;
+        if (crest) crest.rotation.y = this.elapsed * 0.24;
+      }
     }
     while (this.chalk.children.length < (game.chalk || []).length) {
       const mark = new THREE.Mesh(
@@ -1186,9 +1285,9 @@ export class GameScene {
       elevation = THREE.MathUtils.clamp(pitch, -0.35, 1.05),
       arm = THREE.MathUtils.clamp(distance, 1.6, 6.5),
       offset = new THREE.Vector3(
-        Math.sin(yaw) * Math.cos(elevation) * arm,
+        Math.sin(yaw) * Math.cos(elevation) * arm + Math.cos(yaw) * 0.85,
         Math.sin(elevation) * arm,
-        Math.cos(yaw) * Math.cos(elevation) * arm,
+        Math.cos(yaw) * Math.cos(elevation) * arm - Math.sin(yaw) * 0.85,
       );
     this.ray.set(anchor, offset.clone().normalize());
     this.ray.far = offset.length();
@@ -1230,7 +1329,11 @@ export class GameScene {
       ) ?? 2.55) - 0.2,
     );
     this.target.copy(anchor);
-    this.target.y += 0.05;
+    // Look past the torchbearer from a modest shoulder offset, so nearby
+    // discoveries do not sit directly behind the character's silhouette.
+    this.target.x -= Math.sin(yaw) * 1.2;
+    this.target.z -= Math.cos(yaw) * 1.2;
+    this.target.y += 0.15;
     this.camera.lookAt(this.target);
     const renderStart = performance.now();
     this.renderer.render(this.scene, this.camera);
@@ -1258,6 +1361,7 @@ export class GameScene {
       this.catalog.ready(),
       this.actor?.settled,
       this.hunterActor?.settled,
+      this.additionalHunter?.actor.settled,
       this.stalkerActor?.settled,
     ]);
     if (this.scene.userData.disposed) return;
@@ -1278,6 +1382,7 @@ export class GameScene {
     this.catalog.dispose();
     this.actor?.dispose();
     this.hunterActor?.dispose();
+    this.additionalHunter?.actor.dispose();
     this.stalkerActor?.dispose();
     const geometries = new Set<THREE.BufferGeometry>(),
       materials = new Set<THREE.Material>();
