@@ -1,5 +1,13 @@
 # The Last Light — build status
 
+## Critic playtest and response — 2026-10-20
+
+A critic agent played two ordinary expeditions on build `60ef608` using normal movement, camera and interactions, without debug teleports or automated routes. It recovered two named relics, experienced capture, and successfully relit twice. Its strongest finding: navigation friction and camera occlusion were consuming fuel before players could make informed risk decisions. The named discoveries were a positive and were retained.
+
+The implementation team aligned the entrance spawn/camera, staged an existing relic on the first-room approach, added local find/claim/bank guidance, recentered the camera near obstructions and faded only the avatar when the boom compresses. A bounded cold fill improves nearby stone during darkness. Death now identifies the actual Hunter/Stalker and gives counterplay advice, accurately stating that unbanked relics are lost. Emergency relighting returns Blaze to Steady without granting extra fuel; Ember remains Ember. A short cause-specific defeat cue now fades over 0.45 seconds instead of being muted immediately.
+
+Read the [unaltered critic report](docs/CRITIC_PLAYTEST_2026-10-20.md) and [implementation response](docs/CRITIC_RESPONSE_2026-10-20.md). Validation: 114 tests and 100 diagnostic escape routes pass; production build passes. Integration browser play completed an ordinary first-relic return-and-bank loop. These are scoped improvements, not a claim that human pacing, subjective headphone quality or every device is validated.
+
 ## Team gameplay review — 2026-10-20
 
 The style, gameplay/balance and audio review produced a coordinated discoveries-and-danger pass. Relics now have authored names/stories, stronger real-GLB silhouettes, colored soul motes, named prompts and a recovery reveal. The sealed reliquary displays a relic crest; your journal tracks recovered votives and banked stories.

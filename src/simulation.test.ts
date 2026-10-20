@@ -66,6 +66,7 @@ test("movement respects walls; sprint consumes stamina", () => {
 });
 test("camera yaw and movement agree on the forward direction", () => {
   const g = new Game();
+  Object.assign(g.player, { x: 0, z: 2.4 });
   advance(g, 0.5, { ...idle, forward: 1, yaw: Math.PI / 2 });
   assert.ok(g.player.x < -0.5);
   assert.ok(Math.abs(g.player.z - 2.4) < 0.01);
@@ -143,6 +144,22 @@ test("match relight takes two seconds, consumes match and banishes Hunter", () =
   assert.equal(g.matches, 1);
   assert.ok(g.fuel > 100);
 });
+test("successful emergency relighting resets Blaze but preserves a chosen Ember", () => {
+  for (const mode of [0, 1, 2]) {
+    const g = new Game(1);
+    away(g);
+    g.setMode(mode);
+    g.forceHunt();
+    advance(g, 1.2);
+    g.relight();
+    advance(g, 2.05);
+    assert.equal(g.phase, "EXPLORING");
+    assert.equal(g.mode, mode === 2 ? 1 : mode);
+    assert.ok(g.fuel <= CONFIG.matchFuel && g.fuel > CONFIG.matchFuel - 2);
+    if (mode === 2) assert.match(g.message, /Blaze resets to Steady/);
+  }
+});
+
 test("starting sanctuary protects player without completing expedition", () => {
   const g = new Game();
   g.forceHunt();
@@ -190,6 +207,7 @@ test("save/load retain exploration, Hunt state and progression", () => {
   g.banked = 3;
   g.maxFuel = 900;
   g.fuel = 450;
+  g.setMode(2);
   g.artifacts = 1;
   g.mark();
   g.save();
@@ -199,6 +217,7 @@ test("save/load retain exploration, Hunt state and progression", () => {
   assert.equal(loaded.banked, 3);
   assert.equal(loaded.maxFuel, 900);
   assert.equal(loaded.fuel, 450);
+  assert.equal(loaded.mode, 2);
   assert.equal(loaded.artifacts, 1);
   assert.equal(loaded.chalk.length, 1);
   g.forceHunt();
@@ -232,6 +251,10 @@ test("capture loses carried artifacts and preserves banked relics", () => {
   assert.equal(g.phase, "DEAD");
   assert.equal(g.artifacts, 0);
   assert.equal(g.banked, 4);
+  assert.equal(g.deathCause, "Hunter");
+  assert.match(g.deathAdvice, /corners/);
+  g.reset();
+  assert.equal(g.deathCause, "");
 });
 test("sprinting behind a long separating wall does not reveal location", () => {
   const g = new Game(),
@@ -354,6 +377,7 @@ test("initial spawn is in sanctuary and clear of the brazier", () => {
 
 test("movement cannot pass through the starting sanctuary brazier", () => {
   const g = new Game();
+  Object.assign(g.player, { x: 0, z: 2.4 });
   advance(g, 2, { ...idle, forward: 1 });
   assert.ok(g.player.z >= 0.85);
   assert.ok(g.player.z < 1);

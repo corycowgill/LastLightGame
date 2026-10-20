@@ -236,6 +236,8 @@ export class Game {
   }[] = [];
   chalk: Point[] = [];
   matches = 2;
+  deathCause: "Hunter" | "Stalker" | "" = "";
+  deathAdvice = "";
   artifacts = 0;
   banked = 0;
   upgrades: Record<Upgrade, number> = {
@@ -294,6 +296,57 @@ export class Game {
   get start() {
     return { x: this.world.start.x * 2, z: this.world.start.z * 2 };
   }
+  /** Faces the only entrance passage, derived from the generated room graph. */
+  get startingHeading() {
+    const layout = this.world.layout;
+    const edge = layout?.links.find(([a, b]) => a === 0 || b === 0);
+    const next = edge && layout?.rooms[edge[0] === 0 ? edge[1] : edge[0]];
+    if (!next) {
+      const dx = this.destination.x - this.start.x;
+      const dz = this.destination.z - this.start.z;
+      return Math.hypot(dx, dz) > 0 ? Math.atan2(-dx, -dz) : -Math.PI / 2;
+    }
+    return Math.atan2(
+      -(next.x * 2 - this.start.x),
+      -(next.z * 2 - this.start.z),
+    );
+  }
+  get initialHeading() {
+    return this.startingHeading;
+  }
+  get startingPosition() {
+    return {
+      x: this.start.x - Math.sin(this.startingHeading) * 2.4,
+      z: this.start.z - Math.cos(this.startingHeading) * 2.4,
+    };
+  }
+  /** Local, authored guidance; deliberately never tracks distant treasure through walls. */
+  get objectiveHint() {
+    if (this.artifacts > 0 && dist(this.player, this.start) < 40)
+      return "RETURN TO THE FIRST FIRE TO BANK · OR RISK DEEPER CHAMBERS";
+    const first = this.firstDiscovery;
+    if (
+      first &&
+      !first.taken &&
+      (dist(this.player, this.start) < 18 || dist(this.player, first) < 12)
+    )
+      return dist(this.player, first) < 8
+        ? "A RELIC GLOWS AHEAD · APPROACH AND USE TO CLAIM IT"
+        : "FOLLOW THE OPEN PASSAGE · A RELIC LIES BEYOND THE FIRST ARCH";
+    return "SEEK THE FAR GOLDEN FIRE · BANK RELICS AT EITHER SANCTUARY";
+  }
+  private get firstDiscovery() {
+    const layout = this.world.layout;
+    const edge = layout?.links.find(([a, b]) => a === 0 || b === 0);
+    const room = edge && layout?.rooms[edge[0] === 0 ? edge[1] : edge[0]];
+    if (!room) return undefined;
+    return this.items.find(
+      (i) =>
+        i.kind === "artifact" &&
+        i.encounter !== "reliquary" &&
+        roomAt(this.world, i.x, i.z) === room,
+    );
+  }
   private say(text: string) {
     this.message = text;
     this.messageTime = 6;
@@ -301,13 +354,12 @@ export class Game {
   reset(seed = this.world.seed) {
     this.world = generateWorld(seed);
     this.player = {
-      ...this.start,
-      z: this.start.z + 2.4,
-      yaw: 0,
+      ...this.startingPosition,
+      yaw: this.startingHeading,
       stamina: 1,
       crouched: false,
     };
-    this.cameraYaw = 0;
+    this.cameraYaw = this.startingHeading;
     this.fuel = this.maxFuel;
     this.mode = 1;
     this.phase = "EXPLORING";
@@ -320,6 +372,8 @@ export class Game {
     this.chalk = [];
     this.matches = 2;
     this.artifacts = 0;
+    this.deathCause = "";
+    this.deathAdvice = "";
     this.elapsed = 0;
     this.completed = false;
     this.retreatTime = 0;
@@ -345,7 +399,7 @@ export class Game {
     this.surfaceCells = new Map(
       this.world.cells.map((c) => [key(c.x, c.z), c.surface ?? "stone"]),
     );
-    this.say("Seek the far golden fire. E to gather supplies.");
+    this.say("Follow the open passage. A relic glows beyond the first arch.");
     const rooms = this.world.layout!.rooms.filter(
       (r) => r.kind !== "sanctuary",
     );
@@ -446,6 +500,23 @@ export class Game {
       oil.encounter = "oil_cache";
       oil.value = 300;
     }
+    // Make the first discovery visible from the entrance, without adding loot.
+    // A second relic remains the guarded, noisy vault further into the expedition.
+    const first = this.firstDiscovery;
+    if (first) {
+      const room = roomAt(this.world, first.x, first.z)!;
+      const approach = {
+        x: room.x * 2 + Math.sin(this.startingHeading) * 4,
+        z: room.z * 2 + Math.cos(this.startingHeading) * 4,
+      };
+      if (
+        walkable(this.world, approach.x, approach.z) &&
+        !blockedByProp(this.world, approach.x, approach.z, 0.45) &&
+        findPath(this.world, this.start, approach).length > 0 &&
+        !this.items.some((i) => i !== first && dist(i, approach) < 1.5)
+      )
+        Object.assign(first, approach);
+    }
     const guards = [
       [6, 0],
       [-6, 0],
@@ -473,7 +544,7 @@ export class Game {
     if (this.activeInteraction)
       return `OPENING RELIQUARY · ${this.activeInteraction.remaining.toFixed(1)}s · MOVE TO CANCEL`;
     if (dist(this.player, this.start) < 3 && this.artifacts > 0)
-      return `BANK ${this.artifacts} RELICS · END EXPEDITION SAFELY`;
+      return `BANK ${this.artifacts} ${this.artifacts === 1 ? "RELIC" : "RELICS"} · END EXPEDITION SAFELY`;
     const item = this.nearbyItem;
     return item?.encounter === "reliquary"
       ? `OPEN ${relicIdentity(this.world.seed, item).name.toUpperCase()} · 3.5s · NOISY · 3 RELICS`
@@ -808,11 +879,17 @@ export class Game {
             this.fuel,
             Math.min(this.maxFuel, CONFIG.matchFuel),
           );
+          const recoveredFromBlaze = this.mode === 2;
+          if (recoveredFromBlaze) this.mode = 1;
           this.phase = "EXPLORING";
           if (!["DORMANT", "BANISHED"].includes(this.hunter.state))
             this.retreatFrom(this.player);
           else this.hunter.state = "BANISHED";
-          this.say("The flame lives. The Hunter retreats.");
+          this.say(
+            recoveredFromBlaze
+              ? "The flame lives. Blaze resets to Steady to conserve your emergency fuel. The Hunter retreats."
+              : "The flame lives. The Hunter retreats.",
+          );
         } else this.spawnHunter();
       }
     }
@@ -1131,6 +1208,9 @@ export class Game {
         0;
     if (dist(this.hunter, this.player) < 1.1) {
       this.phase = "DEAD";
+      this.deathCause = "Hunter";
+      this.deathAdvice =
+        "Break sight around corners, then crouch to quiet your footsteps. Use a match to relight, or reach sanctuary fire.";
       this.artifacts = 0;
       this.say("The darkness found you. Banked relics remain safe.");
       if (!this.updatingAdditional) this.save();
@@ -1244,6 +1324,9 @@ export class Game {
       } else e.state = "LISTENING";
       if (!lit && this.phase === "HUNT_ACTIVE" && d < 1.1 && !crouch) {
         this.phase = "DEAD";
+        this.deathCause = "Stalker";
+        this.deathAdvice =
+          "The Stalker follows sound. Crouch when fire dies; relight with a match or escape toward sanctuary fire.";
         this.artifacts = 0;
         this.say("Without fire, the Stalker closes in.");
       }
@@ -1310,7 +1393,7 @@ export class Game {
         if (d.player && walkable(this.world, d.player.x, d.player.z))
           this.player = { ...this.player, ...d.player };
         if (dist(this.player, this.start) < 0.9)
-          this.player.z = this.start.z + 2.4;
+          Object.assign(this.player, this.startingPosition);
         this.fuel = Math.max(0, Math.min(this.maxFuel, Number(d.fuel) || 0));
         this.matches = Math.max(0, Number(d.matches) || 0);
         this.setMode(d.mode);

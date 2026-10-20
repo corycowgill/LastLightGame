@@ -1,3 +1,8 @@
+import {
+  shoulderOffset,
+  compressedPlayerOpacity,
+  PlayerCameraFade,
+} from "./camera-framing";
 import { relicIdentity } from "./relics";
 import {
   relicMotes,
@@ -47,6 +52,7 @@ export class GameScene {
   private ambient = new THREE.HemisphereLight(0x8098bc, 0x182031, 0.65);
   private camera = new THREE.PerspectiveCamera(57, 1, 0.08, 100);
   private player = new THREE.Group();
+  private playerCameraFade?: PlayerCameraFade;
   private hunter = new THREE.Group();
   private stalker = new THREE.Group();
   // Bounded near-field light avoids clipping the adjacent hood to white.
@@ -87,6 +93,8 @@ export class GameScene {
   private lastHunterState = "DORMANT";
   private banishTime = 0;
   private lastMessage = "";
+  private lastArtifacts = 0;
+  private darkAdaptation = new THREE.PointLight(0x91b6dc, 0, 3.2, 1.6);
   private gesture = "";
   private gestureTime = 0;
   private stick?: THREE.Mesh;
@@ -124,7 +132,7 @@ export class GameScene {
       this.scene.fog.color.setHex(0x191728);
       this.ambient.color.setHex(0x9589ac);
     }
-    this.scene.add(this.ambient);
+    this.scene.add(this.ambient, this.darkAdaptation);
     const stone = new THREE.MeshStandardMaterial({
         color: 0x59636b,
         roughness: 0.96,
@@ -517,6 +525,8 @@ export class GameScene {
       () => {
         playerFallback.forEach((c) => (c.visible = false));
         this.container.dataset.character = "rigged";
+        if (this.actor)
+          this.playerCameraFade = new PlayerCameraFade(this.actor.root);
       },
     );
     this.player.add(this.actor.root);
@@ -911,8 +921,7 @@ export class GameScene {
         ? "chalk"
         : game.message.startsWith("Oil recovered")
           ? "refill"
-          : game.message.startsWith("An ancient relic") ||
-              game.message.startsWith("A dry match")
+          : game.message.startsWith("A dry match")
             ? "interact"
             : "";
       if (clip) {
@@ -920,6 +929,11 @@ export class GameScene {
         this.gestureTime = 0.85;
       }
     }
+    if (game.artifacts > this.lastArtifacts && this.initialized) {
+      this.gesture = "interact";
+      this.gestureTime = 0.85;
+    }
+    this.lastArtifacts = game.artifacts;
     if (this.lastFuel - game.fuel > 35) {
       this.gesture = "burst";
       this.gestureTime = 0.7;
@@ -1284,11 +1298,16 @@ export class GameScene {
     const anchor = new THREE.Vector3(game.player.x, 1.25, game.player.z),
       elevation = THREE.MathUtils.clamp(pitch, -0.35, 1.05),
       arm = THREE.MathUtils.clamp(distance, 1.6, 6.5),
-      offset = new THREE.Vector3(
-        Math.sin(yaw) * Math.cos(elevation) * arm + Math.cos(yaw) * 0.85,
+      centerOffset = new THREE.Vector3(
+        Math.sin(yaw) * Math.cos(elevation) * arm,
         Math.sin(elevation) * arm,
-        Math.cos(yaw) * Math.cos(elevation) * arm - Math.sin(yaw) * 0.85,
-      );
+        Math.cos(yaw) * Math.cos(elevation) * arm,
+      ),
+      right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)),
+      probeEnd = anchor.clone().add(centerOffset).addScaledVector(right, 0.85),
+      framingWalls = this.cameraIndex?.query(anchor, probeEnd) ?? this.walls,
+      shoulder = shoulderOffset(anchor, centerOffset, right, framingWalls),
+      offset = centerOffset.addScaledVector(right, shoulder);
     this.ray.set(anchor, offset.clone().normalize());
     this.ray.far = offset.length();
     const desiredRayEnd = anchor.clone().add(offset);
@@ -1328,11 +1347,26 @@ export class GameScene {
         `${Math.round(this.camera.position.x / 2)},${Math.round(this.camera.position.z / 2)}`,
       ) ?? 2.55) - 0.2,
     );
+    // Local cold adaptation is bounded to nearby stone; distant rooms stay in fog.
+    this.darkAdaptation.position.copy(this.camera.position);
+    this.darkAdaptation.intensity = THREE.MathUtils.damp(
+      this.darkAdaptation.intensity,
+      burning ? 0 : 1.7,
+      burning ? 6 : 0.8,
+      dt,
+    );
+    const playerOpacity = compressedPlayerOpacity(
+      this.camera.position.distanceTo(anchor),
+    );
+    this.playerCameraFade?.update(playerOpacity);
+    const opacityLabel = playerOpacity.toFixed(2);
+    if (this.container.dataset.playerOpacity !== opacityLabel)
+      this.container.dataset.playerOpacity = opacityLabel;
     this.target.copy(anchor);
     // Look past the torchbearer from a modest shoulder offset, so nearby
     // discoveries do not sit directly behind the character's silhouette.
-    this.target.x -= Math.sin(yaw) * 1.2;
-    this.target.z -= Math.cos(yaw) * 1.2;
+    this.target.x -= Math.sin(yaw) * 1.8;
+    this.target.z -= Math.cos(yaw) * 1.8;
     this.target.y += 0.15;
     this.camera.lookAt(this.target);
     const renderStart = performance.now();

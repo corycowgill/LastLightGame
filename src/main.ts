@@ -183,7 +183,7 @@ function platformAction(action: PlatformAction) {
     cameraControls.pose.pitch = 0.25;
   }
 }
-const intro = `<div class="eyebrow">AN EXPEDITION INTO THE FORGOTTEN CATACOMBS</div><h1>THE LAST<br><em>LIGHT</em></h1><p class="tagline">When the flame dies, the hunt begins.</p><div id="inputStatus" class="input-status">Xbox: press a button to connect · Touch: landscape recommended</div><div class="divider"></div><p class="description">Carry a fragile flame into a labyrinth that remembers.<br>Find the reliquaries. Follow the golden fires home.<br>And if your light goes out — keep moving.</p>`;
+const intro = `<div class="eyebrow">AN EXPEDITION INTO THE FORGOTTEN CATACOMBS</div><h1>THE LAST<br><em>LIGHT</em></h1><p class="tagline">When the flame dies, the hunt begins.</p><div id="inputStatus" class="input-status">Xbox: press a button to connect · Touch: landscape recommended</div><div class="divider"></div><p class="description">Recover a votive from the crypt and bring it back to golden fire.<br>Go deeper for richer discoveries. Leave before the flame fails.<br>And if your light goes out — keep moving.</p>`;
 function panel(content: string) {
   touchInput.reset();
   document.body.dataset.playing = "false";
@@ -305,7 +305,7 @@ async function begin(load: boolean) {
         Date.now() % 1000000,
     );
   if (load) cameraControls.pose.yaw = game.player.yaw;
-  else game.player.yaw = cameraControls.pose.yaw;
+  else game.player.yaw = cameraControls.pose.yaw = game.startingHeading;
   // Reproducible art-review position using the real world, light and game renderer.
   const query = new URLSearchParams(location.search);
   if (!load && query.has("debug") && query.has("stalker")) {
@@ -483,7 +483,8 @@ function ended() {
   screen = "ended";
   endingAnimation = 2.1;
   keys.clear();
-  audio.setVolume(game.phase === "DEAD" ? 0 : settings.volume);
+  if (game.phase === "DEAD") audio.fadeAfterDefeat();
+  else audio.setVolume(settings.volume);
   running = false;
   cameraControls.release();
   if (check) {
@@ -492,8 +493,15 @@ function ended() {
   }
   const dead = game.phase === "DEAD";
   panel(
-    `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}</div><h2>${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? "Your unbanked discoveries remain in the Catacombs. Your banked relics endure." : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
+    `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}</div><h2 id="resultTitle">${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? "Unbanked relics are lost. Banked upgrades and stories endure." : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${dead ? `<p id="deathAdvice" class="learning-note"></p>` : ""}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
   );
+  if (dead) {
+    if (game.deathCause)
+      $("resultTitle").textContent = `Caught by the ${game.deathCause}.`;
+    $("deathAdvice").textContent =
+      game.deathAdvice ||
+      "Keep an escape route in mind. Carry a relic back to fire before risking the next chamber.";
+  }
   if (!dead) {
     if (game.maxFuel < 1170) {
       button("upgrade", "FUEL RESERVOIR +15s BASE | 1 RELIC", () => {
@@ -800,7 +808,7 @@ function updateHUD() {
         : closeCreature?.state === "COWERING" ||
             closeCreature?.state === "FLEEING"
           ? "IT FEARS YOUR FLAME · KEEP YOUR DISTANCE"
-          : "";
+          : game.objectiveHint;
   const markup = `<b>${game.matches}</b> MATCHES &nbsp; <b>${game.artifacts}</b> RELICS<br><small>${game.chalk.length} CHALK MARKS · ${game.banked} BANKED</small>`;
   if (markup !== inventoryMarkup) {
     inventoryMarkup = markup;
@@ -849,7 +857,7 @@ function updateHUD() {
         ? "WATER CARRIES SOUND · DRY EDGES ARE QUIETER"
         : game.depth > 0
           ? `DEEP AIR · FLAME DRAIN +${Math.round(game.depth * 30)}%`
-          : "SEEK THE GOLDEN FIRE";
+          : game.objectiveHint || "SEEK THE GOLDEN FIRE";
   $("scene").dataset.cameraYaw = cameraControls.pose.yaw.toFixed(3);
   $("scene").dataset.cameraPitch = cameraControls.pose.pitch.toFixed(3);
   $("scene").dataset.cameraDistance = cameraControls.pose.distance.toFixed(2);

@@ -89,12 +89,19 @@ export class GameAudio {
   }
   setVolume(v: number) {
     this.level = Math.max(0, Math.min(1, v));
-    if (this.ctx && this.master)
-      this.master.gain.setTargetAtTime(
-        this.level,
-        this.captureTime ?? this.ctx.currentTime,
-        0.1,
-      );
+    if (this.ctx && this.master) {
+      const time = this.captureTime ?? this.ctx.currentTime;
+      // A retry, pause or settings change supersedes the previous ending envelope.
+      this.master.gain.cancelAndHoldAtTime(time);
+      this.master.gain.setTargetAtTime(this.level, time, 0.1);
+    }
+  }
+  fadeAfterDefeat() {
+    if (!this.ctx || !this.master) return;
+    const time = this.captureTime ?? this.ctx.currentTime;
+    const gain = this.master.gain;
+    gain.cancelAndHoldAtTime(time);
+    gain.linearRampToValueAtTime(0, time + 0.45);
   }
   private tone(f: number, duration: number, volume: number, end = f, pan = 0) {
     if (!this.ctx || !this.master) return;
@@ -152,6 +159,7 @@ export class GameAudio {
     this.elapsed += Math.min(0.1, dt);
     if (this.lastWorld !== game.world) {
       this.lastWorld = game.world;
+      this.phase = "";
       this.playerSteps = new FootstepTracker();
       this.threatSteps.clear();
       this.threatStates.clear();
@@ -211,9 +219,19 @@ export class GameAudio {
         this.tone(330, 2.3, 0.05);
         this.tone(440, 2.6, 0.03);
       }
-      if (phase === "DEAD") this.tone(110, 1.3, 0.15, 20);
+      if (phase === "DEAD") {
+        // Brief physical signatures reinforce the result screen's cause without a loud sting.
+        if (game.deathCause === "Stalker") {
+          this.air(0.28, 0.065, 620);
+          this.tone(145, 0.32, 0.055, 65);
+        } else {
+          this.tone(68, 0.35, 0.075, 27);
+          this.air(0.3, 0.045, 190);
+        }
+      }
       this.phase = phase;
     }
+    if (phase === "DEAD") return;
     if (
       game.fuel > 0 &&
       !this.samples?.has("torch") &&

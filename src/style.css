@@ -923,3 +923,13 @@ body[data-touch="true"] #lookHint {
     animation: none;
   }
 }
+
+.learning-note {
+  border-left: 2px solid #9e8455;
+  padding: 10px 14px;
+  color: #c9c2b5;
+  background: #111922a0;
+  max-width: 470px;
+  font-size: 14px;
+  line-height: 1.55;
+}
