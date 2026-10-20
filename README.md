@@ -6,6 +6,16 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Rendering stability pass — 2026-10-20
+
+Point-light shadows now refresh on a staggered budget: at most one six-face map per rendered frame, torch at up to 20 Hz and nearby sanctuary maps at up to 4 Hz. Cached maps continue shading between updates; light intensity and flame animation still update every frame. Shadow-caster counts remain stable between room transitions. This reduces repeated GPU work without changing fuel, AI perception, navigation or darkness adaptation.
+
+Graphics settings now include **Auto (recommended)**. New desktop settings default to Auto; existing explicit High/Low selections are preserved. After a two-second warmup, sustained frame rates below 42 FPS reduce the pixel ratio, then disable shadow maps if pressure persists. The reduced tier stays for the expedition to avoid oscillation. High keeps shadows and Low remains the phone default. Very long suspension gaps do not affect adaptation.
+
+Browser review of seed 104729's ossuary observed approximately 56–58 FPS and a recent frame-time p95 of 18.2–18.3 ms in High/Auto at tier 0. Arrow-key camera input changed yaw correctly. These are individual observations, not a controlled speedup claim or a guarantee for all rooms/devices. Full-device iPhone/Xbox and long-session performance remain open. The prior poor browser samples below are historical observations.
+
+Validation: 91 automated tests, including sustained slow/severe frames, suspension/stall tolerance, quality stability and shadow refresh fairness; 20/20 seeded escape scenarios. Production build passes. Rendering diagnostics on the scene element include `graphicsMode`, `renderTier`, `pixelRatio`, `shadowRefresh`, `triangles` and averaged `renderSubmitMs` (CPU submission time, not GPU timing), alongside frame p95/worst metrics.
+
 ## Expedition polish — 2026-10-19
 
 The Catacombs now use six authored floor plans: narrow burial recesses, low whisper passages, a tall ossuary, flooded halls with dry edges, collapsed chambers and golden refuges. Seeded graph connections remain deterministic. Two-metre corridors, varied ceilings and fitted GLB doorways create a stronger rhythm between confinement and open chambers. Furniture, pillars, decals, camera blockers and navigation use the same floor data.

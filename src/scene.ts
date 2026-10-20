@@ -1,3 +1,4 @@
+import { RenderBudget, type GraphicsMode } from "./render-budget";
 import { roomAt, passageDoors } from "./room-design";
 import { TorchAttachment } from "./torch-attachment";
 import { roomProps } from "./room-props";
@@ -46,6 +47,9 @@ export class GameScene {
   private torch = new THREE.PointLight(0xffa347, 2.2, 18, 0);
   private sanctuaryLights: THREE.PointLight[] = [];
   private lowQuality = false;
+  private renderBudget = new RenderBudget();
+  private metricSeconds = 0;
+  private renderSubmitMs = 0;
   private settlingDust = new THREE.Points(
     new THREE.BufferGeometry().setAttribute(
       "position",
@@ -788,11 +792,20 @@ export class GameScene {
       }
     }
   }
-  setQuality(low: boolean) {
-    this.lowQuality = low;
-    this.renderer.setPixelRatio(low ? 1 : Math.min(devicePixelRatio, 1.6));
-    this.renderer.shadowMap.enabled = !low;
+  setQuality(mode: GraphicsMode) {
+    this.renderBudget = new RenderBudget(mode);
+    this.applyRenderBudget();
+  }
+  private applyRenderBudget() {
+    this.lowQuality = !this.renderBudget.shadows;
+    this.renderer.setPixelRatio(this.renderBudget.pixelRatio(devicePixelRatio));
+    this.renderer.shadowMap.enabled = this.renderBudget.shadows;
+    this.container.dataset.renderTier = String(this.renderBudget.level);
+    this.container.dataset.graphicsMode = this.renderBudget.mode;
     this.resize();
+  }
+  sampleFrame(dt: number) {
+    if (this.renderBudget.sample(dt)) this.applyRenderBudget();
   }
   update(game: Game, dt: number, yaw: number, pitch: number, distance = 3.7) {
     this.container.dataset.catalogModels = String(this.catalog.loaded);
@@ -820,13 +833,30 @@ export class GameScene {
         );
       points.needsUpdate = true;
     }
+    const shadowCandidates = this.sanctuaryLights.flatMap((light, i) =>
+      Math.hypot(
+        light.position.x - game.player.x,
+        light.position.z - game.player.z,
+      ) < 22
+        ? [{ id: `sanctuary-${i}`, hz: 4 }]
+        : [],
+    );
+    if (game.fuel > 0 || this.torch.intensity > 0.1)
+      shadowCandidates.unshift({ id: "torch", hz: 20 });
+    const shadowRefresh = this.renderBudget.shadow(
+      this.elapsed,
+      shadowCandidates,
+    );
+    this.container.dataset.shadowRefresh = shadowRefresh ?? "cached";
     this.sanctuaryLights.forEach((light, i) => {
       const near =
         light.position.distanceToSquared(this.player.position) < 22 * 22;
       // Keep shader light/shadow counts stable when entering a room. Only
       // refresh nearby maps; toggling castShadow can trigger shader compiles.
       light.castShadow = !this.lowQuality;
-      light.shadow.autoUpdate = !this.lowQuality && near;
+      light.shadow.autoUpdate = false;
+      light.shadow.needsUpdate =
+        !this.lowQuality && near && shadowRefresh === `sanctuary-${i}`;
       light.intensity =
         12 *
         (1 +
@@ -980,8 +1010,9 @@ export class GameScene {
       0.64,
     );
     this.torch.castShadow = !this.lowQuality;
-    this.torch.shadow.autoUpdate =
-      !this.lowQuality && (burning || this.torch.intensity > 0.1);
+    this.torch.shadow.autoUpdate = false;
+    this.torch.shadow.needsUpdate =
+      !this.lowQuality && shadowRefresh === "torch";
     this.flame.visible = burning;
     this.flame.scale.set(
       1 + 0.15 * Math.sin(this.elapsed * 21),
@@ -1201,7 +1232,21 @@ export class GameScene {
     this.target.copy(anchor);
     this.target.y += 0.05;
     this.camera.lookAt(this.target);
+    const renderStart = performance.now();
     this.renderer.render(this.scene, this.camera);
+    this.renderSubmitMs =
+      this.renderSubmitMs * 0.9 + (performance.now() - renderStart) * 0.1;
+    this.metricSeconds += dt;
+    if (this.metricSeconds >= 0.5) {
+      this.metricSeconds = 0;
+      this.container.dataset.renderSubmitMs = this.renderSubmitMs.toFixed(2);
+      this.container.dataset.triangles = String(
+        this.renderer.info.render.triangles,
+      );
+      this.container.dataset.pixelRatio = this.renderer
+        .getPixelRatio()
+        .toFixed(2);
+    }
   }
   get assetsLoaded() {
     return this.catalog.loaded;
