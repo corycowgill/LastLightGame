@@ -6,6 +6,20 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Expedition polish — 2026-10-19
+
+The Catacombs now use six authored floor plans: narrow burial recesses, low whisper passages, a tall ossuary, flooded halls with dry edges, collapsed chambers and golden refuges. Seeded graph connections remain deterministic. Two-metre corridors, varied ceilings and fitted GLB doorways create a stronger rhythm between confinement and open chambers. Furniture, pillars, decals, camera blockers and navigation use the same floor data.
+
+Three optional decisions change the route: open a noisy reliquary for three relics (3.5 seconds stationary), detour for an oil cache worth 50 base Steady seconds, or cross noisy water at reduced speed instead of following its dry edges. Loot can be banked by turning back to the starting fire. Banked journal discoveries survive later expeditions and reloads. Fuel drain has not been increased in this pass.
+
+The Hunter has a directional sight cone, close awareness and a short visible pursuit reaction. Spawn selection keeps it behind the destination escape route. It crawls through low passages and listens while searching, using two additional clips from the preserved Mesh2Motion export. Stalker hearing respects crouching and quieter boots; it guards the reliquary instead of tracking a silent player through walls. Stone movement, chains, falling dust and occasional silence replace timed ambient text. These events never alter resources secretly.
+
+Validation: 88 automated tests, 100/100 seeded extinction/Hunt/sanctuary escape scenarios, and a production build. Browser checks exercised the actual Hunt-to-sanctuary loop and the three-relic interaction. A landscape phone-sized viewport showed the touch HUD and narrow passage framing. These checks do not establish ten-minute human pacing or physical iPhone/Xbox compatibility. Automated Chrome review showed poor frame cadence (roughly 1–12 FPS); its cause is unresolved, so smooth performance is not certified.
+
+Reproduce Hunter clip extensions with `python tools/assets/extend_hunter_motions.py`, then `npx tsx tools/assets/ground-hunter-clips.ts`. This preserves the existing neural mesh and fitted skin; it does not generate a new creature. The script records clip provenance in the catalog manifest. Player ivory cloth now retains more surface variation and a worn lower hem. Individual player fingers and terrain-aware foot placement remain limitations.
+
+For visual QA only, use `?debug&seed=104729&room=tunnels` (also burial, ossuary, flooded, collapse, refuge) or `?debug&seed=104729&encounter=reliquary` / `oil_cache`. Add `&touch` for the touch HUD. Review shortcuts clear enemies; ordinary expeditions do not.
+
 ![Title-screen artwork](public/art/title-background-v1.png)
 
 ## Rebuilt Torchbearer (2026-10-19)

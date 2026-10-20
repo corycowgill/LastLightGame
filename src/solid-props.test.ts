@@ -70,7 +70,8 @@ test("arch pillars block movement but the central opening stays passable", () =>
 test("player cannot walk through a crate; navigation detours with body clearance", () => {
   const g = new Game(104729);
   g.enemies = [];
-  const crate = roomProps(0, 0, "sanctuary").find(
+  const room = g.world.layout!.rooms.find((r) => r.design === "ossuary")!;
+  const crate = roomProps(room.x * 2, room.z * 2, room.kind, g.world).find(
     (p) => p.id === "pro_supply_crate",
   )!;
   Object.assign(g.player, { x: crate.x, z: crate.z - 2 });
@@ -84,8 +85,20 @@ test("player cannot walk through a crate; navigation detours with body clearance
     });
   assert.ok(g.player.z > crate.z - 1.8, "player approached crate");
   assert.ok(g.player.z < crate.z - 0.3, "crate stopped the player");
-  const path = findPath(g.world, { x: -8, z: 6 }, { x: -2, z: 6 });
-  assert.ok(path.length > 4, "route goes around furniture");
+  const approach = { x: crate.x, z: crate.z - 2 };
+  const beyond = g.world.cells
+    .map((c) => ({ x: c.x * 2, z: c.z * 2 }))
+    .filter(
+      (p) =>
+        p.z > crate.z &&
+        Math.abs(p.x - crate.x) < 5 &&
+        Math.hypot(p.x - crate.x, p.z - crate.z) < 5 &&
+        walkable(g.world, p.x, p.z),
+    )
+    .find((p) => findPath(g.world, approach, p).length > 0)!;
+  assert.ok(beyond, "there is a reachable route beyond the crate");
+  const path = findPath(g.world, approach, beyond);
+  assert.ok(path.length >= 3, "route reaches the far side of furniture");
   for (let i = 1; i < path.length; i++)
     assert.equal(
       propSegmentClear(

@@ -1,3 +1,4 @@
+import { floorAt, roomAt } from "./room-design";
 import type { World } from "./simulation";
 
 /** Burial furniture is shared by rendering, camera avoidance and AI navigation. */
@@ -11,15 +12,25 @@ export function burialRows(world: World) {
       room.kind === "sanctuary"
     )
       continue;
+    const design = roomAt(world, room.x * 2, room.z * 2)?.design;
+    if (design === "tunnels") continue;
+    const edge =
+      design === "burial"
+        ? 2.65
+        : design === "flooded"
+          ? 6.5
+          : design === "collapse"
+            ? 5.6
+            : 7.6;
     for (const side of [-1, 1])
       for (const offset of [-5.6, -2.8, 2.8, 5.6])
         rows.push({
-          x: room.x * 2 + side * 7.6,
+          x: room.x * 2 + side * edge,
           z: room.z * 2 + offset,
           yaw: (-side * Math.PI) / 2,
         });
   }
-  return rows;
+  return rows.filter((r) => floorAt(world, r.x, r.z, 0.15));
 }
 
 export function burialBlocks(world: World) {
@@ -34,6 +45,7 @@ export function burialBlocks(world: World) {
 /** Four roof supports frame each chamber without closing its central cross. */
 export function pillarRows(world: World) {
   return world.cells
+    .filter((c) => roomAt(world, c.x * 2, c.z * 2)?.design === "ossuary")
     .filter(
       (c) =>
         c.x % 14 === 0 &&
@@ -50,7 +62,8 @@ export function pillarRows(world: World) {
           yaw: (side * Math.PI) / 2,
         })),
       ),
-    );
+    )
+    .filter((p) => floorAt(world, p.x, p.z, 0.7));
 }
 
 export function cryptStory(world: World, room: { x: number; z: number }) {

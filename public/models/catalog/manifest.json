@@ -17,7 +17,7 @@
       "bytes": 645972,
       "triangles": 5000,
       "finishing": "Blender budget reduction; texture resize to 512; geometry preserved during texture packing",
-      "target_size_m": 4.0,
+      "target_size_m": 4,
       "scale_axis": "x",
       "units": "meters",
       "up_axis": "Y",
@@ -31,7 +31,7 @@
     },
     {
       "id": "arc_floor_2m",
-      "name": "Stone paving \u2014 neural masonry derivative",
+      "name": "Stone paving — neural masonry derivative",
       "file": "arc_floor_2m.glb",
       "method": "image_to_3d",
       "model": "microsoft/TRELLIS.2-4B",
@@ -57,7 +57,7 @@
       "license": "TRELLIS.2 model MIT; original project reference",
       "license_url": "https://huggingface.co/microsoft/TRELLIS.2-4B",
       "derived_from": "arc_wall_2m",
-      "derivation": "Rotate and fit accepted neural masonry to 2 \u00d7 0.12 \u00d7 2 m; no new geometry"
+      "derivation": "Rotate and fit accepted neural masonry to 2 × 0.12 × 2 m; no new geometry"
     },
     {
       "id": "arc_wall_2m",
@@ -75,7 +75,7 @@
       "bytes": 546212,
       "triangles": 2500,
       "finishing": "Blender budget reduction; texture resize to 512; geometry preserved during texture packing",
-      "target_size_m": 2.0,
+      "target_size_m": 2,
       "scale_axis": "x",
       "units": "meters",
       "up_axis": "Y",
@@ -155,8 +155,8 @@
       "reference": "references/characters/HUNTER_A_POSE.png",
       "reference_sha256": "870ee22d33e9eb82a2197c730ae760e76db9af083bf783da7785ca1245aa822d",
       "source_sha256": "55fffd7d70fc8c323cf70db6830a653543f50a08a38a031bbbb0b012e14a8f21",
-      "sha256": "2332bc06642428f383cb018dbdcba7cd7636d926562f9e229bfcfdb815e9f726",
-      "bytes": 4625356,
+      "sha256": "b1e93759600c014f878b00af4d59ce65fdb4d924668e35590034c5576495cc17",
+      "bytes": 4779460,
       "triangles": 20000,
       "finishing": "Blender budget reduction; texture resize to 512; geometry preserved during texture packing",
       "target_size_m": 3.2,
@@ -177,7 +177,9 @@
         "pursue",
         "flee",
         "capture",
-        "banish"
+        "banish",
+        "crawl",
+        "listen"
       ],
       "skin_joints": 66,
       "animation_source": {
@@ -236,7 +238,14 @@
         ],
         "review_status": "installed for user gameplay validation; toe chains limited to foot/ball; Stalker and Hollow pending",
         "skin_correction": "48 welded adjacency diffusion passes; hand-local finger influence taper; 240 four-influence projected smoothing passes; normalized weights and lower-leg upper-limb exclusion",
-        "runtime_adapter": "14 player / 6 Hunter gameplay aliases; complete site libraries remain in rig review"
+        "runtime_adapter": "14 player / 6 Hunter gameplay aliases; complete site libraries remain in rig review",
+        "low_clearance_clips": {
+          "crawl": "Crouch_Walk",
+          "listen": "Idle_Listening",
+          "tool": "tools/assets/extend_hunter_motions.py",
+          "floor_offset_m": 0.22
+        },
+        "skin_grounded": true
       }
     },
     {
@@ -306,7 +315,7 @@
     },
     {
       "id": "cha_torchbearer",
-      "name": "Torchbearer \u2014 rebuilt HF motion rig",
+      "name": "Torchbearer — rebuilt HF motion rig",
       "file": "cha_torchbearer.glb",
       "method": "image_to_3d",
       "model": "microsoft/TRELLIS.2-4B",
@@ -373,7 +382,7 @@
       "bytes": 3479792,
       "triangles": 24000,
       "finishing": "Blender budget reduction; texture resize to 1024; geometry preserved during texture packing",
-      "target_size_m": 1.0,
+      "target_size_m": 1,
       "scale_axis": "y",
       "units": "meters",
       "up_axis": "Y",
@@ -681,7 +690,7 @@
       "bytes": 656452,
       "triangles": 5000,
       "finishing": "Blender budget reduction; texture resize to 512; geometry preserved during texture packing",
-      "target_size_m": 4.0,
+      "target_size_m": 4,
       "scale_axis": "y",
       "units": "meters",
       "up_axis": "Y",

@@ -167,7 +167,7 @@ test("destination banks relics and reset retains permanent upgrades", () => {
 });
 test("pickup and chalk are functional", () => {
   const g = new Game();
-  const artifact = g.items.find((i) => i.kind === "artifact")!;
+  const artifact = g.items.find((i) => i.kind === "artifact" && !i.encounter)!;
   g.player.x = artifact.x;
   g.player.z = artifact.z;
   g.interact();
@@ -426,9 +426,15 @@ test("soft boots reduce audible Stalker investigations without making footsteps 
   const walk = { ...idle, forward: 1 };
   normal.step(1 / 60, walk);
   quiet.step(1 / 60, walk);
-  // Both still make enough walking noise to attract a nearby Stalker.
+  // Boots reduce hearing range; they do not mute close footsteps.
   assert.equal(normal.enemies[0].state, "INVESTIGATING");
+  assert.equal(quiet.enemies[0].state, "LISTENING");
+  quiet.setMode(0);
+  quiet.enemies = [{ x: 34, z: 0, state: "LISTENING", kind: "stalker" }];
+  quiet.step(1 / 60, walk);
   assert.equal(quiet.enemies[0].state, "INVESTIGATING");
+  // Match the second simulation step before comparing movement.
+  normal.step(1 / 60, walk);
   assert.equal(quiet.player.x, normal.player.x);
   assert.equal(quiet.player.z, normal.player.z);
 });

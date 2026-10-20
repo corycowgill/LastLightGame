@@ -1,5 +1,18 @@
+import {
+  DESIGNS,
+  ROOM_DESIGNS,
+  roomTile,
+  type RoomDesign,
+} from "./room-design";
 import type { Point, World } from "./simulation";
-export type Room = Point & { kind: string; depth: number; reward: boolean };
+export type Room = Point & {
+  kind: string;
+  depth: number;
+  reward: boolean;
+  design: RoomDesign;
+  name: string;
+  ceiling: number;
+};
 export type Layout = {
   rooms: Room[];
   links: [number, number][];
@@ -100,25 +113,58 @@ export function buildLabyrinth(seed: number): World {
         : kinds[Math.floor(rand() * kinds.length)],
     depth: distances[i] / distances[exit],
     reward: i !== 0 && i !== exit && degree(i) === 1,
+    design: (i === 0 || i === exit
+      ? "refuge"
+      : DESIGNS[(i + ((seed >>> 0) % 5)) % 5]) as RoomDesign,
+    name: "",
+    ceiling: 4,
   }));
   // Include each supported chamber type while preserving the themed weighting.
   ["crypt", "archive", "flooded", "landmark"].forEach((kind, i) => {
     const room = rooms.filter((_, j) => j !== 0 && j !== exit)[i];
     room.kind = kind;
   });
-  const cells = new Map<string, Point & { kind: string }>();
-  const add = (x: number, z: number, kind: string) =>
-    cells.set(`${x},${z}`, { x, z, kind });
+  for (const r of rooms) {
+    r.name = ROOM_DESIGNS[r.design].name;
+    r.ceiling = ROOM_DESIGNS[r.design].ceiling;
+    if (r.design === "flooded") r.kind = "flooded";
+    if (r.design === "ossuary" || r.design === "burial") r.kind = "crypt";
+    if (r.design === "tunnels") r.kind = "archive";
+    if (r.design === "collapse") r.kind = "landmark";
+  }
+  const cells = new Map<
+    string,
+    Point & { kind: string; ceiling: number; surface: string }
+  >();
+  const add = (
+    x: number,
+    z: number,
+    kind: string,
+    ceiling = 2.7,
+    surface = "stone",
+  ) => cells.set(`${x},${z}`, { x, z, kind, ceiling, surface });
   for (const r of rooms)
     for (let x = -4; x <= 4; x++)
-      for (let z = -4; z <= 4; z++) add(r.x + x, r.z + z, r.kind);
+      for (let z = -4; z <= 4; z++)
+        if (roomTile(r.design, x, z))
+          add(
+            r.x + x,
+            r.z + z,
+            r.kind,
+            r.ceiling,
+            r.design === "flooded" && Math.abs(x) < 2 && Math.abs(z) < 2
+              ? "water"
+              : r.design === "collapse"
+                ? "gravel"
+                : "stone",
+          );
   for (const [a, b] of links) {
     const u = rooms[a],
       v = rooms[b],
       dx = Math.sign(v.x - u.x),
       dz = Math.sign(v.z - u.z);
     for (let n = 0; n <= 14; n++)
-      for (let side = -1; side <= 1; side++) {
+      for (let side = 0; side <= 0; side++) {
         const x = u.x + dx * n + dz * side,
           z = u.z + dz * n + dx * side;
         if (!cells.has(`${x},${z}`)) add(x, z, "corridor");

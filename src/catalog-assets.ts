@@ -156,6 +156,7 @@ export class CatalogAssets {
     placements: THREE.Matrix4[],
     dimensions: [number, number, number],
     replace: () => void,
+    finish?: { tint: number; roughness: number },
   ) {
     const holder = this.add(id, new THREE.Group(), 0, 0, 0, 1, 0, () => {
       if (this.disposed) return;
@@ -186,10 +187,22 @@ export class CatalogAssets {
       holder.traverse((node) => {
         const mesh = node as THREE.Mesh;
         if (!mesh.isMesh) return;
+        let material = mesh.material;
+        if (finish) {
+          const adapt = (source: THREE.Material) => {
+            const result = source.clone() as THREE.MeshStandardMaterial;
+            result.color?.multiply(new THREE.Color(finish.tint));
+            result.roughness = finish.roughness;
+            return result;
+          };
+          material = Array.isArray(material)
+            ? material.map(adapt)
+            : adapt(material);
+        }
         for (const region of regions.values()) {
           const instances = new THREE.InstancedMesh(
             mesh.geometry,
-            mesh.material,
+            material,
             region.length,
           );
           region.forEach((matrix, index) => {

@@ -51,7 +51,7 @@ export class ExpeditionCheck {
     }
     // Wait through extinction/grace so every layout exercises an active Hunt
     // before following the final escape route. This is QA-only behavior.
-    if (this.forced && !this.sawHunt) return idle;
+    if (this.forced && !this.sawHunt) return { ...idle, crouch: true };
     let target = this.path[this.cursor];
     while (
       target &&

@@ -1,8 +1,9 @@
+import { ROOM_DESIGNS, roomAt } from "./room-design";
 import { buildLabyrinth, type Layout } from "./worldgen";
 import { blockedByProp, propSegmentClear } from "./crypt-layout";
 export type Point = { x: number; z: number };
 export type World = {
-  cells: (Point & { kind: string })[];
+  cells: (Point & { kind: string; ceiling?: number; surface?: string })[];
   start: Point;
   exit: Point;
   seed: number;
@@ -194,13 +195,20 @@ export class Game {
   maxFuel = 720;
   mode = 1;
   phase = "EXPLORING";
-  hunter = { x: 0, z: 0, state: "DORMANT" };
+  hunter: Point & { state: string; yaw?: number } = {
+    x: 0,
+    z: 0,
+    state: "DORMANT",
+  };
   items: {
     id: number;
     x: number;
     z: number;
     kind: "fuel" | "artifact" | "match";
     taken: boolean;
+    encounter?: "reliquary" | "oil_cache";
+    opening?: number;
+    value?: number;
   }[] = [];
   chalk: Point[] = [];
   matches = 2;
@@ -216,6 +224,21 @@ export class Game {
   message = "";
   completed = false;
   enemies: { x: number; z: number; state: string; kind: string }[] = [];
+  discoveries: string[] = [];
+  archive: string[] = [];
+  visitedRooms: string[] = [];
+  activeInteraction?: { id: number; remaining: number; total: number };
+  ambientEvent?: {
+    id: number;
+    kind: "stone" | "chain" | "silence";
+    x: number;
+    z: number;
+    until: number;
+  };
+  quietUntil = 0;
+  hunterReadiness = 0;
+  private eventCount = 0;
+  private surfaceCells = new Map<string, string>();
   private routes = new WeakMap<Point, { points: Point[]; target: Point }>();
   private searchTimer = 0;
   private timer = 0;
@@ -283,6 +306,16 @@ export class Game {
     this.staminaDelay = 0;
     this.noise = this.noiseTimer = 0;
     this.director = 25;
+    this.discoveries = [];
+    this.visitedRooms = [];
+    this.activeInteraction = undefined;
+    this.ambientEvent = undefined;
+    this.quietUntil = 0;
+    this.eventCount = 0;
+    this.hunterReadiness = 0;
+    this.surfaceCells = new Map(
+      this.world.cells.map((c) => [key(c.x, c.z), c.surface ?? "stone"]),
+    );
     this.say("Seek the far golden fire. E to gather supplies.");
     const rooms = this.world.layout!.rooms.filter(
       (r) => r.kind !== "sanctuary",
@@ -315,15 +348,111 @@ export class Game {
         },
       ];
     });
-    const lair =
+    // All rewards occupy real, unblocked floor. Risk comes from the choice,
+    // never an unreachable pickup embedded in funerary furniture.
+    for (const item of this.items) {
+      const room = roomAt(this.world, item.x, item.z)!;
+      const options = [
+        [2, 0],
+        [-2, 0],
+        [0, 2],
+        [0, -2],
+        [4, 0],
+        [-4, 0],
+      ];
+      if (
+        !walkable(this.world, item.x, item.z) ||
+        blockedByProp(this.world, item.x, item.z, 0.45) ||
+        !findPath(this.world, this.start, item).length
+      ) {
+        const point = options
+          .map(([x, z]) => ({ x: room.x * 2 + x, z: room.z * 2 + z }))
+          .find(
+            (p) =>
+              walkable(this.world, p.x, p.z) &&
+              !this.items.some((i) => i !== item && i.x === p.x && i.z === p.z),
+          );
+        if (point) Object.assign(item, point);
+      }
+    }
+    const vault =
       rooms
-        .filter((r) => r.depth >= 0.4)
+        .filter((r) => r.design === "ossuary" && r.depth > 0.15)
         .sort(
           (a, b) => Math.abs(a.depth - 0.65) - Math.abs(b.depth - 0.65),
-        )[0] ?? rooms[rooms.length - 1];
-    this.enemies = [
-      { x: lair.x * 2, z: lair.z * 2 + 2, kind: "stalker", state: "LISTENING" },
-    ];
+        )[0] ?? rooms[2];
+    const relic = this.items.find(
+      (i) => i.kind === "artifact" && roomAt(this.world, i.x, i.z) === vault,
+    );
+    if (relic) {
+      relic.encounter = "reliquary";
+      relic.value = 3;
+    }
+    const cacheRoom =
+      rooms.find((r) => r.reward) ??
+      rooms.find((r) => r.design === "collapse") ??
+      rooms[3];
+    const oil =
+      this.items.find(
+        (i) => i.kind === "fuel" && roomAt(this.world, i.x, i.z) === cacheRoom,
+      ) ?? this.items.find((i) => i.kind === "fuel");
+    if (oil) {
+      const room = roomAt(this.world, oil.x, oil.z)!;
+      const candidates = this.world.cells
+        .filter((c) => roomAt(this.world, c.x * 2, c.z * 2) === room)
+        .map((c) => ({ x: c.x * 2, z: c.z * 2 }))
+        .filter(
+          (p) =>
+            walkable(this.world, p.x, p.z) &&
+            !blockedByProp(this.world, p.x, p.z, 0.45) &&
+            findPath(this.world, this.start, p).length > 0 &&
+            !this.items.some((i) => i !== oil && dist(i, p) < 2),
+        )
+        .sort(
+          (a, b) =>
+            dist(b, { x: room.x * 2, z: room.z * 2 }) -
+            dist(a, { x: room.x * 2, z: room.z * 2 }),
+        );
+      if (candidates[0]) Object.assign(oil, candidates[0]);
+      oil.encounter = "oil_cache";
+      oil.value = 300;
+    }
+    const guards = [
+      [6, 0],
+      [-6, 0],
+      [0, 6],
+      [0, -6],
+    ].map(([x, z]) => ({ x: vault.x * 2 + x, z: vault.z * 2 + z }));
+    const guard = guards.find(
+      (p) =>
+        walkable(this.world, p.x, p.z) &&
+        findPath(this.world, this.start, p).length > 0,
+    ) ?? { x: vault.x * 2, z: vault.z * 2 + 2 };
+    this.enemies = [{ ...guard, kind: "stalker", state: "LISTENING" }];
+  }
+  get currentRoom() {
+    return roomAt(this.world, this.player.x, this.player.z);
+  }
+  get surface() {
+    return (
+      this.surfaceCells.get(
+        key(Math.round(this.player.x / 2), Math.round(this.player.z / 2)),
+      ) ?? "stone"
+    );
+  }
+  get interactionPrompt() {
+    if (this.activeInteraction)
+      return `OPENING RELIQUARY · ${this.activeInteraction.remaining.toFixed(1)}s · MOVE TO CANCEL`;
+    if (dist(this.player, this.start) < 3 && this.artifacts > 0)
+      return `BANK ${this.artifacts} RELICS · END EXPEDITION SAFELY`;
+    const item = this.nearbyItem;
+    return item?.encounter === "reliquary"
+      ? "OPEN SEALED RELIQUARY · 3.5s · NOISY · 3 RELICS"
+      : item?.encounter === "oil_cache"
+        ? "TAKE OIL CACHE · +50s BASE LIGHT"
+        : item
+          ? `COLLECT ${item.kind.toUpperCase()}`
+          : "";
   }
   sanctuaryBearing(cameraYaw: number) {
     if (!this.upgrades.compass) return null;
@@ -359,7 +488,11 @@ export class Game {
     return room?.depth ?? closest / Math.max(1, this.roomCenters.length - 1);
   }
   footstepNoise(sprint: boolean, crouch: boolean) {
-    return (crouch ? 1 : sprint ? 11 : 5) * (1 - 0.12 * this.upgrades.boots);
+    return (
+      (crouch ? 1 : sprint ? 11 : 5) *
+      (this.surface === "water" ? 1.65 : this.surface === "gravel" ? 1.25 : 1) *
+      (1 - 0.12 * this.upgrades.boots)
+    );
   }
   get relightDuration() {
     return CONFIG.relight - 0.25 * this.upgrades.spark;
@@ -438,6 +571,9 @@ export class Game {
   }
   interact() {
     if (dist(this.player, this.destination) < 4) {
+      this.archive = [...new Set([...this.archive, ...this.discoveries])].slice(
+        -100,
+      );
       this.banked += this.artifacts;
       this.artifacts = 0;
       this.fuel = this.maxFuel;
@@ -449,6 +585,20 @@ export class Game {
       return;
     }
     if (dist(this.player, this.start) < 3) {
+      if (this.artifacts > 0) {
+        this.archive = [
+          ...new Set([...this.archive, ...this.discoveries]),
+        ].slice(-100);
+        this.banked += this.artifacts;
+        this.artifacts = 0;
+        this.fuel = this.maxFuel;
+        this.phase = "SANCTUARY";
+        this.hunter.state = "BANISHED";
+        this.completed = true;
+        this.say("Your discoveries are safe in the golden light.");
+        this.save();
+        return;
+      }
       this.fuel = this.maxFuel;
       this.phase = "EXPLORING";
       this.hunter.state = "BANISHED";
@@ -457,15 +607,35 @@ export class Game {
     }
     const item = this.nearbyItem;
     if (item) {
+      if (item.encounter === "reliquary" && (item.opening ?? 0) < 3.5) {
+        if (this.phase !== "EXPLORING") {
+          this.say("The seal needs light. Relight or leave it.");
+          return;
+        }
+        this.activeInteraction ??= { id: item.id, remaining: 3.5, total: 3.5 };
+        return;
+      }
       item.taken = true;
       if (item.kind === "fuel") {
-        this.fuel = Math.min(this.maxFuel, this.fuel + CONFIG.fuelPickup);
+        this.fuel = Math.min(
+          this.maxFuel,
+          this.fuel +
+            (item.encounter === "oil_cache"
+              ? (item.value ?? 300)
+              : CONFIG.fuelPickup),
+        );
         if (this.fuel > 0 && this.phase !== "EXPLORING") {
           this.phase = "RELIGHTING";
           this.timer = this.relightDuration;
         }
       } else if (item.kind === "match") this.matches++;
-      else this.artifacts++;
+      else {
+        this.artifacts += item.value ?? 1;
+        if (item.encounter === "reliquary")
+          this.discoveries.push(
+            "The sealed reliquary held three votive names: the fire was tended long after the crypt was abandoned.",
+          );
+      }
       this.say(
         item.kind === "artifact"
           ? "An ancient relic. Reach sanctuary to bank it."
@@ -482,6 +652,12 @@ export class Game {
     dt = Math.max(0, Math.min(dt, 0.1));
     this.elapsed += dt;
     this.cooldown -= dt;
+    const room = this.currentRoom;
+    if (room && !this.visitedRooms.includes(`${room.x},${room.z}`)) {
+      this.visitedRooms.push(`${room.x},${room.z}`);
+      this.discoveries.push(`${room.name}: ${ROOM_DESIGNS[room.design].story}`);
+    }
+
     this.messageTime -= dt;
     if (this.messageTime <= 0) this.message = "";
     this.cameraYaw = input.yaw;
@@ -509,11 +685,10 @@ export class Game {
                 : 0),
       ),
     );
-    const speed = input.crouch
-      ? CONFIG.crouch
-      : sprint
-        ? CONFIG.sprint
-        : CONFIG.walk;
+    const surfaceSpeed = this.surface === "water" ? 0.78 : 1;
+    const speed =
+      surfaceSpeed *
+      (input.crouch ? CONFIG.crouch : sprint ? CONFIG.sprint : CONFIG.walk);
     const length = Math.max(1, Math.hypot(input.forward, input.strafe));
     const wantX =
         ((-Math.sin(input.yaw) * input.forward +
@@ -552,6 +727,26 @@ export class Game {
         : moving
           ? this.footstepNoise(sprint, input.crouch)
           : 0;
+    if (this.activeInteraction) {
+      const item = this.items.find((i) => i.id === this.activeInteraction!.id);
+      if (
+        !item ||
+        moving ||
+        dist(item, this.player) > 2.6 ||
+        this.phase !== "EXPLORING"
+      )
+        this.activeInteraction = undefined;
+      else {
+        this.noise = 15;
+        this.noiseTimer = 0.2;
+        this.activeInteraction.remaining -= dt;
+        if (this.activeInteraction.remaining <= 0) {
+          item.opening = 3.5;
+          this.activeInteraction = undefined;
+          this.interact();
+        }
+      }
+    }
     if (this.phase === "EXPLORING") {
       this.fuel = Math.max(0, this.fuel - dt * this.fuelRate);
       if (this.fuel === 0) this.forceHunt();
@@ -610,17 +805,33 @@ export class Game {
       this.updateStalker(dt, input.crouch);
     this.director -= dt;
     if (this.director <= 0) {
-      this.director = 28 + (this.world.seed % 17);
-      if (!safe && this.phase === "EXPLORING")
-        this.say(
-          this.fuel < this.maxFuel * 0.25
-            ? "The flame trembles. Find oil or a golden fire."
-            : [
-                "Stone shifts somewhere beyond the light.",
-                "A distant footfall. Then silence.",
-                "The Catacombs remember your footsteps.",
-              ][Math.floor(this.elapsed / 25) % 3],
-        );
+      this.eventCount++;
+      this.director =
+        35 + (((this.world.seed + this.eventCount * 13) >>> 0) % 29);
+      if (
+        !safe &&
+        this.phase === "EXPLORING" &&
+        this.fuel > this.maxFuel * 0.12
+      ) {
+        const kind = (["stone", "chain", "silence"] as const)[
+          this.eventCount % 3
+        ];
+        const nearby = this.world.cells.filter((c) => {
+          const d = dist(this.player, { x: c.x * 2, z: c.z * 2 });
+          return d > 5 && d < 14;
+        });
+        const p = nearby[(this.world.seed >>> 0) % Math.max(1, nearby.length)];
+        if (p) {
+          this.ambientEvent = {
+            id: this.eventCount,
+            kind,
+            x: p.x * 2,
+            z: p.z * 2,
+            until: this.elapsed + (kind === "silence" ? 8 : 2.5),
+          };
+          if (kind === "silence") this.quietUntil = this.elapsed + 8;
+        }
+      }
     }
   }
   private spawnHunter() {
@@ -647,15 +858,27 @@ export class Game {
         );
       })
       .sort((a, b) => dist(a, this.player) - dist(b, this.player));
+    const escapeDistance = navigationDistance(
+      this.world,
+      this.player,
+      this.destination,
+    );
     const p = candidates.find(
-      (candidate) => findPath(this.world, candidate, this.player).length > 0,
+      (candidate) =>
+        findPath(this.world, candidate, this.player).length > 0 &&
+        navigationDistance(this.world, candidate, this.destination) >
+          escapeDistance + 6,
     );
     if (!p) {
       this.timer = 1;
       this.phase = "HUNT_GRACE";
       return;
     }
-    this.hunter = { ...p, state: "SEARCHING" };
+    this.hunter = {
+      ...p,
+      state: "SEARCHING",
+      yaw: Math.atan2(-(this.player.x - p.x), -(this.player.z - p.z)),
+    };
     this.target = { ...this.player };
     this.phase = "HUNT_ACTIVE";
     this.say("The Hunter searches. Break sight. Quiet your footsteps.");
@@ -710,13 +933,21 @@ export class Game {
       }
       return; // A recoiling Hunter cannot capture the player.
     }
-    const d = dist(this.hunter, this.player),
-      seen =
-        d <
-          CONFIG.sight *
-            (1 + this.depth * 0.15) *
-            (this.player.crouched ? CONFIG.crouchSight : 1) &&
-        lineOfSight(this.world, this.hunter, this.player);
+    const d = dist(this.hunter, this.player);
+    const heading = Math.atan2(
+      -(this.player.x - this.hunter.x),
+      -(this.player.z - this.hunter.z),
+    );
+    const facing = this.hunter.yaw ?? heading;
+    const inCone =
+      d < 2.5 || Math.cos(heading - facing) > Math.cos((Math.PI * 70) / 180);
+    const seen =
+      inCone &&
+      d <
+        CONFIG.sight *
+          (1 + this.depth * 0.15) *
+          (this.player.crouched ? CONFIG.crouchSight : 1) &&
+      lineOfSight(this.world, this.hunter, this.player);
     const heard =
       !seen &&
       d < this.noise &&
@@ -747,14 +978,23 @@ export class Game {
         }
       }
     }
+    this.hunterReadiness = seen
+      ? Math.min(1, this.hunterReadiness + dt / 0.4)
+      : Math.max(0, this.hunterReadiness - dt);
+    const before = { x: this.hunter.x, z: this.hunter.z };
     this.moveEnemy(
       this.hunter,
       this.target,
       this.hunter.state === "PURSUING"
-        ? CONFIG.hunterChase + this.depth * 0.55
+        ? (CONFIG.hunterChase + this.depth * 0.55) *
+            (this.hunterReadiness < 1 ? 0.4 : 1)
         : CONFIG.hunterSearch,
       dt,
     );
+    if (dist(before, this.hunter) > 0.001)
+      this.hunter.yaw =
+        Math.atan2(-(this.hunter.x - before.x), -(this.hunter.z - before.z)) ||
+        0;
     if (dist(this.hunter, this.player) < 1.1) {
       this.phase = "DEAD";
       this.artifacts = 0;
@@ -853,11 +1093,12 @@ export class Game {
         if (d > 10) e.state = "LISTENING";
         continue;
       }
-      if (
-        d < 15 + this.depth * 5 &&
-        (this.noise > 3 || !lit) &&
-        lineOfSight(this.world, e, this.player)
-      ) {
+      const heard =
+        this.noise > 3 &&
+        navigationDistance(this.world, e, this.player) < this.noise * 2.6;
+      const seen =
+        !lit && (!crouch || d < 2.5) && lineOfSight(this.world, e, this.player);
+      if (d < 15 + this.depth * 5 && (heard || seen)) {
         e.state = lit ? "INVESTIGATING" : "PURSUING";
         if (!lit || d > 2 || this.mode === 0)
           this.moveEnemy(
@@ -880,7 +1121,7 @@ export class Game {
         "lastlight-save",
         JSON.stringify({
           version: 1,
-          generation: 2,
+          generation: 3,
           seed: this.world.seed,
           banked: this.banked,
           maxFuel: this.maxFuel,
@@ -891,6 +1132,9 @@ export class Game {
           matches: this.matches,
           artifacts: this.artifacts,
           items: this.items,
+          discoveries: this.discoveries,
+          archive: this.archive,
+          visitedRooms: this.visitedRooms,
           chalk: this.chalk,
           phase: this.phase,
           elapsed: this.elapsed,
@@ -914,8 +1158,11 @@ export class Game {
           ? Math.min(UPGRADES[kind].cap, Math.max(0, Math.floor(level)))
           : 0;
       }
+      this.archive = Array.isArray(d.archive)
+        ? d.archive.filter((s: unknown) => typeof s === "string").slice(-100)
+        : [];
       this.reset(Number(d.seed) || 1);
-      if (d.generation !== 2) {
+      if (d.generation !== 3) {
         this.banked += Math.max(0, Number(d.artifacts) || 0);
         this.say("The passages have shifted. Your banked discoveries endure.");
         this.save();
@@ -931,6 +1178,14 @@ export class Game {
         this.setMode(d.mode);
         this.artifacts = Math.max(0, Number(d.artifacts) || 0);
         if (Array.isArray(d.items)) this.items = d.items;
+        if (Array.isArray(d.discoveries))
+          this.discoveries = d.discoveries
+            .filter((s: unknown) => typeof s === "string")
+            .slice(0, 100);
+        if (Array.isArray(d.visitedRooms))
+          this.visitedRooms = d.visitedRooms
+            .filter((s: unknown) => typeof s === "string")
+            .slice(0, 100);
         if (Array.isArray(d.chalk)) this.chalk = d.chalk;
         this.elapsed = Number(d.elapsed) || 0;
         if (

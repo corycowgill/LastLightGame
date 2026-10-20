@@ -1,3 +1,4 @@
+import { roomAt, passageDoors } from "./room-design";
 import { TorchAttachment } from "./torch-attachment";
 import { roomProps } from "./room-props";
 import { flameFlicker } from "./flame";
@@ -45,6 +46,20 @@ export class GameScene {
   private torch = new THREE.PointLight(0xffa347, 2.2, 18, 0);
   private sanctuaryLights: THREE.PointLight[] = [];
   private lowQuality = false;
+  private settlingDust = new THREE.Points(
+    new THREE.BufferGeometry().setAttribute(
+      "position",
+      new THREE.BufferAttribute(new Float32Array(32 * 3), 3),
+    ),
+    new THREE.PointsMaterial({
+      color: 0xb5a68c,
+      size: 0.035,
+      transparent: true,
+      opacity: 0.3,
+      depthWrite: false,
+    }),
+  );
+  private ceilings = new Map<string, number>();
   private flame: THREE.Mesh;
   private torchBasket = new THREE.Group();
   private walls: THREE.Object3D[] = [];
@@ -78,6 +93,9 @@ export class GameScene {
     private container: HTMLElement,
     world: World,
   ) {
+    this.ceilings = new Map(
+      world.cells.map((c) => [`${c.x},${c.z}`, c.ceiling ?? 4]),
+    );
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6));
     this.renderer.setClearColor(0x070d17);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -123,6 +141,7 @@ export class GameScene {
     const blockMatrices: THREE.Matrix4[] = [],
       wallPlacements: THREE.Matrix4[] = [],
       floorPlacements: THREE.Matrix4[] = [],
+      wetFloorPlacements: THREE.Matrix4[] = [],
       ceilingPlacements: THREE.Matrix4[] = [],
       rubblePlacements: THREE.Matrix4[] = [];
     const floors = new THREE.InstancedMesh(
@@ -131,20 +150,23 @@ export class GameScene {
       world.cells.length,
     );
     world.cells.forEach((c, i) => {
+      const height = c.ceiling ?? 4;
       dummy.scale.set(1, 1, 1);
       dummy.position.set(c.x * 2, -0.12, c.z * 2);
       dummy.rotation.set(0, 0, 0);
       dummy.updateMatrix();
       floors.setMatrixAt(i, dummy.matrix);
-      floorPlacements.push(
+      (c.surface === "water" ? wetFloorPlacements : floorPlacements).push(
         new THREE.Matrix4().makeTranslation(c.x * 2, -0.14, c.z * 2),
       );
       ceilingPlacements.push(
         new THREE.Matrix4()
-          .makeTranslation(c.x * 2, 4.05, c.z * 2)
+          .makeTranslation(c.x * 2, height + 0.05, c.z * 2)
           .multiply(new THREE.Matrix4().makeRotationX(Math.PI)),
       );
-      const color = new THREE.Color(c.kind === "flooded" ? 0x425960 : 0x58616a);
+      const color = new THREE.Color(
+        c.surface === "water" ? 0x294c59 : 0x58616a,
+      );
       color.multiplyScalar(
         0.75 + (((c.x * 17 + c.z * 31 + world.seed) >>> 0) % 11) * 0.025,
       );
@@ -155,15 +177,42 @@ export class GameScene {
         [0, 1],
         [0, -1],
       ]) {
-        if (occupied.has(`${c.x + dx},${c.z + dz}`)) continue;
+        if (occupied.has(`${c.x + dx},${c.z + dz}`)) {
+          const adjacent = this.ceilings.get(`${c.x + dx},${c.z + dz}`) ?? 4;
+          if (height > adjacent + 0.1) {
+            const band = this.box(
+              0.26,
+              height - adjacent,
+              2,
+              stone,
+              c.x * 2 + dx,
+              c.z * 2 + dz,
+              (height + adjacent) / 2,
+            );
+            if (dz) band.rotation.y = Math.PI / 2;
+            band.userData.wallShell = true;
+            this.walls.push(band);
+            wallPlacements.push(
+              new THREE.Matrix4()
+                .makeTranslation(c.x * 2 + dx, adjacent, c.z * 2 + dz)
+                .multiply(
+                  new THREE.Matrix4().makeRotationY(dx ? Math.PI / 2 : 0),
+                )
+                .multiply(
+                  new THREE.Matrix4().makeScale(1, (height - adjacent) / 4, 1),
+                ),
+            );
+          }
+          continue;
+        }
         const wall = this.box(
           0.26,
-          4,
+          height,
           2,
           stone,
           c.x * 2 + dx,
           c.z * 2 + dz,
-          1.9,
+          height / 2 - 0.1,
         );
         if (dz) wall.rotation.y = Math.PI / 2;
         wall.userData.wallShell = true;
@@ -171,7 +220,8 @@ export class GameScene {
         wallPlacements.push(
           new THREE.Matrix4()
             .makeTranslation(c.x * 2 + dx, -0.1, c.z * 2 + dz)
-            .multiply(new THREE.Matrix4().makeRotationY(dx ? Math.PI / 2 : 0)),
+            .multiply(new THREE.Matrix4().makeRotationY(dx ? Math.PI / 2 : 0))
+            .multiply(new THREE.Matrix4().makeScale(1, height / 4, 1)),
         );
         for (let row = 0; row < 4; row++) {
           const course =
@@ -197,7 +247,10 @@ export class GameScene {
             blockMatrices.push(dummy.matrix.clone());
           }
         }
-        if (((c.x * 17 + c.z * 31 + world.seed) >>> 0) % 5 === 0) {
+        if (
+          height >= 3.3 &&
+          ((c.x * 17 + c.z * 31 + world.seed) >>> 0) % 5 === 0
+        ) {
           const tomb = this.box(
             0.6,
             0.5,
@@ -219,7 +272,7 @@ export class GameScene {
         }
       }
       if (c.x % 14 === 0 && c.z % 14 === 0) {
-        this.roomDetails(c.x * 2, c.z * 2, c.kind, stone, trim, bronze);
+        this.roomDetails(c.x * 2, c.z * 2, c.kind, stone, trim, bronze, world);
       }
     });
     const blockMaterial = new THREE.MeshStandardMaterial({
@@ -252,7 +305,7 @@ export class GameScene {
       world.cells.length,
     );
     world.cells.forEach((c, i) => {
-      dummy.position.set(c.x * 2, 4.05, c.z * 2);
+      dummy.position.set(c.x * 2, (c.ceiling ?? 4) + 0.05, c.z * 2);
       dummy.updateMatrix();
       ceiling.setMatrixAt(i, dummy.matrix);
     });
@@ -458,7 +511,7 @@ export class GameScene {
     this.player.add(this.actor.root);
     const hunterFallback = [...this.hunter.children];
     this.hunterActor = new AnimatedCharacter(
-      "/models/hunter.glb?v=multiview-66",
+      "/models/hunter.glb?v=crypt-motion-v3",
       () => {
         hunterFallback.forEach((c) => (c.visible = false));
         if (this.hunterActor) addHunterEyes(this.hunterActor.root);
@@ -514,6 +567,15 @@ export class GameScene {
         floors.visible = false;
       },
     );
+    if (wetFloorPlacements.length)
+      this.catalog.batch(
+        "arc_floor_2m",
+        this.scene,
+        wetFloorPlacements,
+        [2, 0.12, 2],
+        () => {},
+        { tint: 0x548c9c, roughness: 0.22 },
+      );
     this.catalog.batch(
       "arc_floor_2m",
       this.scene,
@@ -558,6 +620,17 @@ export class GameScene {
       () => {},
     );
     addCryptDecals(this.scene, world);
+    this.catalog.batch(
+      "arc_arch_3m",
+      this.scene,
+      passageDoors(world).map((p) =>
+        new THREE.Matrix4()
+          .makeTranslation(p.x, 0, p.z)
+          .multiply(new THREE.Matrix4().makeRotationY(p.yaw)),
+      ),
+      [2.4, 2.55, 0.4],
+      () => {},
+    );
     for (const block of environmentBlocks(world)) {
       const collider = new THREE.Mesh(
         new THREE.BoxGeometry(block.halfX * 2, block.height, block.halfZ * 2),
@@ -571,6 +644,9 @@ export class GameScene {
     }
     this.cameraIndex = new CameraIndex(this.walls);
     this.container.dataset.cameraColliders = String(this.walls.length);
+    this.settlingDust.visible = false;
+    this.settlingDust.frustumCulled = false;
+    this.scene.add(this.settlingDust);
     this.resize();
   }
   private texture(seed: number, slabs: boolean) {
@@ -674,10 +750,13 @@ export class GameScene {
     stone: THREE.Material,
     trim: THREE.Material,
     bronze: THREE.Material,
+    world: World,
   ) {
-    for (const p of roomProps(x, z, kind))
+    for (const p of roomProps(x, z, kind, world))
       this.catalog.add(p.id, this.scene, p.x, p.y, p.z, p.scale, p.yaw);
-    for (const side of [-1, 1]) {
+    for (const side of roomAt(world, x, z)?.design === "ossuary"
+      ? [-1, 1]
+      : []) {
       this.archPlacements.push(
         new THREE.Matrix4().makeTranslation(x, 0, z + side * 7.7),
       );
@@ -718,6 +797,29 @@ export class GameScene {
   update(game: Game, dt: number, yaw: number, pitch: number, distance = 3.7) {
     this.container.dataset.catalogModels = String(this.catalog.loaded);
     this.elapsed += dt;
+    const event = game.ambientEvent;
+    this.settlingDust.visible =
+      !!event &&
+      event.kind === "stone" &&
+      game.elapsed < event.until &&
+      Math.hypot(event.x - game.player.x, event.z - game.player.z) < 16;
+    if (this.settlingDust.visible && event) {
+      this.settlingDust.position.set(event.x, 0, event.z);
+      const age = game.elapsed - (event.until - 2.5),
+        points = this.settlingDust.geometry.getAttribute("position");
+      const ceiling =
+        this.ceilings.get(
+          `${Math.round(event.x / 2)},${Math.round(event.z / 2)}`,
+        ) ?? 2.7;
+      for (let i = 0; i < 32; i++)
+        points.setXYZ(
+          i,
+          Math.sin(i * 19) * 0.65,
+          Math.max(0.2, ceiling - 0.1 - age * 0.8 + Math.sin(i * 7) * 0.3),
+          Math.cos(i * 23) * 0.65,
+        );
+      points.needsUpdate = true;
+    }
     this.sanctuaryLights.forEach((light, i) => {
       const near =
         light.position.distanceToSquared(this.player.position) < 22 * 22;
@@ -779,16 +881,20 @@ export class GameScene {
           ? "relight"
           : game.phase === "EXTINGUISHING"
             ? "extinguish"
-            : this.gestureTime > 0
-              ? this.gesture
-              : movementClip(
-                  game.player.crouched,
-                  this.locomotionSpeed,
-                  this.actor?.clip,
-                ),
+            : game.activeInteraction
+              ? "interact"
+              : this.gestureTime > 0
+                ? this.gesture
+                : movementClip(
+                    game.player.crouched,
+                    this.locomotionSpeed,
+                    this.actor?.clip,
+                  ),
       dt,
       this.locomotionSpeed,
-      game.phase === "RELIGHTING" ? game.relightDuration : undefined,
+      game.phase === "RELIGHTING"
+        ? game.relightDuration
+        : game.activeInteraction?.total,
     );
     this.container.dataset.animation = this.actor?.clip ?? "fallback";
     this.player.updateMatrixWorld(true);
@@ -896,24 +1002,40 @@ export class GameScene {
     this.hunter.scale.setScalar(
       this.banishTime > 0 ? Math.min(1, this.banishTime / 0.8) : 1,
     );
+    const hunterCeiling =
+      this.ceilings.get(
+        `${Math.round(game.hunter.x / 2)},${Math.round(game.hunter.z / 2)}`,
+      ) ?? 2.7;
+    const hunterMoving =
+      Math.hypot(
+        game.hunter.x - this.hunter.position.x,
+        game.hunter.z - this.hunter.position.z,
+      ) > 0.005;
     this.hunterActor?.update(
       game.phase === "DEAD"
         ? "capture"
         : this.banishTime > 0
           ? "banish"
-          : game.hunter.state === "PURSUING"
-            ? "pursue"
-            : game.hunter.state === "FLEEING"
-              ? "flee"
-              : "search",
-      dt,
+          : hunterCeiling < 3.1
+            ? "crawl"
+            : game.hunter.state === "PURSUING"
+              ? "pursue"
+              : game.hunter.state === "FLEEING"
+                ? "flee"
+                : !hunterMoving && game.hunter.state === "SEARCHING"
+                  ? "listen"
+                  : "search",
+      dt *
+        (game.hunter.state === "PURSUING" && game.hunterReadiness < 1
+          ? 0.4
+          : 1),
     );
     if (this.hunter.visible) {
       const dx = game.hunter.x - this.hunter.position.x,
         dz = game.hunter.z - this.hunter.position.z;
       this.hunter.position.set(game.hunter.x, 0, game.hunter.z);
       if (Math.hypot(dx, dz) > 0.005) {
-        const desired = Math.atan2(-dx, -dz);
+        const desired = game.hunter.yaw ?? Math.atan2(-dx, -dz);
         const delta = Math.atan2(
           Math.sin(desired - this.hunter.rotation.y),
           Math.cos(desired - this.hunter.rotation.y),
@@ -970,24 +1092,40 @@ export class GameScene {
         );
         mesh = new THREE.Group();
         mesh.add(fallback);
-        const catalogId = artifact
-          ? "pro_artifact"
-          : item.kind === "fuel"
-            ? "pro_fuel_canister"
-            : "pro_match_case";
-        this.catalog.add(catalogId, mesh, 0, -0.15, 0, 1, 0, () => {
-          fallback.visible = false;
-        });
+        const catalogId =
+          item.encounter === "reliquary"
+            ? "pro_supply_crate"
+            : artifact
+              ? "pro_artifact"
+              : item.kind === "fuel"
+                ? "pro_fuel_canister"
+                : "pro_match_case";
+        this.catalog.add(
+          catalogId,
+          mesh,
+          0,
+          -0.15,
+          0,
+          item.encounter === "reliquary" ? 0.55 : 1,
+          0,
+          () => {
+            fallback.visible = false;
+          },
+        );
         this.items.set(String(item.id), mesh);
         this.scene.add(mesh);
       }
       mesh.visible = !item.taken;
       mesh.position.set(
         item.x,
-        0.37 + Math.sin(this.elapsed * 2 + item.x) * 0.045,
+        item.encounter === "reliquary"
+          ? 0.15
+          : 0.37 + Math.sin(this.elapsed * 2 + item.x) * 0.045,
         item.z,
       );
-      mesh.rotation.y = this.elapsed * 0.45;
+      mesh.rotation.y =
+        item.encounter === "reliquary" ? 0 : this.elapsed * 0.45;
+      if (item.encounter === "reliquary") mesh.scale.setScalar(1);
     }
     while (this.chalk.children.length < (game.chalk || []).length) {
       const mark = new THREE.Mesh(
@@ -1032,7 +1170,16 @@ export class GameScene {
     const hit = this.ray.intersectObjects(candidates, false)[0];
     if (hit) offset.setLength(Math.max(0.4, hit.distance - 0.25));
     const desired = anchor.clone().add(offset);
-    desired.y = THREE.MathUtils.clamp(desired.y, 0.35, 3.7);
+    desired.y = THREE.MathUtils.clamp(
+      desired.y,
+      0.35,
+      Math.min(
+        3.7,
+        (this.ceilings.get(
+          `${Math.round(desired.x / 2)},${Math.round(desired.z / 2)}`,
+        ) ?? 2.55) - 0.2,
+      ),
+    );
     if (!this.initialized) {
       this.camera.position.copy(desired);
       this.initialized = true;
@@ -1044,6 +1191,12 @@ export class GameScene {
         this.camera.position,
         this.cameraIndex?.query(anchor, this.camera.position) ?? this.walls,
       ),
+    );
+    this.camera.position.y = Math.min(
+      this.camera.position.y,
+      (this.ceilings.get(
+        `${Math.round(this.camera.position.x / 2)},${Math.round(this.camera.position.z / 2)}`,
+      ) ?? 2.55) - 0.2,
     );
     this.target.copy(anchor);
     this.target.y += 0.05;

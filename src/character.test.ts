@@ -6,6 +6,49 @@ import { createHash } from "node:crypto";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
+test("Hunter crawl and listening clips keep the fitted skin grounded below corridor ceilings", async () => {
+  const bytes = await readFile(
+    new URL("../public/models/hunter.glb", import.meta.url),
+  );
+  const loader = new GLTFLoader().register(() => ({
+    name: "HeadlessTexture",
+    loadTexture: async () => new THREE.Texture(),
+  }));
+  const gltf = await loader.parseAsync(
+    bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    "",
+  );
+  for (const name of ["crawl", "listen"]) {
+    const clip = gltf.animations.find((c) => c.name === name);
+    assert.ok(clip, `${name} animation must be present`);
+    const mixer = new THREE.AnimationMixer(gltf.scene);
+    mixer.clipAction(clip).play();
+    for (let phase = 0; phase < 12; phase++) {
+      mixer.setTime((clip.duration * phase) / 12);
+      gltf.scene.updateMatrixWorld(true);
+      gltf.scene.traverse((node) => {
+        const mesh = node as THREE.SkinnedMesh;
+        if (mesh.isSkinnedMesh) mesh.skeleton.update();
+      });
+      const bounds = new THREE.Box3().setFromObject(gltf.scene, true);
+      assert.ok(
+        bounds.min.y > -0.03 && bounds.min.y < 0.15,
+        `${name}: feet must meet the floor: ${bounds.min.y} .. ${bounds.max.y}`,
+      );
+      assert.ok(
+        bounds.max.y < (name === "crawl" ? 1.6 : 2.12),
+        `${name}: body must clear the passage lintel`,
+      );
+      assert.ok(
+        bounds.getSize(new THREE.Vector3()).length() < 4,
+        `${name}: no exploded skin`,
+      );
+    }
+    mixer.stopAllAction();
+    mixer.uncacheRoot(gltf.scene);
+  }
+});
+
 test("rebuilt character uses new neural geometry and nine freshly generated motion sources", async () => {
   const record = JSON.parse(
     await readFile(

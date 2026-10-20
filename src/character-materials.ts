@@ -44,12 +44,14 @@ export function prepareIvoryGarb(mesh: THREE.Mesh) {
           * (1.0 - smoothstep(1.58, 1.62, height));
         cloth *= 1.0 - face;
         float detail = dot(original, vec3(0.2126, 0.7152, 0.0722));
-        vec3 ivory = vec3(0.87, 0.85, 0.79) * (0.72 + min(detail * 2.0, 0.28));
+        float linenDetail = 0.60 + min(detail * 3.5, 0.40);
+        float hemWear = mix(0.81, 1.0, smoothstep(0.53, 0.72, height));
+        vec3 ivory = vec3(0.87, 0.85, 0.79) * linenDetail * hemWear;
         diffuseColor.rgb = mix(original, ivory, cloth);
       `,
       );
     };
-    material.customProgramCacheKey = () => "torchbearer-ivory-v1";
+    material.customProgramCacheKey = () => "torchbearer-ivory-v2";
     material.needsUpdate = true;
   }
 }

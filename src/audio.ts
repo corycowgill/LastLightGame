@@ -14,7 +14,11 @@ export class GameAudio {
   private nextBreath = 0;
   private nextWarning = 0;
   private nextPlayerStep = 0;
-  private nextAmbient = 12;
+  private nextStalkerStep = 0;
+  private nextSealScrape = 0;
+  private lastArtifacts = 0;
+  private lastAmbientEvent = -1;
+  private lastHunterState = "DORMANT";
   private phase = "";
   private samples?: Soundscape;
   private lastFuel = 720;
@@ -131,6 +135,7 @@ export class GameAudio {
       audioMood(game.phase, nearFire),
       game.fuel > 0 && game.phase === "EXPLORING",
       game.mode === 2,
+      game.elapsed < game.quietUntil,
     );
     if (this.lastFuel - game.fuel >= 35 && game.phase === "EXPLORING")
       this.samples?.play("burst", 0.28);
@@ -197,7 +202,7 @@ export class GameAudio {
           c.x === Math.round(player.x / 2) && c.z === Math.round(player.z / 2),
       );
       this.tone(95, 0.12, 0.035, 48);
-      if (cell?.kind === "flooded") this.air(0.2, 0.045, 900);
+      if (cell?.surface === "water") this.air(0.2, 0.045, 900);
       this.nextPlayerStep = this.elapsed + (moved / dt > 4 ? 0.3 : 0.47);
     }
     const h = game.hunter;
@@ -217,16 +222,64 @@ export class GameAudio {
       this.air(0.2, volume * 0.4, 280, pan);
       this.nextStep = this.elapsed + (h.state === "PURSUING" ? 0.43 : 0.8);
     }
-    if (this.elapsed > this.nextAmbient) {
-      // Quiet masonry/metal resonance, distinct from actual enemy footsteps.
-      // Keep the Hunt and safe fires free of these decorative distractions.
-      if (!nearFire && game.phase === "EXPLORING") {
-        const pan = Math.sin(this.elapsed * 0.73);
-        this.air(1.6, 0.018, 260, pan);
-        this.tone(137, 1.8, 0.012, 83, pan);
-        this.tone(411, 1.1, 0.006, 243, pan);
+    if (game.activeInteraction && this.elapsed > this.nextSealScrape) {
+      this.air(0.25, 0.035, 950);
+      this.tone(180, 0.22, 0.012, 110);
+      this.nextSealScrape = this.elapsed + 0.6;
+    }
+    if (game.artifacts > this.lastArtifacts) {
+      this.tone(660, 0.18, 0.025, 880);
+      this.tone(990, 0.25, 0.015, 660);
+    }
+    this.lastArtifacts = game.artifacts;
+    const stalker = game.enemies.find((e) =>
+      ["INVESTIGATING", "PURSUING", "FLEEING"].includes(e.state),
+    );
+    if (stalker && this.elapsed > this.nextStalkerStep) {
+      const dx = stalker.x - player.x,
+        dz = stalker.z - player.z,
+        d = Math.hypot(dx, dz);
+      if (d < 18) {
+        const pan =
+          (dx * Math.cos(game.cameraYaw) - dz * Math.sin(game.cameraYaw)) /
+          Math.max(1, d);
+        this.air(0.18, 0.045 * (1 - d / 18), 500, pan);
+        this.tone(150, 0.13, 0.02 * (1 - d / 18), 85, pan);
       }
-      this.nextAmbient = this.elapsed + 18 + Math.random() * 17;
+      this.nextStalkerStep = this.elapsed + 0.7;
+    }
+    const event = game.ambientEvent;
+    if (event && event.id !== this.lastAmbientEvent) {
+      this.lastAmbientEvent = event.id;
+      const dx = event.x - player.x,
+        dz = event.z - player.z,
+        d = Math.max(1, Math.hypot(dx, dz));
+      const pan =
+        (dx * Math.cos(game.cameraYaw) - dz * Math.sin(game.cameraYaw)) / d;
+      if (event.kind === "stone") {
+        this.air(1.2, 0.04, 230, pan);
+        this.tone(110, 0.8, 0.02, 65, pan);
+      }
+      if (event.kind === "chain") {
+        this.tone(620, 0.8, 0.012, 380, pan);
+        this.air(0.5, 0.02, 1700, pan);
+      }
+    }
+    if (game.hunter.state !== this.lastHunterState) {
+      this.lastHunterState = game.hunter.state;
+      const dx = game.hunter.x - player.x,
+        dz = game.hunter.z - player.z,
+        d = Math.max(1, Math.hypot(dx, dz));
+      const pan =
+        (dx * Math.cos(game.cameraYaw) - dz * Math.sin(game.cameraYaw)) / d;
+      if (d < 24 && game.hunter.state === "INVESTIGATING")
+        this.tone(125, 0.9, 0.025, 95, pan);
+      if (d < 24 && game.hunter.state === "PURSUING") {
+        this.samples?.play("hunter", 0.16, pan);
+        this.air(0.5, 0.05, 190, pan);
+      }
+      if (d < 24 && game.hunter.state === "FLEEING")
+        this.air(0.65, 0.05, 380, pan);
     }
   }
   dispose() {

@@ -1,5 +1,15 @@
 # Seeded catacomb layouts
 
+## Current generation: version 3
+
+Six handcrafted floor masks now replace the shared square footprint. Every room retains clear cardinal connections, while side alcoves, dry routes, rubble gaps and ceiling heights vary by design. Corridors are one two-metre cell wide. GLB furniture is filtered against the floor mask; structural doorposts share collision and rendering placement. Tall ossuaries carry interior pillars; low passages avoid blocking pillar arrangements. Wet floor GLBs use a separate tinted material batch.
+
+Navigation validates room-centre connectivity across 200 seeds. The complete diagnostic extinction/Hunt/escape driver passes 100 seeds. This is route and state-machine validation, not a human difficulty or pacing score.
+
+Version 2 and older saves retain upgrades and bank carried relics before restarting at the new entrance, avoiding stale geometry and AI coordinates. Current saves retain expedition state.
+
+## Historical generation 2
+
 Generation version 2 replaces the fixed eleven-room snake with 12–18 chambers on a bounded grid. The opening refuge and first eastward passage remain consistent for learning the controls; the rest of the room positions, connections and destination vary by seed.
 
 `src/worldgen.ts` grows a connected room graph with nonoverlapping footprints, then adds adjacent loop connections. Cardinal corridors never cross unrelated rooms. A breadth-first traversal chooses a farthest destination sanctuary and assigns route-based depth. Optional dead ends contain relics and oil. Resources vary among clear central positions and the Stalker lair follows the generated rooms. Rendering continues to use existing catalog GLBs and decals.

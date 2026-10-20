@@ -10,7 +10,7 @@ import {
 } from "./platform-input";
 import { ExpeditionCheck } from "./qa";
 let check: ExpeditionCheck | undefined;
-import { Game, lineOfSight } from "./simulation";
+import { Game, lineOfSight, walkable } from "./simulation";
 declare const __BUILD_ID__: string;
 import { GameScene } from "./scene";
 import { GameAudio } from "./audio";
@@ -308,6 +308,36 @@ async function begin(load: boolean) {
       cameraControls.pose.pitch = 0.24;
     }
   }
+  if (
+    !load &&
+    query.has("debug") &&
+    (query.has("room") || query.has("encounter"))
+  ) {
+    const item = game.items.find((i) => i.encounter === query.get("encounter"));
+    const room = game.world.layout?.rooms.find(
+      (r) => r.design === query.get("room"),
+    );
+    const target =
+      item ?? (room ? { x: room.x * 2, z: room.z * 2 } : undefined);
+    if (target) {
+      const approach = [
+        [0, 2],
+        [2, 0],
+        [0, -2],
+        [-2, 0],
+      ]
+        .map(([x, z]) => ({ x: target.x + x, z: target.z + z }))
+        .find((p) => walkable(game.world, p.x, p.z));
+      if (approach) {
+        Object.assign(game.player, approach);
+        game.player.yaw = cameraControls.pose.yaw = Math.atan2(
+          -(target.x - approach.x),
+          -(target.z - approach.z),
+        );
+      }
+      game.enemies = [];
+    }
+  }
   rebuild();
   audio.start();
   audio.setVolume(settings.volume);
@@ -408,8 +438,15 @@ function journal() {
   running = false;
   cameraControls.release();
   panel(
-    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (CONFIG.burnMultiplier * (1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><div id="actions"></div>`,
+    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (CONFIG.burnMultiplier * (1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
   );
+  for (const discovery of [
+    ...new Set([...game.archive, ...game.discoveries]),
+  ]) {
+    const paragraph = document.createElement("p");
+    paragraph.textContent = discovery;
+    $("discoveries").append(paragraph);
+  }
   button("resume", "CLOSE JOURNAL", resume);
 }
 function ended() {
@@ -729,9 +766,10 @@ function updateHUD() {
       : "";
   document.body.classList.toggle("hunt", hunt);
   document.body.classList.toggle("lowfuel", pct < 0.1);
-  const nearby = game.nearbyItem;
-  $("prompt").textContent = nearby
-    ? `${useLabel} · COLLECT ${nearby.kind.toUpperCase()}`
+  document.querySelector(".brand span")!.textContent =
+    game.currentRoom?.name ?? "THE WHISPER PASSAGE";
+  $("prompt").textContent = game.interactionPrompt
+    ? `${game.activeInteraction ? "" : useLabel + " · "}${game.interactionPrompt}`
     : game.fuel <= 0
       ? game.matches > 0
         ? `${useLabel} · STRIKE A MATCH`
@@ -739,9 +777,13 @@ function updateHUD() {
       : "";
   $("bearing").textContent = new URLSearchParams(location.search).has("debug")
     ? `${fps.toFixed(0)} FPS · ${game.phase} · ${game.hunter.state} · ${view.renderer.info.render.calls} DRAWS`
-    : game.depth > 0
-      ? `DEEP AIR · FLAME DRAIN +${Math.round(game.depth * 30)}%`
-      : "SEEK THE GOLDEN FIRE";
+    : game.activeInteraction
+      ? "THE SEAL ECHOES THROUGH THE CRYPT"
+      : game.surface === "water"
+        ? "WATER CARRIES SOUND · DRY EDGES ARE QUIETER"
+        : game.depth > 0
+          ? `DEEP AIR · FLAME DRAIN +${Math.round(game.depth * 30)}%`
+          : "SEEK THE GOLDEN FIRE";
   $("scene").dataset.cameraYaw = cameraControls.pose.yaw.toFixed(3);
   $("scene").dataset.cameraPitch = cameraControls.pose.pitch.toFixed(3);
   $("scene").dataset.cameraDistance = cameraControls.pose.distance.toFixed(2);
@@ -776,6 +818,29 @@ function updateHUD() {
               : "Footsteps behind you";
     }
   }
+  const event = game.ambientEvent;
+  if (
+    settings.cues &&
+    !cue &&
+    event &&
+    event.kind !== "silence" &&
+    game.elapsed < event.until
+  ) {
+    const dx = event.x - game.player.x,
+      dz = event.z - game.player.z;
+    const pan =
+      (dx * Math.cos(cameraControls.pose.yaw) -
+        dz * Math.sin(cameraControls.pose.yaw)) /
+      Math.max(1, Math.hypot(dx, dz));
+    cue = `${event.kind === "stone" ? "Stone settling" : "A chain shifting"} ${pan < -0.3 ? "to your left" : pan > 0.3 ? "to your right" : "nearby"}`;
+  }
+  if (
+    hunt &&
+    game.hunter.state === "PURSUING" &&
+    game.hunterReadiness < 1 &&
+    lineOfSight(game.world, game.player, game.hunter)
+  )
+    $("phase").textContent = "IT HAS SEEN YOU · BREAK SIGHT";
   $("direction").textContent = cue;
 }
 game.load();

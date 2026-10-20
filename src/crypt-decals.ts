@@ -1,3 +1,4 @@
+import { floorAt } from "./room-design";
 import * as THREE from "three";
 import type { World } from "./simulation";
 
@@ -32,6 +33,8 @@ export function addCryptDecals(scene: THREE.Scene, world: World) {
     yaw: number,
     floor = false,
   ) => {
+    if (!floorAt(world, x, z, floor ? Math.min(width, height) * 0.2 : 0))
+      return;
     const pose = new THREE.Object3D();
     pose.position.set(x, y, z);
     pose.rotation.set(
@@ -80,6 +83,27 @@ export function addCryptDecals(scene: THREE.Scene, world: World) {
         put(2, x + side * 3.5, 0.006, z + 4.3, 2.6, 2.2, side * 1.7, true);
         put(3, x + side * 6.3, 0.007, z + 5.8, 2.4, 2.3, side, true);
       }
+    }
+  }
+  const occupied = new Set(world.cells.map((c) => `${c.x},${c.z}`));
+  for (const cell of world.cells) {
+    if (Math.abs(cell.x * 13 + cell.z * 7 + world.seed) % 5 !== 0) continue;
+    for (const [dx, dz] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ]) {
+      if (occupied.has(`${cell.x + dx},${cell.z + dz}`)) continue;
+      put(
+        1,
+        cell.x * 2 + dx * 0.97,
+        1.15,
+        cell.z * 2 + dz * 0.97,
+        1.65,
+        2.05,
+        dx ? (-dx * Math.PI) / 2 : dz > 0 ? Math.PI : 0,
+      );
     }
   }
   // Track-like wear ties rooms together without supplying a navigation arrow.

@@ -1,3 +1,4 @@
+import { roomAt } from "./room-design";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { dungeonDressing } from "./dungeon-dressing";
@@ -59,7 +60,12 @@ test("dungeon stories are repeatable and keep large props outside central walkin
       )!;
       assert.ok(room);
       if (detail.id.startsWith("dre_") || detail.id.startsWith("pro_")) {
-        assert.ok(Math.abs(detail.x - room.x * 2) >= 3.5);
+        assert.ok(
+          Math.abs(detail.x - room.x * 2) >=
+            (roomAt(world, room.x * 2, room.z * 2)?.design === "burial"
+              ? 2
+              : 3.5),
+        );
         assert.ok(Math.abs(detail.z - room.z * 2) >= 1.8);
       }
       if (detail.id === "dec_corner_cobweb")

@@ -1,3 +1,4 @@
+import { roomAt, passageDoors } from "./room-design";
 import type { World } from "./simulation";
 import { burialBlocks, pillarRows } from "./crypt-rooms";
 import { dungeonDressing } from "./dungeon-props";
@@ -90,9 +91,11 @@ export function environmentBlocks(world: World): SolidBlock[] {
   )) {
     const x = room.x * 2,
       z = room.z * 2;
-    for (const prop of roomProps(x, z, room.kind))
+    for (const prop of roomProps(x, z, room.kind, world))
       result.push(...solidProp(prop));
-    for (const side of [-1, 1]) {
+    for (const side of roomAt(world, x, z)?.design === "ossuary"
+      ? [-1, 1]
+      : []) {
       const p = {
         id: "passage_arch",
         x,
@@ -105,6 +108,12 @@ export function environmentBlocks(world: World): SolidBlock[] {
         result.push(box(p, 0.4, 0.275, sx * 2.2, 0, 0, 3.1));
       result.push(box(p, 2.6, 0.275, 0, 0, 3.1, 1));
     }
+  }
+  for (const door of passageDoors(world)) {
+    const p = { ...door, id: "passage_arch", y: 0, scale: 1 };
+    for (const side of [-1, 1])
+      result.push(box(p, 0.17, 0.2, side * 1.02, 0, 0, 2.55));
+    result.push(box(p, 1.2, 0.2, 0, 0, 2.12, 0.43));
   }
   for (const p of dungeonDressing(world)) result.push(...solidProp(p));
   cache.set(world, result);

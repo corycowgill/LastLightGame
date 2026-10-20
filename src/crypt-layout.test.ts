@@ -9,7 +9,9 @@ test("burial rows have matching navigation blockers and preserve sanctuary route
     const world = generateWorld(seed);
     const rows = burialRows(world);
     const pillars = pillarRows(world);
-    assert.equal(pillars.length, world.layout!.rooms.length * 4);
+    assert.ok(
+      pillars.length >= 8 && pillars.length <= world.layout!.rooms.length * 4,
+    );
     for (const pillar of pillars) {
       assert.equal(
         walkable(world, pillar.x, pillar.z),
@@ -38,7 +40,7 @@ test("burial rows have matching navigation blockers and preserve sanctuary route
         "navigation can reach the vicinity of a pillar without crossing it",
       );
     }
-    assert.ok(rows.length >= 56);
+    assert.ok(rows.length >= 32);
     for (const row of rows)
       assert.equal(
         walkable(world, row.x, row.z),

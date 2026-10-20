@@ -82,15 +82,15 @@ export class Soundscape {
       entry.gain.gain.setTargetAtTime(volume, this.context.currentTime, 0.8);
     }
   }
-  update(mood: Mood, burning: boolean, blaze: boolean) {
+  update(mood: Mood, burning: boolean, blaze: boolean, quiet = false) {
     this.loop(
       "exploration",
-      mood === "exploration" ? 0.32 * this.musicVolume : 0,
+      mood === "exploration" && !quiet ? 0.22 * this.musicVolume : 0,
     );
     // Leave the Hunt quiet enough for directional enemy footsteps and breathing.
     this.loop("hunt", mood === "hunt" ? 0.1 * this.musicVolume : 0);
     this.loop("sanctuary", mood === "sanctuary" ? 0.38 * this.musicVolume : 0);
-    this.loop("catacombs", mood === "hunt" ? 0.025 : 0.055);
+    this.loop("catacombs", quiet ? 0 : mood === "hunt" ? 0.025 : 0.055);
     this.loop("torch", burning ? (blaze ? 0.14 : 0.08) : 0);
   }
   play(name: Clip, volume = 0.25, pan = 0) {

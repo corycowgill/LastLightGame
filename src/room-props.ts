@@ -1,3 +1,5 @@
+import type { World } from "./simulation";
+import { floorAt } from "./room-design";
 export type RoomProp = {
   id: string;
   x: number;
@@ -7,7 +9,12 @@ export type RoomProp = {
   yaw: number;
 };
 /** Shared placement authority for rendered furniture and its solid footprint. */
-export function roomProps(x: number, z: number, kind: string): RoomProp[] {
+export function roomProps(
+  x: number,
+  z: number,
+  kind: string,
+  world?: World,
+): RoomProp[] {
   const out: RoomProp[] = [];
   const add = (id: string, dx: number, dz: number, yaw = 0, scale = 1, y = 0) =>
     out.push({ id, x: x + dx, y, z: z + dz, scale, yaw });
@@ -40,5 +47,5 @@ export function roomProps(x: number, z: number, kind: string): RoomProp[] {
     add("lan_broken_processional_dais", -7.7, -5.5);
     add("lan_artifact_pedestal", -7.7, -5.5, 0, 1, 0.55);
   }
-  return out;
+  return world ? out.filter((p) => floorAt(world, p.x, p.z, 0.6)) : out;
 }

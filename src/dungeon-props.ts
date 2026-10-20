@@ -1,3 +1,4 @@
+import { floorAt, roomAt } from "./room-design";
 import type { World } from "./simulation";
 import { burialRows, cryptStory } from "./crypt-rooms";
 
@@ -183,5 +184,14 @@ export function dungeonDressing(world: World): Dressing[] {
         });
     }
   });
-  return result;
+  return result
+    .filter((p) => floorAt(world, p.x, p.z, 0.2))
+    .map((p) => {
+      if (p.id === "dec_corner_cobweb") {
+        const ceiling = roomAt(world, p.x, p.z)?.ceiling ?? 4;
+        p.scale = Math.min(p.scale, (ceiling - 1.9) / 0.6);
+        p.y = Math.min(p.y, ceiling - 0.05);
+      }
+      return p;
+    });
 }
