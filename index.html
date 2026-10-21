@@ -21,9 +21,9 @@
     <div id="hud" hidden>
       <header>
         <div class="brand">
-          THE LAST LIGHT<span>THE FORGOTTEN CATACOMBS</span>
+          <span id="roomName">THE FORGOTTEN CATACOMBS</span>
+          <div id="bearing"></div>
         </div>
-        <div id="bearing"></div>
         <div class="view-controls">
           <button id="captureMouse">CAPTURE MOUSE</button
           ><button id="pauseButton">ESC · PAUSE</button>
@@ -53,11 +53,11 @@
             <span id="mode">STEADY FLAME</span><span id="fuelText"></span>
           </div>
           <div class="meter"><i id="fuelBar"></i></div>
-          <div class="modes">[1] EMBER <b>[2] STEADY</b> [3] BLAZE</div>
           <div class="stamina"><i id="staminaBar"></i></div>
+          <section id="inventory"></section>
+          <div class="modes">[1] EMBER · [2] STEADY · [3] BLAZE</div>
           <div id="survivalHint" role="status" aria-live="polite"></div>
         </section>
-        <section id="inventory"></section>
         <section class="hint">
           WASD Move · Drag / Arrows Look · Wheel Zoom<br />SHIFT Sprint · C
           Crouch<br />E Interact / Relight · Q Chalk · F Burst · G Brand · TAB

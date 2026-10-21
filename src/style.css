@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=IM+Fell+English:ital@0;1&family=Inter:wght@400;500;600&display=swap");
 :root {
   font-family: Inter, Arial, sans-serif;
   color: #e5ded0;
@@ -1247,4 +1247,515 @@ body[data-touch="true"] #lookHint {
   body[data-touch="true"] .touch-look-label {
     bottom: calc(max(20px, env(safe-area-inset-bottom)) + 118px);
   }
+}
+
+/* Creeping-dark HUD: compact, engraved, and never quite still. */
+:root {
+  --bone: #cbbfa6;
+  --ash: #7f7b72;
+  --ember: #e09a52;
+  --blood: #a3301d;
+  --hud-font: "IM Fell English", "Cormorant Garamond", Georgia, serif;
+}
+#hud {
+  font-family: var(--hud-font);
+  color: var(--bone);
+  text-shadow:
+    0 0 6px #000,
+    0 0 16px #000c;
+}
+#vignette {
+  background: radial-gradient(
+    ellipse at 50% 46%,
+    transparent 40%,
+    #00000040 62%,
+    #000000d8 100%
+  );
+  transition: background 1.5s;
+}
+#vignette::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 0.9s steps(4) infinite;
+}
+.lowfuel #vignette {
+  background: radial-gradient(
+    ellipse at 50% 46%,
+    transparent 24%,
+    #000000a8 56%,
+    #000 100%
+  );
+  animation: closing-in 3s ease-in-out infinite;
+}
+.hunt #vignette {
+  box-shadow: inset 0 0 190px #3d0703;
+  animation: heartbeat 1.15s ease-in-out infinite;
+}
+
+/* Room names surface on entry, then sink back into the dark. */
+.brand {
+  font-family: var(--hud-font);
+  font-size: 14px;
+  letter-spacing: 0.3em;
+}
+#roomName {
+  display: block;
+  margin: 0;
+  font: italic 14px var(--hud-font);
+  letter-spacing: 0.55em;
+  color: var(--bone);
+  opacity: 0;
+  filter: blur(3px);
+  transition:
+    opacity 1.8s,
+    filter 1.8s,
+    letter-spacing 3s;
+}
+.room-reveal #roomName {
+  opacity: 0.85;
+  filter: blur(0);
+  letter-spacing: 0.3em;
+}
+#bearing {
+  font: italic 11px var(--hud-font);
+  letter-spacing: 0.12em;
+  color: var(--ash);
+  padding: 0;
+  margin-top: 6px;
+  max-width: 340px;
+}
+#bearing:empty {
+  display: none;
+}
+.view-controls {
+  opacity: 0.3;
+  transition: opacity 0.4s;
+}
+.view-controls:hover,
+.view-controls:focus-within,
+body[data-touch="true"] .view-controls {
+  opacity: 0.75;
+}
+.view-controls button,
+#pauseButton {
+  background: #00000055;
+  border: 1px solid #cbbfa626;
+  color: var(--bone);
+  font-family: var(--hud-font);
+  letter-spacing: 0.2em;
+  font-size: 10px;
+  padding: 6px 10px;
+}
+body:not([data-touch="true"]) .view-controls button {
+  min-height: 32px;
+}
+#lookHint {
+  display: none;
+  font-style: italic;
+  color: var(--ash);
+}
+.learning #lookHint {
+  display: block;
+}
+body[data-touch="true"] #lookHint {
+  display: none;
+}
+
+/* One small cluster: flame, stamina, carried things, whispered hint. */
+@media (min-width: 951px) and (pointer: fine) {
+  footer {
+    left: max(30px, env(safe-area-inset-left));
+    right: auto;
+    bottom: max(26px, env(safe-area-inset-bottom));
+  }
+}
+.fuel {
+  width: 220px;
+}
+.label {
+  align-items: baseline;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: var(--ember);
+}
+#fuelText {
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ash);
+}
+.meter {
+  position: relative;
+  height: 3px;
+  margin-top: 7px;
+  background: linear-gradient(90deg, #2b1a12aa, #0d0907aa);
+}
+.meter i {
+  position: relative;
+  background: linear-gradient(90deg, #4a160b, #b5501f 60%, #f0b062);
+  box-shadow:
+    0 0 10px #e0782f88,
+    0 0 2px #ffcf8a;
+}
+.meter i::after {
+  content: "";
+  position: absolute;
+  right: -4px;
+  top: -4px;
+  width: 8px;
+  height: 11px;
+  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  background: radial-gradient(#fff3c4, #f0a24a 45%, transparent 72%);
+  animation: wick 0.8s ease-in-out infinite alternate;
+}
+.lowfuel .meter i {
+  background: linear-gradient(90deg, #2e0905, var(--blood));
+  animation: falter 0.4s steps(2) infinite;
+}
+.stamina {
+  height: 1px;
+  width: 60%;
+  margin-top: 5px;
+  background: #cbbfa612;
+}
+.stamina i {
+  background: #9a978e99;
+}
+#inventory {
+  display: flex;
+  gap: 14px;
+  margin-top: 11px;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--bone);
+}
+#inventory span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.85;
+}
+#inventory svg {
+  width: 15px;
+  height: 15px;
+  color: #c9a067;
+}
+#inventory b {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--bone);
+}
+.stone-dot {
+  display: inline-block;
+  width: 10px;
+  height: 7px;
+  margin: 0 3px;
+  border-radius: 45% 55% 40% 60%;
+  background: #8a857b;
+}
+.modes {
+  display: none;
+}
+.learning .modes {
+  display: block;
+  margin-top: 9px;
+  font-size: 10px;
+  color: var(--ash);
+  letter-spacing: 0.12em;
+  word-spacing: normal;
+}
+#survivalHint {
+  min-height: 0;
+  margin-top: 8px;
+  max-width: 280px;
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #a99f8c;
+}
+.lowfuel #survivalHint {
+  color: #d0603f;
+  animation: falter 1.7s infinite;
+}
+.hint {
+  display: none;
+}
+body:not([data-touch="true"]).learning .hint {
+  display: block;
+  position: fixed;
+  right: max(30px, env(safe-area-inset-right));
+  bottom: max(26px, env(safe-area-inset-bottom));
+  font-style: italic;
+  font-size: 11px;
+  color: var(--ash);
+  opacity: 0.7;
+}
+
+/* Centre text whispers rather than announces. */
+#notice {
+  font: italic 20px var(--hud-font);
+  letter-spacing: 0.03em;
+  color: #d8ccb2;
+  text-shadow:
+    0 0 10px #000,
+    0 0 28px #000;
+  animation: haunt 7s ease-in-out infinite;
+}
+#phase {
+  font-family: var(--hud-font);
+  font-size: 16px;
+  letter-spacing: 0.6em;
+  color: #c0412b;
+  text-shadow:
+    0 0 14px #6d0f06,
+    0 0 3px #000;
+}
+.hunt #phase {
+  animation: tremor 0.14s steps(2) infinite;
+}
+#direction {
+  font: italic 13px var(--hud-font);
+  letter-spacing: 0.1em;
+  color: #9eaab3;
+}
+#prompt {
+  font-family: var(--hud-font);
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  color: #e6d2a6;
+}
+#prompt kbd {
+  font-family: var(--hud-font);
+  background: #00000088;
+  border-color: #cbbfa655;
+  border-radius: 2px;
+}
+#compass {
+  background: radial-gradient(#000000a0, transparent 75%);
+  border: none;
+  font-family: var(--hud-font);
+  color: var(--ember);
+}
+#visualCue {
+  background: radial-gradient(ellipse, #000000c0 30%, transparent 72%);
+  border: none;
+  box-shadow: none;
+  color: var(--bone);
+}
+#visualCue small {
+  font-family: var(--hud-font);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+.cue-symbol {
+  background: conic-gradient(
+    var(--ember) var(--cue-progress, 0deg),
+    #ffffff0a 0
+  );
+  box-shadow: inset 0 0 0 3px #000;
+}
+.cue-symbol svg {
+  background: #0b0908;
+}
+#visualCue.urgent {
+  color: #f0a27e;
+  animation: tremor 0.18s steps(2) infinite;
+}
+#relicDiscovery {
+  background: radial-gradient(ellipse, #000000c8 35%, transparent 75%);
+  border: none;
+  box-shadow: none;
+}
+#relicDiscovery strong {
+  font: italic 18px var(--hud-font);
+}
+.pouch-relic {
+  width: 30px;
+  height: 34px;
+  background: #00000088;
+  border-radius: 2px;
+  border-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+.pouch-relic svg {
+  width: 22px;
+  height: 22px;
+}
+#relicPouch {
+  bottom: 70px;
+  gap: 5px;
+}
+
+@keyframes grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-7%, 4%);
+  }
+  50% {
+    transform: translate(5%, -6%);
+  }
+  75% {
+    transform: translate(-3%, 8%);
+  }
+}
+@keyframes heartbeat {
+  0%,
+  100% {
+    opacity: 0.82;
+  }
+  12% {
+    opacity: 1;
+  }
+  24% {
+    opacity: 0.86;
+  }
+  36% {
+    opacity: 1;
+  }
+}
+@keyframes closing-in {
+  50% {
+    opacity: 0.88;
+  }
+}
+@keyframes wick {
+  from {
+    opacity: 0.75;
+    transform: scale(0.85, 0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.1, 1.15) translateY(-1px);
+  }
+}
+@keyframes falter {
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes haunt {
+  0%,
+  100% {
+    opacity: 0.92;
+    filter: blur(0);
+  }
+  50% {
+    opacity: 0.75;
+    filter: blur(0.4px);
+  }
+}
+@keyframes tremor {
+  0% {
+    translate: 0.5px 0;
+  }
+  100% {
+    translate: -0.5px 0.5px;
+  }
+}
+/* Stack threat cue, phase and whisper instead of overlapping them. */
+.visual-guidance #phase {
+  top: calc(20% + 108px);
+}
+.visual-guidance #notice {
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  top: calc(20% + 142px);
+  font-size: 15px;
+}
+@media (max-height: 500px) {
+  .visual-guidance #phase {
+    top: calc(15% + 82px);
+  }
+  .visual-guidance #notice {
+    top: calc(15% + 108px);
+  }
+}
+@media (max-width: 950px), (pointer: coarse) {
+  footer {
+    top: calc(max(12px, env(safe-area-inset-top)) + 46px);
+  }
+  .fuel {
+    width: 165px;
+  }
+  .label {
+    font-size: 11px;
+  }
+  #roomName {
+    max-width: none;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .room-reveal #roomName {
+    letter-spacing: 0.16em;
+  }
+  #survivalHint {
+    font-size: 11px;
+    max-width: 175px;
+  }
+  #notice {
+    font-size: 16px;
+  }
+  #phase {
+    font-size: 13px;
+    letter-spacing: 0.45em;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #vignette,
+  #vignette::after,
+  .meter i,
+  .meter i::after,
+  #survivalHint,
+  #notice,
+  #phase,
+  #visualCue.urgent {
+    animation: none !important;
+  }
+}
+
+/* Touch: the flame buttons replace the legend; relics hang under PAUSE. */
+body[data-touch="true"] .learning .modes,
+body[data-touch="true"].learning .modes {
+  display: none;
+}
+body[data-touch="true"] #relicPouch {
+  top: calc(max(12px, env(safe-area-inset-top)) + 62px);
+  right: max(14px, env(safe-area-inset-right));
+  left: auto;
+  flex-direction: row-reverse;
+  flex-wrap: wrap;
+  max-width: 110px;
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  body[data-touch="true"] #notice {
+    top: 31%;
+  }
+}
+body[data-touch="true"] #touchControls button {
+  background: #0000008a;
+  border: 1px solid #cbbfa630;
+  color: var(--bone);
+  font-family: var(--hud-font);
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 6px #000;
+}
+body[data-touch="true"] #touchControls button[aria-pressed="true"] {
+  background: #4a210f8f;
+  border-color: var(--ember);
+  color: #f2cf96;
+}
+body[data-touch="true"] #movePad span,
+.touch-look-label {
+  font-family: var(--hud-font);
+  color: var(--ash);
 }

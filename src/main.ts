@@ -655,6 +655,8 @@ function queueSave() {
 let hudTimer = 0;
 let hudPhase = "";
 let inventoryMarkup = "";
+let shownRoom = "";
+let roomRevealUntil = 0;
 let pouchMarkup = "";
 let cueMarkup = "";
 let observedGame: Game | undefined;
@@ -794,6 +796,7 @@ function updateHUD() {
     observedSeed = game.world.seed;
     seenRelics = new Set(game.items.filter((i) => i.taken).map((i) => i.id));
     relicRevealUntil = 0;
+    shownRoom = "";
   }
   for (const item of game.items) {
     if (!item.taken || seenRelics.has(item.id)) continue;
@@ -917,9 +920,8 @@ function updateHUD() {
   $("fuelBar").style.width = `${pct * 100}%`;
   $("staminaBar").style.width = `${game.player.stamina * 100}%`;
   $("fuelText").textContent =
-    `${Math.ceil(pct * 100)}% · ~${Math.ceil(game.fuel / game.fuelRate)}s`;
-  $("mode").textContent =
-    ["EMBER", "STEADY FLAME", "BLAZE"][game.mode] || "FLAME";
+    `${Math.ceil(game.fuel / game.fuelRate)}s left${game.depth > 0 ? ` · +${Math.round(game.depth * 30)}% DRAIN` : ""}`;
+  $("mode").textContent = ["EMBER", "STEADY", "BLAZE"][game.mode] || "FLAME";
   const closeCreature = game.enemies.find(
     (e) =>
       Math.hypot(e.x - game.player.x, e.z - game.player.z) < 8 &&
@@ -936,7 +938,7 @@ function updateHUD() {
             closeCreature?.state === "FLEEING"
           ? "IT FEARS YOUR FLAME · KEEP YOUR DISTANCE"
           : game.hazardHint || game.objectiveHint;
-  const markup = `<b>${game.matches}</b> MATCHES &nbsp; <b>${game.artifacts}</b> RELICS<br><small>${game.chalk.length} CHALK MARKS · ${game.stones} STONES · ${game.banked} BANKED</small>`;
+  const markup = `<span title="Matches" aria-label="${game.matches} matches">${glyphSvg("match")}<b>${game.matches}</b></span><span title="Relics carried" aria-label="${game.artifacts} relics carried">${glyphSvg("votive")}<b>${game.artifacts}</b></span><span title="Stones" aria-label="${game.stones} stones"><i class="stone-dot"></i><b>${game.stones}</b></span>`;
   if (markup !== inventoryMarkup) {
     inventoryMarkup = markup;
     $("inventory").innerHTML = markup;
@@ -980,10 +982,22 @@ function updateHUD() {
     : game.phase === "RELIGHTING"
       ? "HOLD ON TO THE SPARK"
       : "";
+  // The threat cue already names a plain Hunt; keep only distinct warnings.
+  $("phase").hidden =
+    !!visualSignal &&
+    visualSignal.label.toUpperCase() === $("phase").textContent;
   document.body.classList.toggle("hunt", hunt);
   document.body.classList.toggle("lowfuel", pct < 0.1);
-  document.querySelector(".brand span")!.textContent =
-    game.currentRoom?.name ?? "THE WHISPER PASSAGE";
+  // Room names surface briefly on entry, then sink back into the dark.
+  const roomName = game.currentRoom?.name ?? "THE WHISPER PASSAGE";
+  if (roomName !== shownRoom) {
+    shownRoom = roomName;
+    roomRevealUntil = game.elapsed + 5;
+    $("roomName").textContent = roomName;
+  }
+  document.body.classList.toggle("room-reveal", game.elapsed < roomRevealUntil);
+  // Controls and mode legend only during the opening of an expedition.
+  document.body.classList.toggle("learning", game.elapsed < 25);
   $("prompt").textContent = game.interactionPrompt
     ? `${game.activeInteraction ? "" : useLabel + " · "}${game.interactionPrompt}`
     : game.fuel <= 0
@@ -1020,9 +1034,7 @@ function updateHUD() {
         ? "THE SEAL ECHOES THROUGH THE CRYPT"
         : game.surface === "water"
           ? "WATER CARRIES SOUND · DRY EDGES ARE QUIETER"
-          : game.depth > 0
-            ? `DEEP AIR · FLAME DRAIN +${Math.round(game.depth * 30)}%`
-            : game.hazardHint || game.objectiveHint || "SEEK THE GOLDEN FIRE";
+          : "";
   $("scene").dataset.cameraYaw = cameraControls.pose.yaw.toFixed(3);
   $("scene").dataset.cameraPitch = cameraControls.pose.pitch.toFixed(3);
   $("scene").dataset.cameraDistance = cameraControls.pose.distance.toFixed(2);
@@ -1079,8 +1091,10 @@ function updateHUD() {
         (hunter.readiness ?? 0) < 1 &&
         lineOfSight(game.world, game.player, hunter),
     )
-  )
+  ) {
     $("phase").textContent = "IT HAS SEEN YOU · BREAK SIGHT";
+    $("phase").hidden = false;
+  }
   $("direction").textContent = cue || game.hunterWarning;
   if (game.phase === "DEAD" || game.completed) {
     $("prompt").textContent = "";
