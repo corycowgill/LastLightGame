@@ -19,6 +19,7 @@ import { CameraIndex } from "./camera-index";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { AnimatedCharacter, movementClip, smoothFacing } from "./character";
 import { CatalogAssets } from "./catalog-assets";
+import { EncounterVisuals } from "./encounter-visuals";
 import { dressDungeon } from "./dungeon-dressing";
 import { environmentBlocks, pillarRows } from "./crypt-layout";
 import { addCryptDecals } from "./crypt-decals";
@@ -104,9 +105,11 @@ export class GameScene {
   private attachmentPoint = new THREE.Vector3();
   private torchAttachment = new TorchAttachment();
   private initialized = false;
+  private encounterVisuals?: EncounterVisuals;
   private elapsed = 0;
   private locomotionSpeed = 0;
   private lastFuel = 720;
+  private lastBrandId = 0;
   private burst = 0;
   constructor(
     private container: HTMLElement,
@@ -677,6 +680,7 @@ export class GameScene {
       this.walls.push(collider);
     }
     this.cameraIndex = new CameraIndex(this.walls);
+    this.encounterVisuals = new EncounterVisuals(this.scene, this.catalog);
     this.container.dataset.cameraColliders = String(this.walls.length);
     this.settlingDust.visible = false;
     this.settlingDust.frustumCulled = false;
@@ -838,6 +842,28 @@ export class GameScene {
     if (this.renderBudget.sample(dt)) this.applyRenderBudget();
   }
   update(game: Game, dt: number, yaw: number, pitch: number, distance = 3.7) {
+    if (this.encounterVisuals) {
+      this.encounterVisuals.initialize(game.encounter, game.landmarkDecoration);
+      const bell = this.encounterVisuals.landmarkCollider;
+      if (bell && !this.walls.includes(bell)) {
+        this.walls.push(bell);
+        this.cameraIndex = new CameraIndex(this.walls);
+      }
+      const gate = this.encounterVisuals.gateCollider;
+      const shouldBlock = !!game.world.shortcutGate && !game.shortcutOpen;
+      const present = this.walls.includes(gate);
+      if (present !== shouldBlock) {
+        if (shouldBlock) this.walls.push(gate);
+        else this.walls.splice(this.walls.indexOf(gate), 1);
+        this.cameraIndex = new CameraIndex(this.walls);
+        this.container.dataset.cameraColliders = String(this.walls.length);
+      }
+      this.encounterVisuals.update(
+        game.brands,
+        game.shortcutOpen,
+        game.elapsed,
+      );
+    }
     this.container.dataset.catalogModels = String(this.catalog.loaded);
     this.elapsed += dt;
     const event = game.ambientEvent;
@@ -934,9 +960,16 @@ export class GameScene {
       this.gestureTime = 0.85;
     }
     this.lastArtifacts = game.artifacts;
-    if (this.lastFuel - game.fuel > 35) {
+    const brandPlaced =
+      !!game.brands[0] && game.brands[0].id !== this.lastBrandId;
+    if (brandPlaced) this.lastBrandId = game.brands[0].id;
+    if (this.lastFuel - game.fuel > 35 && !brandPlaced) {
       this.gesture = "burst";
       this.gestureTime = 0.7;
+    }
+    if (brandPlaced) {
+      this.gesture = "interact";
+      this.gestureTime = 0.85;
     }
     this.actor?.update(
       game.phase === "DEAD"

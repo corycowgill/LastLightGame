@@ -45,7 +45,7 @@ test("Xbox actions use press edges and do not repeat while held", () => {
     "burst",
     "chalk",
     "previousMode",
-    "nextMode",
+    "brand",
     "journal",
     "recenter",
   ]);

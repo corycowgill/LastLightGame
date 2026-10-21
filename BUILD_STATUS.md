@@ -1,5 +1,13 @@
 # The Last Light — build status
 
+## Expedition choices — 2026-10-20
+
+The Bell Crypt now offers a sealed votive and a return decision: retrace the longer route quietly, or recover its votive and raise a noisy shortcut gate. Gates use actual collision, line of sight and cached navigation invalidation. An existing catalog bell and chained crypt-door GLBs mark the encounter. It appears only where an existing loop provides a useful shortcut without disconnecting any room; other seeds retain normal expeditions.
+
+Drop a burning brand with **G / Xbox RB / touch BRAND**. It costs 15 base Steady seconds of fuel, burns for 18 seconds, and temporarily repels visible enemies within four metres. During a Hunt, one match can ignite it immediately while your handheld torch stays out. One brand can be active, with a 24-second cooldown. Its light can sustain a sealed-relic interaction, but it never permanently banishes Hunters.
+
+See [mechanics, pipeline, save migration and validation](docs/EXPEDITION_CHOICES.md). Validation: 133 tests, 100 seeded escape scenarios and the production build pass. Browser review exercised fuel spending and opening the return gate through normal controls in a diagnostic fixture. Physical Xbox/iPhone and subjective headphone/pacing validation remain open.
+
 ## Critic playtest and response — 2026-10-20
 
 A critic agent played two ordinary expeditions on build `60ef608` using normal movement, camera and interactions, without debug teleports or automated routes. It recovered two named relics, experienced capture, and successfully relit twice. Its strongest finding: navigation friction and camera occlusion were consuming fuel before players could make informed risk decisions. The named discoveries were a positive and were retained.

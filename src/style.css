@@ -506,7 +506,7 @@ body[data-touch="true"][data-playing="true"]:not([data-input="gamepad"])
   right: max(16px, env(safe-area-inset-right));
   bottom: max(20px, env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: repeat(3, 52px);
+  grid-template-columns: repeat(4, 52px);
   gap: 7px;
 }
 #touchControls .touch-primary {
@@ -739,7 +739,7 @@ body[data-input="gamepad"] #captureMouse {
     min-height: 44px;
   }
   .touch-actions {
-    grid-template-columns: repeat(3, 48px);
+    grid-template-columns: repeat(4, 48px);
     gap: 5px;
   }
   #movePad {

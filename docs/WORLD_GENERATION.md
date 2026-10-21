@@ -1,12 +1,14 @@
 # Seeded catacomb layouts
 
-## Current generation: version 3
+## Current generation: version 4
+
+Version 4 adds optional closed return gates and Bell Crypt placement; the underlying floor masks remain unchanged. Older saves preserve upgrades, bank carried relics and archive discoveries before resetting stale coordinates.
 
 Six handcrafted floor masks now replace the shared square footprint. Every room retains clear cardinal connections, while side alcoves, dry routes, rubble gaps and ceiling heights vary by design. Corridors are one two-metre cell wide. GLB furniture is filtered against the floor mask; structural doorposts share collision and rendering placement. Tall ossuaries carry interior pillars; low passages avoid blocking pillar arrangements. Wet floor GLBs use a separate tinted material batch.
 
 Navigation validates room-centre connectivity across 200 seeds. The complete diagnostic extinction/Hunt/escape driver passes 100 seeds. This is route and state-machine validation, not a human difficulty or pacing score.
 
-Version 2 and older saves retain upgrades and bank carried relics before restarting at the new entrance, avoiding stale geometry and AI coordinates. Current saves retain expedition state.
+Version 3 and older saves retain upgrades and bank carried relics before restarting at the new entrance, avoiding stale geometry and AI coordinates. Current saves retain expedition state.
 
 ## Historical generation 2
 

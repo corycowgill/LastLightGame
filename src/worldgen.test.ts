@@ -86,7 +86,7 @@ test("old fixed-map saves migrate safely and preserve upgrades and carried disco
   assert.equal(g.maxFuel, 900);
   assert.equal(g.fuel, 900);
   assert.ok(walkable(g.world, g.player.x, g.player.z));
-  assert.equal(JSON.parse(stored).generation, 3);
+  assert.equal(JSON.parse(stored).generation, 4);
   assert.equal(g.load(), true);
   assert.equal(g.banked, 5);
 });

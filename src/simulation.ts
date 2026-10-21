@@ -1,3 +1,15 @@
+import {
+  planExpeditionEncounter,
+  type ExpeditionEncounterPlan,
+} from "./expedition-encounter";
+import {
+  BRAND_CONFIG,
+  tryDropBrand,
+  stepBrands,
+  brandRepels,
+  type Brand,
+} from "./brands";
+import { floorAt } from "./room-design";
 import { relicIdentity } from "./relics";
 import { ROOM_DESIGNS, roomAt } from "./room-design";
 import { buildLabyrinth, type Layout } from "./worldgen";
@@ -8,6 +20,7 @@ export type Hunter = {
   state: string;
   yaw?: number;
   readiness?: number;
+  temporaryRetreat?: boolean;
 };
 export type Point = { x: number; z: number };
 export type World = {
@@ -16,6 +29,8 @@ export type World = {
   exit: Point;
   seed: number;
   layout?: Layout;
+  shortcutGate?: Point & { yaw: number; open: boolean };
+  landmarkDecoration?: Point & { yaw: number };
 };
 export type Input = {
   forward: number;
@@ -98,7 +113,11 @@ function grid(w: World) {
   if (!s) {
     s = new Set(
       w.cells
-        .filter((c) => !blockedByProp(w, c.x * 2, c.z * 2, 0.45))
+        .filter(
+          (c) =>
+            !blockedByProp(w, c.x * 2, c.z * 2, 0.45) &&
+            !dynamicObstacle(w, c.x * 2, c.z * 2, 0.35),
+        )
         .map((c) => key(c.x, c.z)),
     );
     grids.set(w, s);
@@ -108,10 +127,36 @@ function grid(w: World) {
 export function generateWorld(seed = 1): World {
   return buildLabyrinth(seed);
 }
+export function dynamicObstacle(w: World, x: number, z: number, padding = 0) {
+  const gate = w.shortcutGate;
+  if (gate && !gate.open) {
+    const dx = x - gate.x,
+      dz = z - gate.z,
+      c = Math.cos(gate.yaw),
+      t = Math.sin(gate.yaw);
+    if (
+      Math.abs(c * dx - t * dz) < 1.05 + padding &&
+      Math.abs(t * dx + c * dz) < 0.4 + padding
+    )
+      return true;
+  }
+  const bell = w.landmarkDecoration;
+  return (
+    !!bell &&
+    Math.abs(x - bell.x) < 0.6 + padding &&
+    Math.abs(z - bell.z) < 0.6 + padding
+  );
+}
+export function invalidateNavigation(w: World) {
+  grids.delete(w);
+  pathCaches.delete(w);
+  edgeCaches.delete(w);
+}
 export function walkable(w: World, x: number, z: number) {
   return (
     floorGrid(w).has(key(Math.round(x / 2), Math.round(z / 2))) &&
-    !blockedByProp(w, x, z)
+    !blockedByProp(w, x, z) &&
+    !dynamicObstacle(w, x, z)
   );
 }
 const edgeCaches = new WeakMap<World, Map<string, boolean>>();
@@ -206,13 +251,33 @@ export class Game {
   maxFuel = 720;
   mode = 1;
   phase = "EXPLORING";
-  hunter: Point & { state: string; yaw?: number } = {
+  hunter: Hunter = {
     x: 0,
     z: 0,
     state: "DORMANT",
   };
   additionalHunters: Hunter[] = [];
   hunterWarning = "";
+  encounter?: ExpeditionEncounterPlan;
+  encounterRelicId?: number;
+  brands: Brand[] = [];
+  brandCooldown = 0;
+  private nextBrandId = 1;
+  get shortcutOpen() {
+    return this.world.shortcutGate?.open ?? false;
+  }
+  get landmarkDecoration() {
+    return this.world.landmarkDecoration;
+  }
+  get brandReady() {
+    return (
+      ((this.phase === "EXPLORING" && this.fuel >= BRAND_CONFIG.fuelCost + 6) ||
+        (["HUNT_GRACE", "HUNT_ACTIVE"].includes(this.phase) &&
+          this.matches > 0)) &&
+      this.brandCooldown <= 0 &&
+      !this.brands.length
+    );
+  }
   private huntElapsed = 0;
   private reinforcementAttempt = CONFIG.reinforcementArrival;
   private reinforcementSpawned = false;
@@ -322,6 +387,17 @@ export class Game {
   }
   /** Local, authored guidance; deliberately never tracks distant treasure through walls. */
   get objectiveHint() {
+    if (
+      this.encounter &&
+      this.world.layout &&
+      this.currentRoom ===
+        this.world.layout?.rooms[this.encounter.landmarkRoomIndex]
+    )
+      return this.shortcutUnlocked && !this.shortcutOpen
+        ? "BELL SEAL RELEASED · LOUD SHORTCUT OR QUIET RETURN"
+        : !this.shortcutUnlocked
+          ? "THE BELL CRYPT · RECOVER ITS SEALED VOTIVE TO RELEASE THE RETURN GATE"
+          : "RETURN GATE OPEN · FOLLOW THE SHORTER PASSAGE TOWARD FIRE";
     if (this.artifacts > 0 && dist(this.player, this.start) < 40)
       return "RETURN TO THE FIRST FIRE TO BANK · OR RISK DEEPER CHAMBERS";
     const first = this.firstDiscovery;
@@ -353,6 +429,24 @@ export class Game {
   }
   reset(seed = this.world.seed) {
     this.world = generateWorld(seed);
+    this.encounter = this.world.layout
+      ? planExpeditionEncounter(this.world.layout)
+      : undefined;
+    this.encounterRelicId = undefined;
+    this.brands = [];
+    this.brandCooldown = 0;
+    this.nextBrandId = 1;
+    if (this.encounter) {
+      const gate = this.encounter.gate;
+      this.world.shortcutGate = {
+        x: gate.x,
+        z: gate.z,
+        yaw: gate.yaw,
+        open: false,
+      };
+      this.world.layout!.rooms[this.encounter.landmarkRoomIndex].name =
+        "THE BELL CRYPT";
+    }
     this.player = {
       ...this.startingPosition,
       yaw: this.startingHeading,
@@ -458,18 +552,20 @@ export class Game {
         if (point) Object.assign(item, point);
       }
     }
-    const vault =
-      rooms
-        .filter((r) => r.design === "ossuary" && r.depth > 0.15)
-        .sort(
-          (a, b) => Math.abs(a.depth - 0.65) - Math.abs(b.depth - 0.65),
-        )[0] ?? rooms[2];
+    const vault = this.encounter
+      ? this.world.layout!.rooms[this.encounter.landmarkRoomIndex]
+      : (rooms
+          .filter((r) => r.design === "ossuary" && r.depth > 0.15)
+          .sort(
+            (a, b) => Math.abs(a.depth - 0.65) - Math.abs(b.depth - 0.65),
+          )[0] ?? rooms[2]);
     const relic = this.items.find(
       (i) => i.kind === "artifact" && roomAt(this.world, i.x, i.z) === vault,
     );
     if (relic) {
       relic.encounter = "reliquary";
       relic.value = 3;
+      this.encounterRelicId = this.encounter ? relic.id : undefined;
     }
     const cacheRoom =
       rooms.find((r) => r.reward) ??
@@ -529,6 +625,28 @@ export class Game {
         findPath(this.world, this.start, p).length > 0,
     ) ?? { x: vault.x * 2, z: vault.z * 2 + 2 };
     this.enemies = [{ ...guard, kind: "stalker", state: "LISTENING" }];
+    if (this.encounter) {
+      const room = this.world.layout!.rooms[this.encounter.landmarkRoomIndex];
+      const candidates = [
+        [-3, -3],
+        [3, -3],
+        [-3, 3],
+        [3, 3],
+        [-4, -2],
+        [4, 2],
+      ].map(([x, z]) => ({ x: room.x * 2 + x, z: room.z * 2 + z }));
+      const point = candidates.find(
+        (p) =>
+          floorAt(this.world, p.x, p.z, 0.8) &&
+          !blockedByProp(this.world, p.x, p.z, 0.9) &&
+          !this.items.some((i) => dist(i, p) < 2) &&
+          walkable(this.world, p.x, p.z),
+      );
+      if (point) {
+        this.world.landmarkDecoration = { ...point, yaw: 0 };
+        invalidateNavigation(this.world);
+      }
+    }
   }
   get currentRoom() {
     return roomAt(this.world, this.player.x, this.player.z);
@@ -540,7 +658,45 @@ export class Game {
       ) ?? "stone"
     );
   }
+  get nearShortcut() {
+    const g = this.world.shortcutGate;
+    return (
+      !!g &&
+      !g.open &&
+      dist(this.player, g) < 2.6 &&
+      lineOfSight(this.world, this.player, {
+        x: this.player.x + (g.x - this.player.x) * 0.5,
+        z: this.player.z + (g.z - this.player.z) * 0.5,
+      })
+    );
+  }
+  get shortcutUnlocked() {
+    return (
+      this.encounterRelicId !== undefined &&
+      !!this.items.find((i) => i.id === this.encounterRelicId)?.taken
+    );
+  }
+  get relicLight() {
+    return (
+      (this.phase === "EXPLORING" && this.fuel > 0) ||
+      (["HUNT_GRACE", "HUNT_ACTIVE"].includes(this.phase) &&
+        !!brandRepels(this.brands, this.player, (a, b) =>
+          lineOfSight(this.world, a, b),
+        ))
+    );
+  }
   get interactionPrompt() {
+    if (
+      this.nearShortcut &&
+      !this.shortcutUnlocked &&
+      ["HUNT_GRACE", "HUNT_ACTIVE"].includes(this.phase) &&
+      this.matches > 0
+    )
+      return "STRIKE A MATCH · BELL SEAL REMAINS LOCKED";
+    if (this.nearShortcut)
+      return this.shortcutUnlocked
+        ? "RAISE RETURN GATE · LOUD · SHORTER ROUTE TO FIRE"
+        : "BELL SEAL · RECOVER ITS VOTIVE VIA THE LONG PASSAGE";
     if (this.activeInteraction)
       return `OPENING RELIQUARY · ${this.activeInteraction.remaining.toFixed(1)}s · MOVE TO CANCEL`;
     if (dist(this.player, this.start) < 3 && this.artifacts > 0)
@@ -625,6 +781,51 @@ export class Game {
       this.say("Chalk remembers the way.");
     }
   }
+  dropBrand() {
+    const emergency = ["HUNT_GRACE", "HUNT_ACTIVE"].includes(this.phase);
+    if (
+      (this.phase !== "EXPLORING" && !emergency) ||
+      (emergency && this.matches <= 0)
+    ) {
+      this.say("A brand needs torch fuel, or one match during the Hunt.");
+      return false;
+    }
+    const result = tryDropBrand({
+      // A match supplies ignition energy, but its unused potential fuel is
+      // deliberately not credited to the handheld torch.
+      fuel: emergency ? CONFIG.matchFuel : this.fuel,
+      cooldown: this.brandCooldown,
+      brands: this.brands,
+      player: this.player,
+      yaw: this.player.yaw,
+      nextId: this.nextBrandId,
+      walkable: (x, z) =>
+        walkable(this.world, x, z) &&
+        !blockedByProp(this.world, x, z, 0.15) &&
+        !dynamicObstacle(this.world, x, z, 0.15),
+    });
+    if (!result.ok) {
+      this.say(
+        result.reason === "fuel"
+          ? "A brand needs 15 seconds of Steady fuel, plus a small reserve."
+          : result.reason === "placement"
+            ? "No clear footing for a brand."
+            : "Let the last brand cool before placing another.",
+      );
+      return false;
+    }
+    this.brands = [result.brand];
+    if (emergency) this.matches--;
+    else this.fuel = result.fuel;
+    this.brandCooldown = result.cooldown;
+    this.nextBrandId++;
+    this.say(
+      emergency
+        ? "One match spent: eighteen seconds of stationary fire. Your torch remains out; move before the brand dies."
+        : "Brand placed: eighteen seconds of stationary fire. It repels nearby creatures; it is not a sanctuary.",
+    );
+    return true;
+  }
   burst() {
     if (
       this.phase === "EXPLORING" &&
@@ -677,6 +878,32 @@ export class Game {
       .sort((a, b) => dist(a, this.player) - dist(b, this.player))[0];
   }
   interact() {
+    if (this.nearShortcut) {
+      if (!this.shortcutUnlocked) {
+        if (
+          ["HUNT_GRACE", "HUNT_ACTIVE"].includes(this.phase) &&
+          this.matches > 0
+        ) {
+          this.relight();
+          return;
+        }
+        this.say("The bell seal holds. Follow the long passage to its votive.");
+        return;
+      }
+      this.world.shortcutGate!.open = true;
+      invalidateNavigation(this.world);
+      this.routes = new WeakMap();
+      this.noise = 15;
+      this.noiseTimer = 3;
+      this.discoveries.push(
+        "The Bell Crypt: its raised return gate opens a shorter route toward the first fire.",
+      );
+      this.say(
+        "The gate rings through the crypt. The return is shorter; the sound may draw a search.",
+      );
+      this.save();
+      return;
+    }
     if (dist(this.player, this.destination) < 4) {
       this.archive = [...new Set([...this.archive, ...this.discoveries])].slice(
         -100,
@@ -721,8 +948,10 @@ export class Game {
     const item = this.nearbyItem;
     if (item) {
       if (item.encounter === "reliquary" && (item.opening ?? 0) < 3.5) {
-        if (this.phase !== "EXPLORING") {
-          this.say("The seal needs light. Relight or leave it.");
+        if (!this.relicLight) {
+          this.say(
+            "The seal needs a lit torch or nearby brand. Relight or leave it.",
+          );
           return;
         }
         this.activeInteraction ??= { id: item.id, remaining: 3.5, total: 3.5 };
@@ -766,6 +995,8 @@ export class Game {
     if (["DEAD", "SANCTUARY"].includes(this.phase)) return;
     dt = Math.max(0, Math.min(dt, 0.1));
     this.elapsed += dt;
+    this.brands = stepBrands(this.brands, dt);
+    this.brandCooldown = Math.max(0, this.brandCooldown - dt);
     this.cooldown -= dt;
     const room = this.currentRoom;
     if (room && !this.visitedRooms.includes(`${room.x},${room.z}`)) {
@@ -844,12 +1075,7 @@ export class Game {
           : 0;
     if (this.activeInteraction) {
       const item = this.items.find((i) => i.id === this.activeInteraction!.id);
-      if (
-        !item ||
-        moving ||
-        dist(item, this.player) > 2.6 ||
-        this.phase !== "EXPLORING"
-      )
+      if (!item || moving || dist(item, this.player) > 2.6 || !this.relicLight)
         this.activeInteraction = undefined;
       else {
         this.noise = 15;
@@ -1121,24 +1347,34 @@ export class Game {
   }
   private updateHunter(dt: number) {
     if (["DORMANT", "BANISHED"].includes(this.hunter.state)) return;
-    const fire = [this.start, this.destination].find(
+    const sanctuaryFire = [this.start, this.destination].find(
       (p) =>
         dist(p, this.hunter) < CONFIG.fireRepel &&
         lineOfSight(this.world, p, this.hunter),
     );
+    const brand = brandRepels(this.brands, this.hunter, (a, b) =>
+      lineOfSight(this.world, a, b),
+    );
+    const fire = sanctuaryFire ?? brand;
     const torchNear =
       this.fuel > 0 &&
       this.phase === "EXPLORING" &&
       dist(this.player, this.hunter) < CONFIG.lightRepel[this.mode] &&
       lineOfSight(this.world, this.player, this.hunter);
-    if ((fire || torchNear) && this.hunter.state !== "FLEEING")
+    if ((fire || torchNear) && this.hunter.state !== "FLEEING") {
+      this.hunter.temporaryRetreat = !!brand && !sanctuaryFire && !torchNear;
       this.retreatFrom(fire ?? this.player);
+    }
     if (this.hunter.state === "FLEEING") {
       this.retreatTime -= dt;
       if (this.retreatTarget)
         this.moveEnemy(this.hunter, this.retreatTarget, CONFIG.hunterFlee, dt);
       if (this.retreatTime <= 0) {
-        this.hunter.state = this.fuel > 0 || fire ? "BANISHED" : "SEARCHING";
+        this.hunter.state =
+          !this.hunter.temporaryRetreat && (this.fuel > 0 || sanctuaryFire)
+            ? "BANISHED"
+            : "SEARCHING";
+        this.hunter.temporaryRetreat = false;
         this.memory = 0;
         this.retreatTarget = undefined;
       }
@@ -1249,10 +1485,16 @@ export class Game {
       const d = dist(e, this.player);
       const lit =
         this.fuel > 0 && ["EXPLORING", "SANCTUARY"].includes(this.phase);
+      const brand = brandRepels(this.brands, e, (a, b) =>
+        lineOfSight(this.world, a, b),
+      );
+      const light = brand ?? this.player;
+      const lightDistance = dist(e, light);
       const threatened =
-        lit &&
-        d < CONFIG.lightRepel[this.mode] + 2 &&
-        lineOfSight(this.world, e, this.player);
+        !!brand ||
+        (lit &&
+          d < CONFIG.lightRepel[this.mode] + 2 &&
+          lineOfSight(this.world, e, this.player));
       let retreat = this.stalkerRetreats.get(e);
       if (
         threatened ||
@@ -1273,17 +1515,17 @@ export class Game {
             .filter(
               (p) =>
                 dist(p, e) < 14 &&
-                dist(p, this.player) > d + 3 &&
+                dist(p, light) > lightDistance + 3 &&
                 walkable(this.world, p.x, p.z),
             )
-            .sort((a, b) => dist(b, this.player) - dist(a, this.player));
+            .sort((a, b) => dist(b, light) - dist(a, light));
           retreat.target = options.find((p) => {
             const path = findPath(this.world, e, p);
             return (
               path.length > 0 &&
               path
                 .slice(0, 4)
-                .every((step) => dist(step, this.player) >= d - 0.5)
+                .every((step) => dist(step, light) >= lightDistance - 0.5)
             );
           });
           this.routes.delete(e);
@@ -1338,7 +1580,7 @@ export class Game {
         "lastlight-save",
         JSON.stringify({
           version: 1,
-          generation: 3,
+          generation: 4,
           seed: this.world.seed,
           banked: this.banked,
           maxFuel: this.maxFuel,
@@ -1360,6 +1602,9 @@ export class Game {
           secondaryBrain: this.secondaryBrain,
           huntElapsed: this.huntElapsed,
           reinforcementSpawned: this.reinforcementSpawned,
+          shortcutOpen: this.shortcutOpen,
+          brands: this.brands,
+          brandCooldown: this.brandCooldown,
           target: this.target,
           memory: this.memory,
           timer: this.timer,
@@ -1383,13 +1628,41 @@ export class Game {
         ? d.archive.filter((s: unknown) => typeof s === "string").slice(-100)
         : [];
       this.reset(Number(d.seed) || 1);
-      if (d.generation !== 3) {
+      if (d.generation !== 4) {
+        if (Array.isArray(d.discoveries))
+          this.archive = [
+            ...new Set([
+              ...this.archive,
+              ...d.discoveries.filter((v: unknown) => typeof v === "string"),
+            ]),
+          ].slice(-100);
         this.banked += Math.max(0, Number(d.artifacts) || 0);
         this.say("The passages have shifted. Your banked discoveries endure.");
         this.save();
         return true;
       }
       if (!["DEAD", "SANCTUARY"].includes(d.phase)) {
+        if (this.world.shortcutGate) {
+          this.world.shortcutGate.open = Boolean(d.shortcutOpen);
+          invalidateNavigation(this.world);
+        }
+        this.brands = Array.isArray(d.brands)
+          ? d.brands
+              .filter(
+                (b: Brand) =>
+                  Number.isFinite(b.id) &&
+                  Number.isFinite(b.remaining) &&
+                  b.remaining > 0 &&
+                  b.remaining <= BRAND_CONFIG.lifetime &&
+                  walkable(this.world, b.x, b.z),
+              )
+              .slice(0, 1)
+          : [];
+        this.nextBrandId = Math.max(0, ...this.brands.map((b) => b.id)) + 1;
+        this.brandCooldown = Math.max(
+          0,
+          Math.min(BRAND_CONFIG.cooldown, Number(d.brandCooldown) || 0),
+        );
         if (d.player && walkable(this.world, d.player.x, d.player.z))
           this.player = { ...this.player, ...d.player };
         if (dist(this.player, this.start) < 0.9)

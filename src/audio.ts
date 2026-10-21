@@ -34,6 +34,9 @@ export class GameAudio {
   private phase = "";
   private samples?: Soundscape;
   private lastFuel = 720;
+  private lastBrandId = 0;
+  private nextBrandCrackle = 0;
+  private lastShortcutOpen = false;
   private musicLevel = 0.7;
   setMusicVolume(value: number) {
     this.musicLevel = Math.max(0, Math.min(1, value));
@@ -166,6 +169,8 @@ export class GameAudio {
       this.lastAmbientEvent = -1;
       this.lastArtifacts = game.artifacts;
       this.lastFuel = game.fuel;
+      this.lastBrandId = game.brands[0]?.id ?? 0;
+      this.lastShortcutOpen = game.shortcutOpen;
       this.lastHunterWarning = "";
       this.lastThreatContact = undefined;
     }
@@ -190,7 +195,38 @@ export class GameAudio {
       game.elapsed < game.quietUntil,
       nearbyThreat,
     );
-    if (this.lastFuel - game.fuel >= 35 && game.phase === "EXPLORING")
+    const brandPlaced =
+      !!game.brands[0] && game.brands[0].id !== this.lastBrandId;
+    if (brandPlaced) {
+      this.lastBrandId = game.brands[0].id;
+      this.air(0.5, 0.035, 900);
+      this.tone(95, 0.2, 0.012, 60);
+    }
+    if (game.shortcutOpen && !this.lastShortcutOpen) {
+      const gate = game.world.shortcutGate!;
+      const cue = spatialCue(game.player, gate, game.cameraYaw, true, 30);
+      this.air(1.3, 0.12 * cue.gain, 350, cue.pan);
+      this.tone(270, 1.6, 0.05 * cue.gain, 130, cue.pan);
+      this.tone(405, 1.2, 0.025 * cue.gain, 200, cue.pan);
+    }
+    this.lastShortcutOpen = game.shortcutOpen;
+    if (game.brands[0] && this.elapsed > this.nextBrandCrackle) {
+      const brand = game.brands[0];
+      const cue = spatialCue(
+        game.player,
+        brand,
+        game.cameraYaw,
+        lineOfSight(game.world, game.player, brand),
+        12,
+      );
+      this.air(0.12, 0.018 * cue.gain, cue.muffled ? 650 : 1600, cue.pan);
+      this.nextBrandCrackle = this.elapsed + 0.55;
+    }
+    if (
+      this.lastFuel - game.fuel >= 35 &&
+      game.phase === "EXPLORING" &&
+      !brandPlaced
+    )
       this.samples?.play("burst", 0.28);
     this.lastFuel = game.fuel;
     const phase = String(game.phase),

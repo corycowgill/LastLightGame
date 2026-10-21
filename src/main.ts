@@ -1,3 +1,4 @@
+import { BRAND_CONFIG } from "./brands";
 import { CONFIG, UPGRADES, type Upgrade } from "./simulation";
 import { relicIdentity } from "./relics";
 import "./style.css";
@@ -74,8 +75,8 @@ function selectInput(source: string) {
     hint.dataset.source = source;
     hint.innerHTML =
       source === "gamepad"
-        ? "LS Move · RS Look · A Use<br>RT Run · LT/B Crouch · X Burst · Y Chalk<br>LB/RB Flame · View Journal · Menu Pause"
-        : "WASD Move · Drag / Arrows Look · Wheel Zoom<br>SHIFT Sprint · C Crouch<br>E Use · Q Chalk · F Burst · TAB Journal";
+        ? "LS Move · RS Look · A Use<br>RT Run · LT/B Crouch · X Burst · Y Chalk<br>LB / D-pad Flame · RB Brand · View Journal · Menu Pause"
+        : "WASD Move · Drag / Arrows Look · Wheel Zoom<br>SHIFT Sprint · C Crouch<br>E Use · Q Chalk · F Burst · G Brand · TAB Journal";
   }
 }
 if (new URLSearchParams(location.search).has("touch"))
@@ -174,6 +175,7 @@ function platformAction(action: PlatformAction) {
   if (!running) return;
   if (action === "interact") game.interact();
   if (action === "burst") game.burst();
+  if (action === "brand") game.dropBrand();
   if (action === "chalk") game.mark();
   if (action === "journal") journal();
   if (action === "previousMode") game.setMode((game.mode + 2) % 3);
@@ -337,7 +339,16 @@ async function begin(load: boolean) {
       (r) => r.design === query.get("room"),
     );
     const target =
-      item ?? (room ? { x: room.x * 2, z: room.z * 2 } : undefined);
+      query.get("encounter") === "shortcut"
+        ? game.world.shortcutGate
+        : (item ?? (room ? { x: room.x * 2, z: room.z * 2 } : undefined));
+    if (query.get("encounter") === "shortcut" && query.has("recovered")) {
+      const votive = game.items.find((i) => i.id === game.encounterRelicId);
+      if (votive) {
+        votive.taken = true;
+        game.artifacts = votive.value ?? 3;
+      }
+    }
     if (target) {
       const approach = [
         [0, 2],
@@ -416,7 +427,7 @@ function pause() {
 function controls() {
   screen = "guide";
   panel(
-    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Drag mouse / arrow keys · Look &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C / CTRL · Crouch<br>E · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Xbox: LS Move · RS Look · A Use · B Toggle Crouch · X Burst · Y Chalk · LB/RB Flame · LT Crouch · RT/LS Sprint · D-pad Up/Down Zoom · RS Click Recenter · View Journal · Menu Pause. Menus: D-pad Navigate · A Select · B Back.</p><p>Touch: Left pad Move · Drag view Look · RUN Hold Sprint · CROUCH Toggle · USE Interact/Relight · BURST, CHALK and JOURNAL actions · Flame buttons · +/− Zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps and reduce distant visual detection; close Hunters can still see you. Sprint in bursts: stamina recovers after a short rest. Break sight around corners to lose the Hunter. A fresh Steady torch lasts about two minutes. Oil adds about 30 seconds; each of your two starting matches buys about 20 seconds after a two second relight. Ember stretches fuel to about 3.6 minutes; Blaze empties a full torch in about 34 seconds. Relighting slows movement and prevents sprinting; find cover first. Flame bursts cannot reach through stone walls. Relit torchlight makes the Hunter recoil and flee before banishment; stronger flame protects a wider area. Sanctuary fires repel it when unobstructed. Deeper air drains fuel faster, and the Hunter grows more persistent. Stalkers can damage a steady flame at close range; use Blaze or keep your distance. Golden sanctuary fires banish the Hunt.</p><div id="actions"></div>',
+    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Drag mouse / arrow keys · Look &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C / CTRL · Crouch<br>E · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst &nbsp; G · Drop burning brand<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Xbox: LS Move · RS Look · A Use · B Toggle Crouch · X Burst · Y Chalk · LB / D-pad Flame · RB Brand · LT Crouch · RT/LS Sprint · D-pad Up/Down Zoom · RS Click Recenter · View Journal · Menu Pause. Menus: D-pad Navigate · A Select · B Back.</p><p>Touch: Left pad Move · Drag view Look · RUN Hold Sprint · CROUCH Toggle · USE Interact/Relight · BURST, BRAND, CHALK and JOURNAL actions · Flame buttons · +/− Zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps and reduce distant visual detection; close Hunters can still see you. Sprint in bursts: stamina recovers after a short rest. Break sight around corners to lose the Hunter. A fresh Steady torch lasts about two minutes. Oil adds about 30 seconds; each of your two starting matches buys about 20 seconds after a two second relight. Ember stretches fuel to about 3.6 minutes; Blaze empties a full torch in about 34 seconds. Relighting slows movement and prevents sprinting; find cover first. Flame bursts cannot reach through stone walls. Relit torchlight makes the Hunter recoil and flee before banishment; stronger flame protects a wider area. Sanctuary fires repel it when unobstructed. Deeper air drains fuel faster, and the Hunter grows more persistent. Stalkers can damage a steady flame at close range; use Blaze or keep your distance. Golden sanctuary fires banish the Hunt.</p><p>G / RB / BRAND drops a burning brand: costs 15 seconds of base Steady fuel while lit, or one match during a Hunt, lasts 18 seconds, and repels creatures within 4 metres when unobstructed. It is stationary and grants no sanctuary refill; Hunters resume searching after it dies. Its fire can also light a reliquary seal while your torch is out. Only one brand may burn, with a 24-second cooldown.</p><p>Some expeditions contain the Bell Crypt. Recover its sealed votive via the longer route, then choose: quietly retrace your steps or raise the loud return gate for a shorter route to fire. Flooded chambers have slower, noisy water and quieter dry edges.</p><div id="actions"></div>',
   );
   button("back", "BACK", menu);
 }
@@ -465,6 +476,9 @@ function journal() {
   panel(
     `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (CONFIG.burnMultiplier * (1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
   );
+  const tools = document.createElement("p");
+  tools.textContent = `Burning brand: G / RB / BRAND. Cost ${BRAND_CONFIG.fuelCost / 6}s base Steady fuel; ${BRAND_CONFIG.lifetime}s stationary light, ${BRAND_CONFIG.repelRadius}m protection, ${BRAND_CONFIG.cooldown}s cooldown. During a Hunt, spend one match for instant stationary fire instead of a two-second torch relight. ${game.encounter ? `Bell Crypt return seal: ${game.shortcutOpen ? "OPEN" : game.shortcutUnlocked ? "VOTIVE RECOVERED — READY TO RAISE" : "SEALED — FIND ITS VOTIVE"}. Raising it is loud; retracing your route is quieter.` : "Explore this layout's crypts; no bell return seal was found on this expedition."}`;
+  $("discoveries").append(tools);
   const summary = document.createElement("p");
   const votives = game.items.filter((i) => i.kind === "artifact");
   summary.textContent = `Votives recovered: ${votives.filter((i) => i.taken).length}/${votives.length}. Search burial recesses and side chambers for glimmers; the sealed ossuary reliquary holds three names. Prolonged Hunts draw a second Hunter: find fire or relight before the answering footsteps arrive.`;
@@ -555,6 +569,7 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "KeyE") game.interact();
   if (e.code === "KeyQ") game.mark();
   if (e.code === "KeyF") game.burst();
+  if (e.code === "KeyG") game.dropBrand();
   if (e.code.startsWith("Digit")) game.setMode(Number(e.code.slice(-1)) - 1);
   if (e.code === "Tab") journal();
   if (new URLSearchParams(location.search).has("debug")) {
@@ -752,6 +767,21 @@ function updateHUD() {
   }
   $("relicDiscovery").hidden =
     game.elapsed >= relicRevealUntil || game.phase !== "EXPLORING";
+  const brandButton = document.querySelector<HTMLButtonElement>(
+    '[data-touch-action="brand"]',
+  );
+  if (brandButton) {
+    brandButton.disabled = !game.brandReady;
+    brandButton.textContent = game.brands.length
+      ? `FIRE ${Math.ceil(game.brands[0].remaining)}s`
+      : game.brandCooldown > 0
+        ? `${Math.ceil(game.brandCooldown)}s`
+        : game.phase.includes("HUNT")
+          ? "BRAND · 1M"
+          : "BRAND";
+  }
+  $("scene").dataset.brandCount = String(game.brands.length);
+  $("scene").dataset.shortcutOpen = String(game.shortcutOpen);
   $("scene").dataset.audioSamples = String(audio.sampleCount);
   $("audioUnlock").hidden = !audio.needsGesture;
   if (inputSource === "gamepad")
@@ -851,13 +881,17 @@ function updateHUD() {
       : "";
   $("bearing").textContent = new URLSearchParams(location.search).has("debug")
     ? `${fps.toFixed(0)} FPS · ${game.phase} · ${game.hunter.state} · ${view.renderer.info.render.calls} DRAWS`
-    : game.activeInteraction
-      ? "THE SEAL ECHOES THROUGH THE CRYPT"
-      : game.surface === "water"
-        ? "WATER CARRIES SOUND · DRY EDGES ARE QUIETER"
-        : game.depth > 0
-          ? `DEEP AIR · FLAME DRAIN +${Math.round(game.depth * 30)}%`
-          : game.objectiveHint || "SEEK THE GOLDEN FIRE";
+    : game.nearShortcut
+      ? game.shortcutUnlocked
+        ? "LOUD SHORTCUT · OR TAKE THE QUIET RETURN"
+        : "THE BELL SEAL OPENS AFTER ITS VOTIVE IS RECOVERED"
+      : game.activeInteraction
+        ? "THE SEAL ECHOES THROUGH THE CRYPT"
+        : game.surface === "water"
+          ? "WATER CARRIES SOUND · DRY EDGES ARE QUIETER"
+          : game.depth > 0
+            ? `DEEP AIR · FLAME DRAIN +${Math.round(game.depth * 30)}%`
+            : game.objectiveHint || "SEEK THE GOLDEN FIRE";
   $("scene").dataset.cameraYaw = cameraControls.pose.yaw.toFixed(3);
   $("scene").dataset.cameraPitch = cameraControls.pose.pitch.toFixed(3);
   $("scene").dataset.cameraDistance = cameraControls.pose.distance.toFixed(2);
