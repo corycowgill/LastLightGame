@@ -4,13 +4,24 @@ import { vaporPhase, type EnvironmentHazard } from "./environment-hazards";
 /** Catalog meshes identify physical hazards; bounded particles are vapor effects only. */
 export class HazardVisuals {
   private ready = false;
+  private impact = new THREE.Group();
   private webs: { hazard: EnvironmentHazard; root: THREE.Group }[] = [];
   private mistTexture?: THREE.CanvasTexture;
   private vents: { hazard: EnvironmentHazard; mist: THREE.Points }[] = [];
   constructor(
     private scene: THREE.Scene,
     private catalog: CatalogAssets,
-  ) {}
+  ) {
+    this.scene.add(this.impact);
+    this.impact.visible = false;
+    this.catalog.batch(
+      "pro_rubble",
+      this.impact,
+      [new THREE.Matrix4()],
+      [0.22, 0.14, 0.22],
+      () => {},
+    );
+  }
   initialize(hazards: EnvironmentHazard[]) {
     if (this.ready) return;
     this.ready = true;
@@ -83,7 +94,9 @@ export class HazardVisuals {
       }
     }
   }
-  update(elapsed: number) {
+  update(elapsed: number, impact?: { x: number; z: number; until: number }) {
+    this.impact.visible = !!impact && impact.until > elapsed;
+    if (impact) this.impact.position.set(impact.x, 0.03, impact.z);
     for (const { hazard, root } of this.webs) {
       root.visible = !hazard.burned;
       root.scale.y =

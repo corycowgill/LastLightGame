@@ -1,5 +1,13 @@
 # The Last Light — build status
 
+## Whispering votive and distractions — 2026-10-20
+
+The sealed three-relic votive now carries a return-trip risk: every 18 seconds away from sanctuary it can cry out. A three-second text/audio warning gives time to crouch completely still and muffle it. The cry creates ordinary audible noise; it does not spawn enemies or reveal the player globally. Ordinary relics stay unchanged.
+
+Three throwable stones per expedition add a limited escape tool: **T / Xbox D-pad Up / touch STONE**. Aim down an open passage; the impact draws unseen Hunters and Stalkers toward it. Direct perception of the player takes priority. Throws have a five-second cooldown and stop at walls. Xbox zoom is now D-pad Down to zoom out, LT + Down to zoom in. Close active Hunts gain restrained proximity heartbeat cues.
+
+Validation: 151 tests, 100 seeded escape scenarios and production build pass. See [mechanics and limits](docs/TENSION_MECHANICS.md). Physical controller/iPhone, human difficulty and subjective headphone mixing remain open.
+
 ## Burial webs and unstable rubble — 2026-10-20
 
 Two more environmental challenges now join bones, chains and vents. Burial webs slow upright movement; crouch through, skirt the patch, or hold Blaze within three metres for two uninterrupted seconds to burn a permanent opening. Cleared webs survive save/load. Unstable rubble causes a noisy stamina-costing stumble when sprinted across; walking and crouching avoid it. Both reuse original catalog GLBs.

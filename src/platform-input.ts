@@ -1,6 +1,7 @@
 export type PlatformAction =
   | "interact"
   | "brand"
+  | "stone"
   | "burst"
   | "chalk"
   | "journal"
@@ -110,6 +111,7 @@ export class ControllerInput {
       5: "brand",
       8: "journal",
       11: "recenter",
+      12: "stone",
       14: "previousMode",
       15: "nextMode",
     };

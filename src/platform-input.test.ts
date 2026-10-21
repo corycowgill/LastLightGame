@@ -253,3 +253,11 @@ test("pause reset and app backgrounding release held touch controls", () => {
   assert.equal(s.touch.movement.strafe, 0);
   s.touch.dispose();
 });
+
+test("D-pad Up throws one stone per press during play", () => {
+  const actions: PlatformAction[] = [];
+  const c = new ControllerInput((a) => actions.push(a));
+  c.update(pad([], [12]), 1 / 60, true);
+  c.update(pad([], [12]), 1 / 60, true);
+  assert.deepEqual(actions, ["stone"]);
+});

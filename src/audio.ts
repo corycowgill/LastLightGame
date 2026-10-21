@@ -18,6 +18,10 @@ export class GameAudio {
   private nextWarning = 0;
   private nextSealScrape = 0;
   private lastArtifacts = 0;
+  private lastStone = 0;
+  private lastRelicEcho = 0;
+  private nextHeartbeat = 0;
+  private nextVotiveWhisper = 0;
   private lastAmbientEvent = -1;
   private playerSteps = new FootstepTracker();
   private threatSteps = new Map<object, FootstepTracker>();
@@ -170,6 +174,9 @@ export class GameAudio {
       this.threatSteps.clear();
       this.threatStates.clear();
       this.lastAmbientEvent = -1;
+      this.lastStone = 0;
+      this.lastRelicEcho = game.relicEcho;
+      this.nextHeartbeat = 0;
       this.lastArtifacts = game.artifacts;
       this.lastFuel = game.fuel;
       this.lastHazardEvent = 0;
@@ -266,6 +273,41 @@ export class GameAudio {
         );
       }
       this.nextVentHiss = this.elapsed + 0.8;
+    }
+    if (game.distraction && game.distraction.id !== this.lastStone) {
+      this.lastStone = game.distraction.id;
+      const cue = spatialCue(
+        game.player,
+        game.distraction,
+        game.cameraYaw,
+        lineOfSight(game.world, game.player, game.distraction),
+        20,
+      );
+      this.air(0.16, 0.12 * cue.gain, 1600, cue.pan);
+      this.tone(260, 0.22, 0.05 * cue.gain, 100, cue.pan);
+    }
+    if (game.tensionHint && this.elapsed > this.nextVotiveWhisper) {
+      this.air(0.65, 0.025, 520);
+      this.tone(210, 0.6, 0.015, 160);
+      this.nextVotiveWhisper = this.elapsed + 1;
+    }
+    if (game.relicEcho !== this.lastRelicEcho) {
+      this.lastRelicEcho = game.relicEcho;
+      this.air(1.2, 0.06, 700);
+      this.tone(430, 1.1, 0.035, 140);
+    }
+    const proximity = Math.min(
+      ...threats
+        .filter((t) => !["DORMANT", "BANISHED", "FLEEING"].includes(t.state))
+        .map((t) => Math.hypot(t.x - game.player.x, t.z - game.player.z)),
+    );
+    if (
+      game.phase === "HUNT_ACTIVE" &&
+      proximity < 12 &&
+      this.elapsed > this.nextHeartbeat
+    ) {
+      this.tone(48, 0.14, 0.045 * (1 - proximity / 16), 30);
+      this.nextHeartbeat = this.elapsed + 0.45 + proximity * 0.045;
     }
     const brandPlaced =
       !!game.brands[0] && game.brands[0].id !== this.lastBrandId;

@@ -318,6 +318,55 @@ export class Game {
     spark: 0,
     compass: 0,
   };
+  stones = 3;
+  stoneCooldown = 0;
+  distraction?: Point & { until: number; id: number };
+  private stoneId = 0;
+  cursedRelic = false;
+  relicPulse = 18;
+  relicEcho = 0;
+  get tensionHint() {
+    return this.cursedRelic && this.artifacts > 0 && this.relicPulse <= 3
+      ? `THE VOTIVE WHISPERS · CROUCH STILL TO MUFFLE IT · ${Math.ceil(this.relicPulse)}s`
+      : "";
+  }
+  throwStone() {
+    if (
+      !["EXPLORING", "HUNT_GRACE", "HUNT_ACTIVE"].includes(this.phase) ||
+      this.stones <= 0 ||
+      this.stoneCooldown > 0
+    )
+      return false;
+    let landing: Point | undefined;
+    for (let d = 0.5; d <= 8; d += 0.25) {
+      const p = {
+        x: this.player.x - Math.sin(this.cameraYaw) * d,
+        z: this.player.z - Math.cos(this.cameraYaw) * d,
+      };
+      if (
+        !walkable(this.world, p.x, p.z) ||
+        !lineOfSight(this.world, this.player, p)
+      )
+        break;
+      landing = p;
+    }
+    if (!landing || dist(landing, this.player) < 2) {
+      this.say("No clear throw. Aim down an open passage.");
+      return false;
+    }
+    this.stones--;
+    this.stoneCooldown = 5;
+    this.distraction = {
+      ...landing,
+      until: this.elapsed + 2,
+      id: ++this.stoneId,
+    };
+    this.say(
+      "Stone thrown. Break sight and move quietly while they investigate.",
+    );
+    this.save();
+    return true;
+  }
   elapsed = 0;
   hazards: EnvironmentHazard[] = [];
   hazardEvent?: { id: number; x: number; z: number; kind: string };
@@ -490,6 +539,13 @@ export class Game {
     this.artifacts = 0;
     this.deathCause = "";
     this.deathAdvice = "";
+    this.stones = 3;
+    this.stoneCooldown = 0;
+    this.distraction = undefined;
+    this.stoneId = 0;
+    this.cursedRelic = false;
+    this.relicPulse = 18;
+    this.relicEcho = 0;
     this.elapsed = 0;
     this.completed = false;
     this.retreatTime = 0;
@@ -729,7 +785,7 @@ export class Game {
       return `BANK ${this.artifacts} ${this.artifacts === 1 ? "RELIC" : "RELICS"} · END EXPEDITION SAFELY`;
     const item = this.nearbyItem;
     return item?.encounter === "reliquary"
-      ? `OPEN ${relicIdentity(this.world.seed, item).name.toUpperCase()} · 3.5s · NOISY · 3 RELICS`
+      ? `OPEN ${relicIdentity(this.world.seed, item).name.toUpperCase()} · 3.5s · NOISY · 3 RELICS · WHISPERS WHEN CARRIED`
       : item?.encounter === "oil_cache"
         ? "TAKE OIL CACHE · +50s BASE LIGHT"
         : item
@@ -999,6 +1055,10 @@ export class Game {
       } else if (item.kind === "match") this.matches++;
       else {
         this.artifacts += item.value ?? 1;
+        if (item.encounter === "reliquary") {
+          this.cursedRelic = true;
+          this.relicPulse = 18;
+        }
         const identity = relicIdentity(this.world.seed, item);
         this.discoveries.push(`${identity.name}: ${identity.story}`);
         if (item.encounter === "reliquary")
@@ -1023,6 +1083,9 @@ export class Game {
     this.elapsed += dt;
     this.brands = stepBrands(this.brands, dt);
     this.brandCooldown = Math.max(0, this.brandCooldown - dt);
+    this.stoneCooldown = Math.max(0, this.stoneCooldown - dt);
+    if (this.distraction && this.distraction.until <= this.elapsed)
+      this.distraction = undefined;
     this.cooldown -= dt;
     const room = this.currentRoom;
     if (room && !this.visitedRooms.includes(`${room.x},${room.z}`)) {
@@ -1184,6 +1247,28 @@ export class Game {
         : moving
           ? this.footstepNoise(sprint, input.crouch)
           : 0;
+    if (
+      this.cursedRelic &&
+      this.artifacts > 0 &&
+      dist(this.player, this.start) > 5 &&
+      dist(this.player, this.destination) > 5
+    ) {
+      this.relicPulse -= dt;
+      if (this.relicPulse <= 0) {
+        const muffled = input.crouch && !moving && this.movementSpeed < 0.15;
+        if (!muffled) {
+          this.noiseTimer = Math.max(this.noiseTimer, 2.5);
+          this.noise = 15;
+          this.relicEcho++;
+        }
+        this.say(
+          muffled
+            ? "You still the votive's whisper. Keep moving toward fire."
+            : "The votive cries into the dark. Something may have heard.",
+        );
+        this.relicPulse = 18;
+      }
+    }
     if (this.activeInteraction) {
       const item = this.items.find((i) => i.id === this.activeInteraction!.id);
       if (!item || moving || dist(item, this.player) > 2.6 || !this.relicLight)
@@ -1511,7 +1596,18 @@ export class Game {
       d < this.noise &&
       navigationDistance(this.world, this.hunter, this.player) <
         this.noise * 1.5;
-    if (seen || heard) {
+    const lure =
+      this.distraction &&
+      this.distraction.until > this.elapsed &&
+      dist(this.hunter, this.distraction) < 16 &&
+      navigationDistance(this.world, this.hunter, this.distraction) < 24
+        ? this.distraction
+        : undefined;
+    if (!seen && !heard && lure) {
+      this.target = { x: lure.x, z: lure.z };
+      this.memory = 6;
+      this.hunter.state = "INVESTIGATING";
+    } else if (seen || heard) {
       this.target = { ...this.player };
       this.memory = CONFIG.memory + this.depth * 4;
       this.hunter.state = seen ? "PURSUING" : "INVESTIGATING";
@@ -1674,6 +1770,13 @@ export class Game {
             lit ? 1.8 + this.depth * 0.5 : 2.8,
             dt,
           );
+      } else if (
+        this.distraction &&
+        this.distraction.until > this.elapsed &&
+        navigationDistance(this.world, e, this.distraction) < 20
+      ) {
+        e.state = "INVESTIGATING";
+        this.moveEnemy(e, this.distraction, 1.8, dt);
       } else e.state = "LISTENING";
       if (!lit && this.phase === "HUNT_ACTIVE" && d < 1.1 && !crouch) {
         this.phase = "DEAD";
@@ -1701,6 +1804,10 @@ export class Game {
           mode: this.mode,
           matches: this.matches,
           artifacts: this.artifacts,
+          stones: this.stones,
+          stoneCooldown: this.stoneCooldown,
+          cursedRelic: this.cursedRelic,
+          relicPulse: this.relicPulse,
           items: this.items,
           discoveries: this.discoveries,
           archive: this.archive,
@@ -1789,6 +1896,18 @@ export class Game {
         this.matches = Math.max(0, Number(d.matches) || 0);
         this.setMode(d.mode);
         this.artifacts = Math.max(0, Number(d.artifacts) || 0);
+        this.stones = Number.isFinite(d.stones)
+          ? Math.max(0, Math.min(3, Math.floor(d.stones)))
+          : 3;
+        this.stoneCooldown = Math.max(
+          0,
+          Math.min(5, Number(d.stoneCooldown) || 0),
+        );
+        this.cursedRelic = !!d.cursedRelic;
+        this.relicPulse = Math.max(
+          0.1,
+          Math.min(18, Number(d.relicPulse) || 18),
+        );
         if (Array.isArray(d.items)) this.items = d.items;
         if (Array.isArray(d.discoveries))
           this.discoveries = d.discoveries

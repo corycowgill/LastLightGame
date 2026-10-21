@@ -933,3 +933,16 @@ body[data-touch="true"] #lookHint {
   font-size: 14px;
   line-height: 1.55;
 }
+
+/* Keep touch inventory and discovery prose from occupying the same area. */
+body[data-touch="true"] #relicDiscovery {
+  left: 16px;
+  right: auto;
+  top: 25%;
+  width: 225px;
+  padding: 10px 12px;
+}
+body[data-touch="true"] #relicDiscovery p,
+body[data-touch="true"] #relicDiscovery small {
+  display: none;
+}

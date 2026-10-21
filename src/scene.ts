@@ -846,7 +846,7 @@ export class GameScene {
   }
   update(game: Game, dt: number, yaw: number, pitch: number, distance = 3.7) {
     this.hazardVisuals?.initialize(game.hazards);
-    this.hazardVisuals?.update(game.elapsed);
+    this.hazardVisuals?.update(game.elapsed, game.distraction);
     if (this.encounterVisuals) {
       this.encounterVisuals.initialize(game.encounter, game.landmarkDecoration);
       const bell = this.encounterVisuals.landmarkCollider;
