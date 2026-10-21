@@ -74,6 +74,54 @@
       "seed": 104737,
       "loop": false,
       "prompt": "One short rush of fire from a handheld torch, fast airy ignition followed by a soft crackling decay, a defensive flash rather than an explosion. Isolated sound effect, no music, no speech, no gunshot."
+    },
+    {
+      "id": "cough",
+      "kind": "sfx",
+      "seconds": 3,
+      "seed": 210100,
+      "loop": false,
+      "prompt": "One close dry human cough, a weary adult explorer suppressing a cough, short rough exhalation and recovery breath. Isolated game foley, no speech, no words, no music, no scream, no background."
+    },
+    {
+      "id": "foot_stone",
+      "kind": "sfx",
+      "seconds": 3,
+      "seed": 210101,
+      "loop": false,
+      "prompt": "One isolated heavy leather boot footstep on dusty stone tiles in an underground crypt, dry heel impact and grit scuff, short natural stone room tail. Single footfall only, no walking sequence, no music, no voice."
+    },
+    {
+      "id": "foot_water",
+      "kind": "sfx",
+      "seconds": 3,
+      "seed": 210102,
+      "loop": false,
+      "prompt": "One isolated leather boot footstep splashing through shallow water on a stone floor, wet impact with small splash and droplets. Single footfall, no continuous walking, no music, no speech."
+    },
+    {
+      "id": "crypt_creak",
+      "kind": "sfx",
+      "seconds": 5,
+      "seed": 210103,
+      "loop": false,
+      "prompt": "An old crypt timber beam slowly creaks under strain, dry wooden groan with a low stone scrape and falling dust, restrained unsettling underground ambience. No voices, no monster growl, no music, no footsteps."
+    },
+    {
+      "id": "chain_rattle",
+      "kind": "sfx",
+      "seconds": 3,
+      "seed": 210104,
+      "loop": false,
+      "prompt": "A short rusty hanging iron chain rattle as a body brushes it, several loose metal links clinking and scraping, a brief hollow crypt echo. Isolated sound effect, no music, no voice."
+    },
+    {
+      "id": "bone_crunch",
+      "kind": "sfx",
+      "seconds": 3,
+      "seed": 210105,
+      "loop": false,
+      "prompt": "One leather boot treads on brittle dry animal bones and gravel, short crunchy crack and brittle fragments settling. Isolated subtle horror game foley, no gore, no music, no speech."
     }
   ]
 }

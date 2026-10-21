@@ -40,8 +40,16 @@ def main():
     plan = json.loads((Path(__file__).with_name("audio-prompts.json")).read_text())
     dest = ROOT / "public" / "audio"
     dest.mkdir(parents=True, exist_ok=True)
-    entries = []
+    import argparse
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("ids",nargs="*")
+    args=parser.parse_args()
+    selected=set(args.ids)
+    manifest_path=dest / "manifest.json"
+    existing=json.loads(manifest_path.read_text(encoding="utf-8"))["clips"] if selected and manifest_path.exists() else []
+    entries=[e for e in existing if e["id"] not in selected]
     for clip in plan["clips"]:
+        if selected and clip["id"] not in selected: continue
         folder = ROOT / ".asset-tools" / "audio" / "raw" / clip["id"]
         record_path = folder / "complete.json"
         if not record_path.exists():
@@ -54,6 +62,13 @@ def main():
         samples, sr = sf.read(decoded, always_2d=True)
         if clip["kind"] == "sfx":
             samples = samples.mean(axis=1, keepdims=True)
+        # New isolated foley needs an immediate onset and bounded overlap in gameplay.
+        if clip["id"] in {"cough","foot_stone","foot_water","crypt_creak","chain_rattle","bone_crunch"}:
+            peak=float(np.max(np.abs(samples)))
+            energetic=np.flatnonzero(np.max(np.abs(samples),axis=1)>max(0.003,peak*0.07))
+            if len(energetic): samples=samples[max(0,int(energetic[0]-sr*.02)):]
+            limit={"cough":2.2,"foot_stone":0.65,"foot_water":0.8,"crypt_creak":4.5,"chain_rattle":1.8,"bone_crunch":0.9}[clip["id"]]
+            samples=samples[:int(sr*limit)]
         samples = prepare(samples, sr, clip["loop"], clip["kind"] == "music")
         mastered = folder / "mastered.wav"
         sf.write(mastered, samples, sr, subtype="PCM_16")

@@ -222,18 +222,28 @@ export class GameAudio {
         lineOfSight(game.world, game.player, event),
         22,
       );
-      this.air(
-        0.4,
-        0.12 * cue.gain,
-        event.kind === "rubble"
-          ? 450
-          : event.kind === "webs"
-            ? 1100
-            : event.kind === "bones"
-              ? 1500
-              : 2300,
-        cue.pan,
-      );
+      const foley =
+        event.kind === "chains"
+          ? "chain_rattle"
+          : event.kind === "bones" || event.kind === "rubble"
+            ? "bone_crunch"
+            : undefined;
+      const played = foley
+        ? this.samples?.play(foley, 0.42 * cue.gain, cue.pan, 1, cue.muffled)
+        : false;
+      if (!played)
+        this.air(
+          0.4,
+          0.12 * cue.gain,
+          event.kind === "rubble"
+            ? 450
+            : event.kind === "webs"
+              ? 1100
+              : event.kind === "bones"
+                ? 1500
+                : 2300,
+          cue.pan,
+        );
       this.tone(
         event.kind === "rubble"
           ? 75
@@ -316,8 +326,10 @@ export class GameAudio {
     }
     if (game.mistCough !== this.lastMistCough) {
       this.lastMistCough = game.mistCough;
-      this.air(0.26, 0.11, 420);
-      this.tone(92, 0.18, 0.025, 55);
+      if (!this.samples?.play("cough", 0.55)) {
+        this.air(0.26, 0.11, 420);
+        this.tone(92, 0.18, 0.025, 55);
+      }
     }
     if (game.mist.exposure > 0.3 && this.elapsed > this.nextMistBreath) {
       this.air(0.9, 0.025 * game.mist.exposure, 330);
@@ -333,7 +345,23 @@ export class GameAudio {
     if (game.shortcutOpen && !this.lastShortcutOpen) {
       const gate = game.world.shortcutGate!;
       const cue = spatialCue(game.player, gate, game.cameraYaw, true, 30);
-      this.air(1.3, 0.12 * cue.gain, 350, cue.pan);
+      this.samples?.play(
+        "chain_rattle",
+        0.28 * cue.gain,
+        cue.pan,
+        0.9,
+        cue.muffled,
+      );
+      if (
+        !this.samples?.play(
+          "crypt_creak",
+          0.38 * cue.gain,
+          cue.pan,
+          0.9,
+          cue.muffled,
+        )
+      )
+        this.air(1.3, 0.12 * cue.gain, 350, cue.pan);
       this.tone(270, 1.6, 0.05 * cue.gain, 130, cue.pan);
       this.tone(405, 1.2, 0.025 * cue.gain, 200, cue.pan);
     }
@@ -440,14 +468,23 @@ export class GameAudio {
       const softness =
         (player.crouched ? 0.3 : 1) * (1 - game.upgrades.boots * 0.12);
       const pan = this.stepSide * 0.12;
-      this.tone(87 + this.stepSide * 6, 0.1, 0.03 * softness, 43, pan);
-      this.air(
-        0.09,
-        0.022 * softness,
-        game.surface === "gravel" ? 1800 : 1100,
-        pan,
-      );
-      if (game.surface === "water") this.air(0.24, 0.06 * softness, 850, pan);
+      if (
+        !this.samples?.play(
+          game.surface === "water" ? "foot_water" : "foot_stone",
+          0.3 * softness,
+          pan,
+          1 + this.stepSide * 0.035,
+        )
+      ) {
+        this.tone(87 + this.stepSide * 6, 0.1, 0.03 * softness, 43, pan);
+        this.air(
+          0.09,
+          0.022 * softness,
+          game.surface === "gravel" ? 1800 : 1100,
+          pan,
+        );
+        if (game.surface === "water") this.air(0.24, 0.06 * softness, 850, pan);
+      }
     }
     const liveThreats = new Set<object>(threats);
     for (const tracked of this.threatSteps.keys()) {
@@ -491,9 +528,27 @@ export class GameAudio {
           };
         if (hunter) {
           this.tone(59, 0.28, 0.16 * cue.gain, 27, cue.pan);
-          this.air(0.23, 0.065 * cue.gain, cue.muffled ? 180 : 650, cue.pan);
+          if (
+            !this.samples?.play(
+              "foot_stone",
+              0.42 * cue.gain,
+              cue.pan,
+              0.84,
+              cue.muffled,
+            )
+          )
+            this.air(0.23, 0.065 * cue.gain, cue.muffled ? 180 : 650, cue.pan);
         } else {
-          this.air(0.14, 0.07 * cue.gain, cue.muffled ? 230 : 1100, cue.pan);
+          if (
+            !this.samples?.play(
+              "foot_stone",
+              0.22 * cue.gain,
+              cue.pan,
+              1.12,
+              cue.muffled,
+            )
+          )
+            this.air(0.14, 0.07 * cue.gain, cue.muffled ? 230 : 1100, cue.pan);
           this.tone(130, 0.11, 0.035 * cue.gain, 72, cue.pan);
         }
       }
@@ -540,12 +595,24 @@ export class GameAudio {
         gain = cue.gain;
       // Environmental sounds are stone and metal, never counterfeit approaching footsteps.
       if (event.kind === "stone") {
-        this.air(1.2, 0.07 * gain, 230, pan);
+        if (
+          !this.samples?.play("crypt_creak", 0.34 * gain, pan, 1, cue.muffled)
+        )
+          this.air(1.2, 0.07 * gain, 230, pan);
         this.tone(110, 0.8, 0.035 * gain, 65, pan);
       }
       if (event.kind === "chain") {
         this.tone(cue.muffled ? 280 : 620, 0.8, 0.025 * gain, 180, pan);
-        this.air(0.5, 0.035 * gain, cue.muffled ? 450 : 1700, pan);
+        if (
+          !this.samples?.play(
+            "chain_rattle",
+            0.24 * gain,
+            pan,
+            0.9,
+            cue.muffled,
+          )
+        )
+          this.air(0.5, 0.035 * gain, cue.muffled ? 450 : 1700, pan);
       }
     }
   }

@@ -1,0 +1,24 @@
+{
+  "id": "foot_water",
+  "kind": "sfx",
+  "seconds": 3,
+  "seed": 210102,
+  "loop": false,
+  "prompt": "One isolated leather boot footstep splashing through shallow water on a stone floor, wet impact with small splash and droplets. Single footfall, no continuous walking, no music, no speech.",
+  "space": "OpenMOSS-Team/MOSS-SoundEffect-v2.0",
+  "endpoint": "/run_inference",
+  "parameters": {
+    "prompt": "One isolated leather boot footstep splashing through shallow water on a stone floor, wet impact with small splash and droplets. Single footfall, no continuous walking, no music, no speech.",
+    "seconds": 3,
+    "steps": 50,
+    "cfg_scale": 4.0,
+    "sigma_shift": 5.0,
+    "seed": 210102
+  },
+  "started": 1792592721.6530843,
+  "job_id": "c20d51a8d66646769746075bfa490879",
+  "api_base": "https://openmoss-team-moss-soundeffect-v2-0.hf.space",
+  "file": ".asset-tools\\audio\\raw\\foot_water\\source.wav",
+  "bytes": 288044,
+  "completed": 1792592728.0036514
+}

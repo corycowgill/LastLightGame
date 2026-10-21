@@ -1,0 +1,24 @@
+{
+  "id": "bone_crunch",
+  "kind": "sfx",
+  "seconds": 3,
+  "seed": 210105,
+  "loop": false,
+  "prompt": "One leather boot treads on brittle dry animal bones and gravel, short crunchy crack and brittle fragments settling. Isolated subtle horror game foley, no gore, no music, no speech.",
+  "space": "OpenMOSS-Team/MOSS-SoundEffect-v2.0",
+  "endpoint": "/run_inference",
+  "parameters": {
+    "prompt": "One leather boot treads on brittle dry animal bones and gravel, short crunchy crack and brittle fragments settling. Isolated subtle horror game foley, no gore, no music, no speech.",
+    "seconds": 3,
+    "steps": 50,
+    "cfg_scale": 4.0,
+    "sigma_shift": 5.0,
+    "seed": 210105
+  },
+  "started": 1792592741.4498878,
+  "job_id": "2b76613a9caa4ae5bb765aeef5f069ac",
+  "api_base": "https://openmoss-team-moss-soundeffect-v2-0.hf.space",
+  "file": ".asset-tools\\audio\\raw\\bone_crunch\\source.wav",
+  "bytes": 288044,
+  "completed": 1792592747.819426
+}

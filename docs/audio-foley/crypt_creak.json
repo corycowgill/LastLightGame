@@ -1,0 +1,24 @@
+{
+  "id": "crypt_creak",
+  "kind": "sfx",
+  "seconds": 5,
+  "seed": 210103,
+  "loop": false,
+  "prompt": "An old crypt timber beam slowly creaks under strain, dry wooden groan with a low stone scrape and falling dust, restrained unsettling underground ambience. No voices, no monster growl, no music, no footsteps.",
+  "space": "OpenMOSS-Team/MOSS-SoundEffect-v2.0",
+  "endpoint": "/run_inference",
+  "parameters": {
+    "prompt": "An old crypt timber beam slowly creaks under strain, dry wooden groan with a low stone scrape and falling dust, restrained unsettling underground ambience. No voices, no monster growl, no music, no footsteps.",
+    "seconds": 5,
+    "steps": 50,
+    "cfg_scale": 4.0,
+    "sigma_shift": 5.0,
+    "seed": 210103
+  },
+  "started": 1792592728.1586797,
+  "job_id": "83994a8bcb9b4fa58cda179f2ac9c35a",
+  "api_base": "https://openmoss-team-moss-soundeffect-v2-0.hf.space",
+  "file": ".asset-tools\\audio\\raw\\crypt_creak\\source.wav",
+  "bytes": 480044,
+  "completed": 1792592734.8079848
+}

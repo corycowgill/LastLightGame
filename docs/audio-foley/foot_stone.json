@@ -1,0 +1,24 @@
+{
+  "id": "foot_stone",
+  "kind": "sfx",
+  "seconds": 3,
+  "seed": 210101,
+  "loop": false,
+  "prompt": "One isolated heavy leather boot footstep on dusty stone tiles in an underground crypt, dry heel impact and grit scuff, short natural stone room tail. Single footfall only, no walking sequence, no music, no voice.",
+  "space": "OpenMOSS-Team/MOSS-SoundEffect-v2.0",
+  "endpoint": "/run_inference",
+  "parameters": {
+    "prompt": "One isolated heavy leather boot footstep on dusty stone tiles in an underground crypt, dry heel impact and grit scuff, short natural stone room tail. Single footfall only, no walking sequence, no music, no voice.",
+    "seconds": 3,
+    "steps": 50,
+    "cfg_scale": 4.0,
+    "sigma_shift": 5.0,
+    "seed": 210101
+  },
+  "started": 1792592715.1792521,
+  "job_id": "a0358bf4b2944fbea794eef19a516241",
+  "api_base": "https://openmoss-team-moss-soundeffect-v2-0.hf.space",
+  "file": ".asset-tools\\audio\\raw\\foot_stone\\source.wav",
+  "bytes": 288044,
+  "completed": 1792592721.4985356
+}

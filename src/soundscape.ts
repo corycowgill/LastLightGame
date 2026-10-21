@@ -22,6 +22,12 @@ export const AUDIO_FILES = [
   "relight",
   "hunter",
   "burst",
+  "cough",
+  "foot_stone",
+  "foot_water",
+  "crypt_creak",
+  "chain_rattle",
+  "bone_crunch",
 ] as const;
 type Clip = (typeof AUDIO_FILES)[number];
 
@@ -103,24 +109,30 @@ export class Soundscape {
     this.loop("catacombs", quiet ? 0 : mood === "hunt" ? 0.025 : 0.045 * bed);
     this.loop("torch", burning ? (blaze ? 0.14 : 0.08) : 0);
   }
-  play(name: Clip, volume = 0.25, pan = 0) {
+  play(name: Clip, volume = 0.25, pan = 0, rate = 1, muffled = false) {
     const buffer = this.buffers.get(name);
-    if (!buffer || this.disposed || this.active.size >= 6) return;
+    if (!buffer || this.disposed || this.active.size >= 6) return false;
     const source = this.context.createBufferSource(),
       gain = this.context.createGain(),
       panner = this.context.createStereoPanner();
     source.buffer = buffer;
+    source.playbackRate.value = Math.max(0.8, Math.min(1.2, rate));
     gain.gain.value = volume;
     panner.pan.value = Math.max(-1, Math.min(1, pan));
-    source.connect(gain).connect(panner).connect(this.master);
+    const filter = this.context.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = muffled ? 650 : 20000;
+    source.connect(filter).connect(gain).connect(panner).connect(this.master);
     this.active.add(source);
     source.onended = () => {
       source.disconnect();
+      filter.disconnect();
       gain.disconnect();
       panner.disconnect();
       this.active.delete(source);
     };
     source.start();
+    return true;
   }
   dispose() {
     this.disposed = true;

@@ -1,0 +1,56 @@
+[
+  {
+    "id": "cough",
+    "decoded_seconds": 2.2,
+    "decoded_peak": 0.6402782797813416,
+    "decoded_rms": 0.0846516564488411,
+    "finite": true,
+    "clipping": false,
+    "review": "technical decode verified; subjective listening pending"
+  },
+  {
+    "id": "foot_stone",
+    "decoded_seconds": 0.65,
+    "decoded_peak": 0.6658728718757629,
+    "decoded_rms": 0.026197634637355804,
+    "finite": true,
+    "clipping": false,
+    "review": "technical decode verified; subjective listening pending"
+  },
+  {
+    "id": "foot_water",
+    "decoded_seconds": 0.8,
+    "decoded_peak": 0.6605492830276489,
+    "decoded_rms": 0.07510625571012497,
+    "finite": true,
+    "clipping": false,
+    "review": "technical decode verified; subjective listening pending"
+  },
+  {
+    "id": "crypt_creak",
+    "decoded_seconds": 4.5,
+    "decoded_peak": 0.4302706718444824,
+    "decoded_rms": 0.08466725796461105,
+    "finite": true,
+    "clipping": false,
+    "review": "technical decode verified; subjective listening pending"
+  },
+  {
+    "id": "chain_rattle",
+    "decoded_seconds": 1.8,
+    "decoded_peak": 0.6550262570381165,
+    "decoded_rms": 0.056513093411922455,
+    "finite": true,
+    "clipping": false,
+    "review": "technical decode verified; subjective listening pending"
+  },
+  {
+    "id": "bone_crunch",
+    "decoded_seconds": 0.9,
+    "decoded_peak": 0.7328150272369385,
+    "decoded_rms": 0.01688361167907715,
+    "finite": true,
+    "clipping": false,
+    "review": "technical decode verified; subjective listening pending"
+  }
+]

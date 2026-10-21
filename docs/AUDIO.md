@@ -1,6 +1,6 @@
 # The Last Light audio
 
-Nine original prompt-based drafts are bundled in `public/audio` (about 2.13 MB). Listen at `/audio/listen.html`. They require no runtime account, inference service, or API key.
+Fifteen original prompt-based drafts are bundled in `public/audio` (the original collection plus about 182 KB of new foley). Listen at `/audio/listen.html`. They require no runtime account, inference service, or API key.
 
 Music was generated through the official [ACE-Step demo](https://huggingface.co/spaces/ACE-Step/ACE-Step), using [ACE-Step-v1-3.5B](https://huggingface.co/ACE-Step/ACE-Step-v1-3.5B). Effects were generated through the official [MOSS demo](https://huggingface.co/spaces/OpenMOSS-Team/MOSS-SoundEffect-v2.0), using [MOSS-SoundEffect-v2.0](https://huggingface.co/OpenMOSS-Team/MOSS-SoundEffect-v2.0). Both model cards identify Apache-2.0 licensing. No model weights are redistributed. The newer ACE-Step 1.5 demo failed, so these recordings use the older model; local inference was not used.
 
@@ -11,3 +11,5 @@ Exploration uses restrained strings, stone resonance and sparse bells. The Hunt 
 Playback crossfades between three states, lowers music during the Hunt, caps simultaneous one-shots, and retains procedural audio if downloads fail. Settings provide separate soundtrack and master levels. Audio starts after a user gesture. Pausing mutes the mixer.
 
 These are generated and technically mastered drafts; listening review and device speaker/headphone balancing remain required. Automated checks do not establish artistic quality. Physical iPhone and Xbox testing remain pending.
+
+The 2026-10-21 foley extension adds coughs, stone/water steps, timber creaks, chain contact and bone crunch. See [the audio gap audit](AUDIO_GAP_AUDIT.md) for the exact event mapping, remaining gaps and validation.

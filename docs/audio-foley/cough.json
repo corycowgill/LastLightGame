@@ -1,0 +1,24 @@
+{
+  "id": "cough",
+  "kind": "sfx",
+  "seconds": 3,
+  "seed": 210100,
+  "loop": false,
+  "prompt": "One close dry human cough, a weary adult explorer suppressing a cough, short rough exhalation and recovery breath. Isolated game foley, no speech, no words, no music, no scream, no background.",
+  "space": "OpenMOSS-Team/MOSS-SoundEffect-v2.0",
+  "endpoint": "/run_inference",
+  "parameters": {
+    "prompt": "One close dry human cough, a weary adult explorer suppressing a cough, short rough exhalation and recovery breath. Isolated game foley, no speech, no words, no music, no scream, no background.",
+    "seconds": 3,
+    "steps": 50,
+    "cfg_scale": 4.0,
+    "sigma_shift": 5.0,
+    "seed": 210100
+  },
+  "started": 1792592691.120567,
+  "job_id": "645e2493d0da4c4eb1013d1a4a4e4184",
+  "api_base": "https://openmoss-team-moss-soundeffect-v2-0.hf.space",
+  "file": ".asset-tools\\audio\\raw\\cough\\source.wav",
+  "bytes": 288044,
+  "completed": 1792592715.0305068
+}

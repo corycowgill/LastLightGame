@@ -1,0 +1,24 @@
+{
+  "id": "chain_rattle",
+  "kind": "sfx",
+  "seconds": 3,
+  "seed": 210104,
+  "loop": false,
+  "prompt": "A short rusty hanging iron chain rattle as a body brushes it, several loose metal links clinking and scraping, a brief hollow crypt echo. Isolated sound effect, no music, no voice.",
+  "space": "OpenMOSS-Team/MOSS-SoundEffect-v2.0",
+  "endpoint": "/run_inference",
+  "parameters": {
+    "prompt": "A short rusty hanging iron chain rattle as a body brushes it, several loose metal links clinking and scraping, a brief hollow crypt echo. Isolated sound effect, no music, no voice.",
+    "seconds": 3,
+    "steps": 50,
+    "cfg_scale": 4.0,
+    "sigma_shift": 5.0,
+    "seed": 210104
+  },
+  "started": 1792592734.9614878,
+  "job_id": "1455730b58cc4685a51f8d8db985ff6e",
+  "api_base": "https://openmoss-team-moss-soundeffect-v2-0.hf.space",
+  "file": ".asset-tools\\audio\\raw\\chain_rattle\\source.wav",
+  "bytes": 288044,
+  "completed": 1792592741.2964795
+}

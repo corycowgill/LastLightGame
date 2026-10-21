@@ -1,5 +1,13 @@
 # The Last Light — build status
 
+## Generated foley and audio gap audit — 2026-10-21
+
+Six new original MOSS-SoundEffect clips now cover mist coughing, stone and water footfalls, crypt timber creaks, hanging-chain contact and bone crunch. They are triggered by real gameplay events, with positional panning, wall muffling, modest pitch variation and bounded overlap. Existing procedural effects remain fallbacks rather than doubling every recorded impact. The soundtrack is retained.
+
+The HF CLI verified the existing account and running official MOSS demo; the established authenticated queue pipeline generated the clips without local weight downloads or paid hardware changes. Prompts, seeds, provider job IDs and technical decoding reports are preserved in [the audio audit](docs/AUDIO_GAP_AUDIT.md). Listen individually at [/audio/listen.html](https://lastlightgame.onrender.com/audio/listen.html).
+
+Validation: 163 game tests, two mastering tests and production build pass; all six MP3s decode without clipping or invalid samples. Subjective headphone quality and physical-device mix remain open. Remaining audio gaps include generated exertion breaths, differentiated Hunter foot textures, vent jets and wordless relic whispers.
+
 ## Living mist — 2026-10-21
 
 A drifting ground-mist field now fills the crypt. Torch modes clear different pockets (Ember 2.5m, Steady 4.5m, Blaze 7m); sanctuary fire and dropped brands also repel it. Cleared floor slowly refills when fire leaves. Fire clearing respects walls and the field persists in current-generation saves.
