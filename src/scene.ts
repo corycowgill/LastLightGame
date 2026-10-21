@@ -1,3 +1,8 @@
+import {
+  createTorchFlame,
+  ContactShadows,
+  createEmberGlow,
+} from "./graphics-polish";
 import { HazardVisuals } from "./hazard-visuals";
 import {
   shoulderOffset,
@@ -45,6 +50,7 @@ export function constrainCamera(
 }
 export class GameScene {
   private catalog = new CatalogAssets();
+  private contactShadows?: ContactShadows;
   private wallFallbacks: THREE.Object3D[] = [];
   private archFallbacks: THREE.Object3D[] = [];
   private rubbleFallbacks: THREE.Object3D[] = [];
@@ -124,7 +130,7 @@ export class GameScene {
     this.renderer.setClearColor(0x070d17);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.12;
+    this.renderer.toneMappingExposure = 1.02;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
@@ -138,6 +144,7 @@ export class GameScene {
       this.ambient.color.setHex(0x9589ac);
     }
     this.scene.add(this.ambient, this.darkAdaptation);
+    this.contactShadows = new ContactShadows(this.scene);
     const stone = new THREE.MeshStandardMaterial({
         color: 0x59636b,
         roughness: 0.96,
@@ -413,10 +420,7 @@ export class GameScene {
     stick.position.set(0.43, 1.17, -0.18);
     stick.rotation.z = -0.15;
     this.player.add(stick);
-    this.flame = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(0.052, 1),
-      new THREE.MeshBasicMaterial({ color: 0xffd58a }),
-    );
+    this.flame = createTorchFlame();
     const iron = new THREE.MeshStandardMaterial({
       color: 0x292a2b,
       metalness: 0.8,
@@ -509,7 +513,8 @@ export class GameScene {
       geometry,
       new THREE.PointsMaterial({
         color: 0xffc06a,
-        size: 0.035,
+        map: createEmberGlow(),
+        size: 0.045,
         transparent: true,
         opacity: 0.65,
         depthWrite: false,
@@ -1045,7 +1050,7 @@ export class GameScene {
     this.burst = Math.max(0, this.burst - dt * 2);
     this.ambient.intensity = THREE.MathUtils.damp(
       this.ambient.intensity,
-      burning ? 0.55 : 0.3,
+      burning ? 0.46 : 0.3,
       2,
       dt,
     );
@@ -1091,7 +1096,8 @@ export class GameScene {
       (2.1 + 0.3 * Math.sin(this.elapsed * 15)) * Math.sqrt(flicker),
       1,
     );
-    this.flame.rotation.y = this.elapsed * 2;
+    (this.flame.material as THREE.ShaderMaterial).uniforms.time.value =
+      this.elapsed;
     if (
       game.hunter.state === "BANISHED" &&
       !["BANISHED", "DORMANT"].includes(this.lastHunterState)
@@ -1408,6 +1414,8 @@ export class GameScene {
     this.target.y += 0.15;
     this.camera.lookAt(this.target);
     const renderStart = performance.now();
+    this.flame.lookAt(this.camera.position);
+    this.contactShadows?.update(game.player, game.hunter);
     this.renderer.render(this.scene, this.camera);
     this.renderSubmitMs =
       this.renderSubmitMs * 0.9 + (performance.now() - renderStart) * 0.1;

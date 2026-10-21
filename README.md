@@ -6,6 +6,14 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Graphics surface and fire pass — 2026-10-20
+
+Catalog masonry now reuses its embedded color maps for subtle bump relief, with improved oblique texture sampling. Chains/iron retain a controlled metallic response instead of being flattened into the same roughness as stone. Bone remains matte. Exposure and ambient fill are slightly lower to preserve warm fire against cool crypt shadows, while dark adaptation is unchanged.
+
+The handheld torch now uses a camera-facing animated translucent flame with a warm core and wavering tip. Soft ember sprites replace square particles. Bounded player/Hunter contact shadows help ground silhouettes even when dynamic shadows are disabled. Original catalog GLBs remain the environment and character assets; these additions are material and effect work.
+
+Validation: production build and 151 tests pass. Browser review of the seed-1 burial-web room showed no shader errors and approximately 57 FPS; this is an individual observation, not a benchmark across devices. Existing automatic graphics fallback and staggered shadow budgets remain in place. See [graphics implementation and limitations](docs/GRAPHICS_POLISH.md).
+
 ## Whispering votive and distractions — 2026-10-20
 
 The sealed three-relic votive now carries a return-trip risk: every 18 seconds away from sanctuary it can cry out. A three-second text/audio warning gives time to crouch completely still and muffle it. The cry creates ordinary audible noise; it does not spawn enemies or reveal the player globally. Ordinary relics stay unchanged.

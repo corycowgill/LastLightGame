@@ -1,3 +1,4 @@
+import { polishCatalogSurface } from "./graphics-polish";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { LoadQueue } from "./load-queue";
@@ -59,16 +60,21 @@ export class CatalogAssets {
                 id,
               );
               mesh.receiveShadow = true;
+              for (const material of Array.isArray(mesh.material)
+                ? mesh.material
+                : [mesh.material])
+                polishCatalogSurface(id, material);
               if (
-                id.startsWith("arc_") ||
-                (id.startsWith("lan_") && id !== "lan_fallen_bell") ||
-                id.startsWith("dre_") ||
-                [
-                  "pro_pillar",
-                  "pro_sarcophagus",
-                  "pro_memorial",
-                  "pro_rubble",
-                ].includes(id)
+                !/chain|cage|lantern|iron/.test(id) &&
+                (id.startsWith("arc_") ||
+                  (id.startsWith("lan_") && id !== "lan_fallen_bell") ||
+                  id.startsWith("dre_") ||
+                  [
+                    "pro_pillar",
+                    "pro_sarcophagus",
+                    "pro_memorial",
+                    "pro_rubble",
+                  ].includes(id))
               ) {
                 for (const material of Array.isArray(mesh.material)
                   ? mesh.material
