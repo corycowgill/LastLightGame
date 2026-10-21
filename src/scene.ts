@@ -1,3 +1,4 @@
+import { HunterShroud } from "./horror-presentation";
 import { MistVisuals } from "./mist-visuals";
 import { relicGlyph } from "./visual-language";
 import {
@@ -100,6 +101,8 @@ export class GameScene {
   private target = new THREE.Vector3();
   private actor?: AnimatedCharacter;
   private hunterActor?: AnimatedCharacter;
+  private hunterShroud?: HunterShroud;
+  private secondShroud?: HunterShroud;
   private additionalHunter?: { root: THREE.Group; actor: AnimatedCharacter };
   private stalkerActor?: AnimatedCharacter;
   private lastHunterState = "DORMANT";
@@ -546,20 +549,28 @@ export class GameScene {
     );
     this.player.add(this.actor.root);
     const hunterFallback = [...this.hunter.children];
+    this.hunterShroud = new HunterShroud(this.hunter);
     this.hunterActor = new AnimatedCharacter(
       "/models/hunter.glb?v=crypt-motion-v3",
       () => {
         hunterFallback.forEach((c) => (c.visible = false));
-        if (this.hunterActor) addHunterEyes(this.hunterActor.root);
+        if (this.hunterActor) {
+          addHunterEyes(this.hunterActor.root);
+          this.hunterShroud?.prepare(this.hunterActor.root);
+        }
       },
     );
     this.hunter.add(this.hunterActor.root);
     {
       // Prepare the second body before an expedition, never during an ambush.
       const root = new THREE.Group();
+      this.secondShroud = new HunterShroud(root);
       const actor = new AnimatedCharacter(
         "/models/hunter.glb?v=crypt-motion-v3",
-        () => addHunterEyes(actor.root),
+        () => {
+          addHunterEyes(actor.root);
+          this.secondShroud?.prepare(actor.root);
+        },
       );
       root.add(actor.root);
       root.visible = false;
@@ -1125,6 +1136,11 @@ export class GameScene {
         game.hunter.x - this.hunter.position.x,
         game.hunter.z - this.hunter.position.z,
       ) > 0.005;
+    this.hunterShroud?.update(game.elapsed, game.hunter.state);
+    this.secondShroud?.update(
+      game.elapsed,
+      game.additionalHunters[0]?.state ?? "DORMANT",
+    );
     this.hunterActor?.update(
       game.phase === "DEAD"
         ? "capture"

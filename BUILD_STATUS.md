@@ -1,5 +1,11 @@
 # The Last Light — build status
 
+## Horror presentation — 2026-10-21
+
+Both Hunters now have a dark, subtly shifting surface and rising shadow wisps, while their glowing eyes remain readable. Living mist rolls at varied heights with layered texture detail. These effects retain the original GLBs, rigs and gameplay perception rules. See [implementation and review limits](docs/HORROR_PRESENTATION.md).
+
+Validation: 163 tests and production build pass. Chrome corridor review measured 46–49 FPS; the larger Hunter-retreat chamber measured only 17–22 FPS and remains a performance priority. No shader errors were observed. Physical-device review remains open.
+
 ## Generated foley and audio gap audit — 2026-10-21
 
 Six new original MOSS-SoundEffect clips now cover mist coughing, stone and water footfalls, crypt timber creaks, hanging-chain contact and bone crunch. They are triggered by real gameplay events, with positional panning, wall muffling, modest pitch variation and bounded overlap. Existing procedural effects remain fallbacks rather than doubling every recorded impact. The soundtrack is retained.
