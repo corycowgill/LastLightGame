@@ -332,16 +332,18 @@ async function begin(load: boolean) {
   if (
     !load &&
     query.has("debug") &&
-    (query.has("room") || query.has("encounter"))
+    (query.has("room") || query.has("encounter") || query.has("hazard"))
   ) {
     const item = game.items.find((i) => i.encounter === query.get("encounter"));
     const room = game.world.layout?.rooms.find(
       (r) => r.design === query.get("room"),
     );
+    const hazard = game.hazards.find((h) => h.kind === query.get("hazard"));
     const target =
-      query.get("encounter") === "shortcut"
+      hazard ??
+      (query.get("encounter") === "shortcut"
         ? game.world.shortcutGate
-        : (item ?? (room ? { x: room.x * 2, z: room.z * 2 } : undefined));
+        : (item ?? (room ? { x: room.x * 2, z: room.z * 2 } : undefined)));
     if (query.get("encounter") === "shortcut" && query.has("recovered")) {
       const votive = game.items.find((i) => i.id === game.encounterRelicId);
       if (votive) {
@@ -477,7 +479,7 @@ function journal() {
     `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (CONFIG.burnMultiplier * (1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
   );
   const tools = document.createElement("p");
-  tools.textContent = `Burning brand: G / RB / BRAND. Cost ${BRAND_CONFIG.fuelCost / 6}s base Steady fuel; ${BRAND_CONFIG.lifetime}s stationary light, ${BRAND_CONFIG.repelRadius}m protection, ${BRAND_CONFIG.cooldown}s cooldown. During a Hunt, spend one match for instant stationary fire instead of a two-second torch relight. ${game.encounter ? `Bell Crypt return seal: ${game.shortcutOpen ? "OPEN" : game.shortcutUnlocked ? "VOTIVE RECOVERED — READY TO RAISE" : "SEALED — FIND ITS VOTIVE"}. Raising it is loud; retracing your route is quieter.` : "Explore this layout's crypts; no bell return seal was found on this expedition."}`;
+  tools.textContent = `Environmental dangers: crouch over loose bones and beneath hanging chains to avoid noise. Cold vents hiss for two seconds before a three-second burst; go around or wait. Active vapor slows movement and drains stamina. Burning brand: G / RB / BRAND. Cost ${BRAND_CONFIG.fuelCost / 6}s base Steady fuel; ${BRAND_CONFIG.lifetime}s stationary light, ${BRAND_CONFIG.repelRadius}m protection, ${BRAND_CONFIG.cooldown}s cooldown. During a Hunt, spend one match for instant stationary fire instead of a two-second torch relight. ${game.encounter ? `Bell Crypt return seal: ${game.shortcutOpen ? "OPEN" : game.shortcutUnlocked ? "VOTIVE RECOVERED — READY TO RAISE" : "SEALED — FIND ITS VOTIVE"}. Raising it is loud; retracing your route is quieter.` : "Explore this layout's crypts; no bell return seal was found on this expedition."}`;
   $("discoveries").append(tools);
   const summary = document.createElement("p");
   const votives = game.items.filter((i) => i.kind === "artifact");
@@ -838,7 +840,7 @@ function updateHUD() {
         : closeCreature?.state === "COWERING" ||
             closeCreature?.state === "FLEEING"
           ? "IT FEARS YOUR FLAME · KEEP YOUR DISTANCE"
-          : game.objectiveHint;
+          : game.hazardHint || game.objectiveHint;
   const markup = `<b>${game.matches}</b> MATCHES &nbsp; <b>${game.artifacts}</b> RELICS<br><small>${game.chalk.length} CHALK MARKS · ${game.banked} BANKED</small>`;
   if (markup !== inventoryMarkup) {
     inventoryMarkup = markup;
@@ -852,7 +854,7 @@ function updateHUD() {
       : inputSource === "touch"
         ? "PAUSE"
         : "ESC · PAUSE";
-  $("notice").textContent = (game.message || "").replace(
+  $("notice").textContent = (game.message || game.hazardHint || "").replace(
     /\bE to\b/g,
     inputSource === "touch" ? "Tap USE to" : `${useLabel} to`,
   );
@@ -891,7 +893,7 @@ function updateHUD() {
           ? "WATER CARRIES SOUND · DRY EDGES ARE QUIETER"
           : game.depth > 0
             ? `DEEP AIR · FLAME DRAIN +${Math.round(game.depth * 30)}%`
-            : game.objectiveHint || "SEEK THE GOLDEN FIRE";
+            : game.hazardHint || game.objectiveHint || "SEEK THE GOLDEN FIRE";
   $("scene").dataset.cameraYaw = cameraControls.pose.yaw.toFixed(3);
   $("scene").dataset.cameraPitch = cameraControls.pose.pitch.toFixed(3);
   $("scene").dataset.cameraDistance = cameraControls.pose.distance.toFixed(2);

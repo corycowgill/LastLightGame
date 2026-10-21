@@ -1,3 +1,4 @@
+import { vaporPhase } from "./environment-hazards";
 import { Soundscape, audioMood } from "./soundscape";
 import { lineOfSight, type Game } from "./simulation";
 import { FootstepTracker, spatialCue } from "./audio-spatial";
@@ -35,6 +36,8 @@ export class GameAudio {
   private samples?: Soundscape;
   private lastFuel = 720;
   private lastBrandId = 0;
+  private lastHazardEvent = 0;
+  private nextVentHiss = 0;
   private nextBrandCrackle = 0;
   private lastShortcutOpen = false;
   private musicLevel = 0.7;
@@ -169,6 +172,8 @@ export class GameAudio {
       this.lastAmbientEvent = -1;
       this.lastArtifacts = game.artifacts;
       this.lastFuel = game.fuel;
+      this.lastHazardEvent = 0;
+      this.nextVentHiss = 0;
       this.lastBrandId = game.brands[0]?.id ?? 0;
       this.lastShortcutOpen = game.shortcutOpen;
       this.lastHunterWarning = "";
@@ -195,6 +200,61 @@ export class GameAudio {
       game.elapsed < game.quietUntil,
       nearbyThreat,
     );
+    if (game.hazardEvent && game.hazardEvent.id !== this.lastHazardEvent) {
+      const event = game.hazardEvent;
+      this.lastHazardEvent = event.id;
+      const cue = spatialCue(
+        game.player,
+        event,
+        game.cameraYaw,
+        lineOfSight(game.world, game.player, event),
+        22,
+      );
+      this.air(
+        0.4,
+        0.12 * cue.gain,
+        event.kind === "bones" ? 1500 : 2300,
+        cue.pan,
+      );
+      this.tone(
+        event.kind === "bones" ? 160 : 680,
+        0.6,
+        0.045 * cue.gain,
+        100,
+        cue.pan,
+      );
+    }
+    if (this.elapsed > this.nextVentHiss) {
+      const vent = game.hazards
+        .filter(
+          (h) =>
+            h.kind === "vapor" &&
+            Math.hypot(h.x - game.player.x, h.z - game.player.z) < 12,
+        )
+        .sort(
+          (a, b) =>
+            Math.hypot(a.x - game.player.x, a.z - game.player.z) -
+            Math.hypot(b.x - game.player.x, b.z - game.player.z),
+        )[0];
+      if (vent) {
+        const cue = spatialCue(
+          game.player,
+          vent,
+          game.cameraYaw,
+          lineOfSight(game.world, game.player, vent),
+          12,
+        );
+        const phase = vaporPhase(vent, game.elapsed);
+        this.air(
+          0.65,
+          (phase === "active" ? 0.09 : phase === "warning" ? 0.05 : 0.012) *
+            cue.gain,
+          phase === "active" ? 1800 : 850,
+          cue.pan,
+        );
+      }
+      this.nextVentHiss = this.elapsed + 0.8;
+    }
     const brandPlaced =
       !!game.brands[0] && game.brands[0].id !== this.lastBrandId;
     if (brandPlaced) {

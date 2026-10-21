@@ -1,4 +1,11 @@
 import {
+  planEnvironmentHazards,
+  hazardEffect,
+  hazardWarning,
+  HAZARD_CONFIG,
+  type EnvironmentHazard,
+} from "./environment-hazards";
+import {
   planExpeditionEncounter,
   type ExpeditionEncounterPlan,
 } from "./expedition-encounter";
@@ -312,6 +319,20 @@ export class Game {
     compass: 0,
   };
   elapsed = 0;
+  hazards: EnvironmentHazard[] = [];
+  hazardEvent?: { id: number; x: number; z: number; kind: string };
+  private hazardCooldowns = new Map<number, number>();
+  private hazardEventId = 0;
+  get hazardHint() {
+    const near = this.hazards
+      .filter(
+        (h) =>
+          dist(h, this.player) < HAZARD_CONFIG.warningRadius &&
+          lineOfSight(this.world, this.player, h),
+      )
+      .sort((a, b) => dist(a, this.player) - dist(b, this.player))[0];
+    return near ? hazardWarning(near, this.elapsed) : "";
+  }
   message = "";
   completed = false;
   enemies: { x: number; z: number; state: string; kind: string }[] = [];
@@ -490,6 +511,9 @@ export class Game {
     this.quietUntil = 0;
     this.eventCount = 0;
     this.hunterReadiness = 0;
+    this.hazardCooldowns.clear();
+    this.hazardEvent = undefined;
+    this.hazardEventId = 0;
     this.surfaceCells = new Map(
       this.world.cells.map((c) => [key(c.x, c.z), c.surface ?? "stone"]),
     );
@@ -647,6 +671,7 @@ export class Game {
         invalidateNavigation(this.world);
       }
     }
+    this.hazards = planEnvironmentHazards(this.world, this.items);
   }
   get currentRoom() {
     return roomAt(this.world, this.player.x, this.player.z);
@@ -1031,7 +1056,19 @@ export class Game {
                 : 0),
       ),
     );
-    const surfaceSpeed = this.surface === "water" ? 0.78 : 1;
+    const inVapor = this.hazards.some(
+      (h) =>
+        dist(h, this.player) < HAZARD_CONFIG.radius &&
+        hazardEffect(h, this.elapsed, moving, input.crouch, sprint).slow,
+    );
+    if (inVapor)
+      this.player.stamina = Math.max(
+        0,
+        this.player.stamina - dt * HAZARD_CONFIG.staminaDrain,
+      );
+    const surfaceSpeed =
+      (this.surface === "water" ? 0.78 : 1) *
+      (inVapor ? HAZARD_CONFIG.vaporSpeed : 1);
     const speed =
       surfaceSpeed *
       (input.crouch ? CONFIG.crouch : sprint ? CONFIG.sprint : CONFIG.walk);
@@ -1066,6 +1103,30 @@ export class Game {
     if (clear(this.player.x, this.player.z + this.vz * dt))
       this.player.z += this.vz * dt;
     else this.vz = 0;
+    for (const h of this.hazards) {
+      if (
+        dist(h, this.player) >= HAZARD_CONFIG.radius ||
+        !hazardEffect(h, this.elapsed, moving, input.crouch, sprint).noise ||
+        (this.hazardCooldowns.get(h.id) ?? 0) > this.elapsed
+      )
+        continue;
+      this.hazardCooldowns.set(
+        h.id,
+        this.elapsed + HAZARD_CONFIG.triggerCooldown,
+      );
+      this.noiseTimer = Math.max(this.noiseTimer, HAZARD_CONFIG.noiseDuration);
+      this.hazardEvent = {
+        id: ++this.hazardEventId,
+        x: h.x,
+        z: h.z,
+        kind: h.kind,
+      };
+      this.say(
+        h.kind === "bones"
+          ? "Bones crack beneath your boots. Crouch or skirt the patch to stay quiet."
+          : "The chains ring out. Crouch beneath them next time.",
+      );
+    }
     this.noiseTimer -= dt;
     this.noise =
       this.noiseTimer > 0

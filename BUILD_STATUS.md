@@ -1,5 +1,11 @@
 # The Last Light — build status
 
+## Environmental dangers — 2026-10-20
+
+Catacombs now contain optional loose-bone patches, hanging chains and pulsing cold-vapor vents. Crossing bones or chains upright makes a loud contact that nearby enemies can investigate; crouching or going around avoids it. Vents hiss for two seconds before a three-second discharge, slowing movement and draining stamina while inside. These create pursuit and route choices without instant death or hidden fuel penalties.
+
+Placement is seeded, bounded to one small hazard per eligible room, excludes the opening rooms and sanctuaries, and keeps rewards clear. Catalog bone, chain and rubble GLBs provide physical cues; soft vapor particles show the cycle. Local warnings and positional sound explain counterplay. See [environment hazards](docs/ENVIRONMENT_HAZARDS.md) for balancing, implementation and validation.
+
 ## Expedition choices — 2026-10-20
 
 The Bell Crypt now offers a sealed votive and a return decision: retrace the longer route quietly, or recover its votive and raise a noisy shortcut gate. Gates use actual collision, line of sight and cached navigation invalidation. An existing catalog bell and chained crypt-door GLBs mark the encounter. It appears only where an existing loop provides a useful shortcut without disconnecting any room; other seeds retain normal expeditions.

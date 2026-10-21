@@ -1,3 +1,4 @@
+import { HazardVisuals } from "./hazard-visuals";
 import {
   shoulderOffset,
   compressedPlayerOpacity,
@@ -106,6 +107,7 @@ export class GameScene {
   private torchAttachment = new TorchAttachment();
   private initialized = false;
   private encounterVisuals?: EncounterVisuals;
+  private hazardVisuals?: HazardVisuals;
   private elapsed = 0;
   private locomotionSpeed = 0;
   private lastFuel = 720;
@@ -681,6 +683,7 @@ export class GameScene {
     }
     this.cameraIndex = new CameraIndex(this.walls);
     this.encounterVisuals = new EncounterVisuals(this.scene, this.catalog);
+    this.hazardVisuals = new HazardVisuals(this.scene, this.catalog);
     this.container.dataset.cameraColliders = String(this.walls.length);
     this.settlingDust.visible = false;
     this.settlingDust.frustumCulled = false;
@@ -842,6 +845,8 @@ export class GameScene {
     if (this.renderBudget.sample(dt)) this.applyRenderBudget();
   }
   update(game: Game, dt: number, yaw: number, pitch: number, distance = 3.7) {
+    this.hazardVisuals?.initialize(game.hazards);
+    this.hazardVisuals?.update(game.elapsed);
     if (this.encounterVisuals) {
       this.encounterVisuals.initialize(game.encounter, game.landmarkDecoration);
       const bell = this.encounterVisuals.landmarkCollider;
