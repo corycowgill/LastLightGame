@@ -18,6 +18,7 @@ export class GameAudio {
   private nextWarning = 0;
   private nextSealScrape = 0;
   private lastArtifacts = 0;
+  private lastMatches = 0;
   private lastStone = 0;
   private lastRelicEcho = 0;
   private nextHeartbeat = 0;
@@ -177,6 +178,7 @@ export class GameAudio {
       this.lastStone = 0;
       this.lastRelicEcho = game.relicEcho;
       this.nextHeartbeat = 0;
+      this.lastMatches = game.matches;
       this.lastArtifacts = game.artifacts;
       this.lastFuel = game.fuel;
       this.lastHazardEvent = 0;
@@ -342,6 +344,15 @@ export class GameAudio {
       !brandPlaced
     )
       this.samples?.play("burst", 0.28);
+    if (game.fuel > this.lastFuel + 10) {
+      this.air(0.4, 0.045, 450);
+      this.tone(180, 0.25, 0.02, 240);
+    }
+    if (game.matches > this.lastMatches) {
+      this.air(0.12, 0.035, 2100);
+      this.tone(900, 0.1, 0.015, 600);
+    }
+    this.lastMatches = game.matches;
     this.lastFuel = game.fuel;
     const phase = String(game.phase),
       hunt = phase === "HUNT_ACTIVE" || phase === "HUNT_GRACE";

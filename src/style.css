@@ -946,3 +946,249 @@ body[data-touch="true"] #relicDiscovery p,
 body[data-touch="true"] #relicDiscovery small {
   display: none;
 }
+
+/* Consistent visual language: hazard -> response, with readable shape + color. */
+#visualCue {
+  position: absolute;
+  left: 50%;
+  top: 20%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 52px 18px 42px;
+  align-items: center;
+  justify-items: center;
+  gap: 5px;
+  padding: 12px 16px 8px;
+  border: 1px solid #baa27466;
+  border-radius: 12px;
+  background: #080f19e6;
+  color: #e9ca8b;
+  box-shadow: 0 6px 30px #0007;
+  pointer-events: none;
+}
+#visualCue[hidden] {
+  display: none;
+}
+#visualCue svg {
+  width: 36px;
+  height: 36px;
+}
+#visualCue small {
+  grid-column: 1/-1;
+  font-size: 9px;
+  letter-spacing: 2px;
+  margin-top: 3px;
+}
+.cue-symbol {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(#c69c58 var(--cue-progress, 0deg), #ffffff0d 0);
+  box-shadow: inset 0 0 0 3px #0a1018;
+}
+.cue-symbol svg {
+  background: #101824;
+  border-radius: 50%;
+  padding: 5px;
+  width: 34px !important;
+  height: 34px !important;
+}
+.cue-arrow {
+  font-size: 24px;
+  opacity: 0.6;
+}
+#visualCue.urgent {
+  color: #ffc18e;
+  border-color: #dd8e6488;
+  animation: cue-breath 1s ease-in-out infinite alternate;
+}
+@keyframes cue-breath {
+  to {
+    box-shadow: 0 0 25px #b45b2c44;
+  }
+}
+.visual-guidance #survivalHint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.visual-guidance #notice {
+  top: calc(20% + 115px);
+  font-size: 12px;
+  max-width: 460px;
+}
+#relicEmblem svg {
+  width: 76px;
+  height: 76px;
+  color: var(--relic-color);
+  filter: drop-shadow(0 0 14px var(--relic-color));
+}
+#relicDiscovery {
+  width: 220px;
+  text-align: center;
+  border: 1px solid #b69c6266;
+  border-radius: 8px;
+}
+#relicDiscovery p,
+#relicDiscovery small {
+  display: none;
+}
+#relicDiscovery strong {
+  font-size: 16px;
+}
+#relicPouch {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+  pointer-events: none;
+}
+.pouch-relic {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 42px;
+  background: #0b121edb;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  animation: discovery-arrival 0.35s ease-out;
+}
+.pouch-relic svg {
+  width: 27px;
+  height: 27px;
+}
+.relic-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.relic-gallery article {
+  padding: 16px;
+  border: 1px solid #b09a6255;
+  border-radius: 8px;
+  background: #101824;
+}
+.relic-gallery svg {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 12px;
+  color: var(--relic-color);
+}
+.relic-gallery strong {
+  color: var(--relic-color);
+  font:
+    16px Georgia,
+    serif;
+}
+.relic-gallery p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+body[data-touch="true"] #relicPouch {
+  bottom: auto;
+  top: 90px;
+  left: 24px;
+  transform: none;
+}
+body[data-touch="true"] #relicDiscovery {
+  top: 30%;
+  width: 160px;
+}
+@media (max-height: 500px) {
+  #visualCue {
+    top: 15%;
+    transform: translateX(-50%) scale(0.8);
+    transform-origin: top center;
+  }
+  .visual-guidance #notice {
+    top: calc(15% + 88px);
+    max-width: 340px;
+  }
+  #relicEmblem svg {
+    width: 48px;
+    height: 48px;
+  }
+  body[data-touch="true"] #relicPouch {
+    top: 65px;
+    gap: 4px;
+  }
+  .pouch-relic {
+    width: 27px;
+    height: 31px;
+  }
+  .pouch-relic svg {
+    width: 21px;
+    height: 21px;
+  }
+  body[data-touch="true"] #relicDiscovery {
+    width: 130px;
+    padding: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #visualCue.urgent,
+  .pouch-relic {
+    animation: none;
+  }
+}
+
+#notice.visual-replaced {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+#prompt .prompt-icon {
+  display: inline-flex;
+  vertical-align: middle;
+  color: #e8cb8d;
+  margin-right: 10px;
+}
+#prompt .prompt-icon svg {
+  width: 32px;
+  height: 32px;
+}
+#prompt kbd {
+  padding: 5px 8px;
+  border: 1px solid #b99c6a88;
+  border-radius: 4px;
+  margin-right: 8px;
+  color: #f6e4c2;
+}
+#prompt.timed-prompt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+#overlay {
+  align-items: flex-start;
+}
+#overlay .panel {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+.journal-reference {
+  border: 1px solid #a28b5b55;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 15px 0;
+}
+.journal-reference summary {
+  cursor: pointer;
+  color: #d8bd84;
+  font-size: 11px;
+  letter-spacing: 1px;
+}

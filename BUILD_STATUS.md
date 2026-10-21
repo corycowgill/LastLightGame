@@ -1,5 +1,13 @@
 # The Last Light — build status
 
+## Visual gameplay UX — 2026-10-21
+
+Relics now have seven authored emblems (bell, ember, tear, coin, candle, key and sealed votive), shared by depth-tested world markers, brief collection reveals, a carried-relic pouch and a journal gallery. Oil and matches have distinct pickup symbols and sound cues. Long discovery prose stays in the journal; gameplay reveals last four seconds instead of twelve.
+
+Hazards pair an illustrated danger with a response symbol. Reliquary opening, relighting and warning cycles use progress rings. Repeated explanatory notices are visually suppressed when replaced by these cues, while accessible descriptions and important failure messages remain. Journal reference prose is collapsible, and tall panels scroll from a reachable heading.
+
+Validation: 155 tests and production build pass. Targeted Chrome review exercised opening, collection and the gallery. Physical-phone/controller and subjective audio validation remain open. See [visual UX implementation](docs/VISUAL_GAMEPLAY_UX.md).
+
 ## Graphics surface and fire pass — 2026-10-20
 
 Catalog masonry now reuses its embedded color maps for subtle bump relief, with improved oblique texture sampling. Chains/iron retain a controlled metallic response instead of being flattened into the same roughness as stone. Bone remains matte. Exposure and ambient fill are slightly lower to preserve warm fire against cool crypt shadows, while dark adaptation is unchanged.

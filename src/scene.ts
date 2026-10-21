@@ -1,3 +1,4 @@
+import { relicGlyph } from "./visual-language";
 import {
   createTorchFlame,
   ContactShadows,
@@ -12,6 +13,7 @@ import {
 import { relicIdentity } from "./relics";
 import {
   relicMotes,
+  relicEmblem,
   animateRelicMotes,
   illuminateRelic,
 } from "./relic-visuals";
@@ -1261,6 +1263,12 @@ export class GameScene {
         );
         if (artifact) {
           const identity = relicIdentity(game.world.seed, item);
+          const emblem = relicEmblem(
+            relicGlyph(game.world.seed, item),
+            identity.color,
+          );
+          emblem.position.y = item.encounter === "reliquary" ? 1.9 : 1.1;
+          mesh.add(emblem);
           const motes = relicMotes(
             item.encounter === "reliquary",
             identity.color,

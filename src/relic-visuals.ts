@@ -1,3 +1,4 @@
+import { glyphSvg, type Glyph } from "./visual-language";
 import * as THREE from "three";
 
 /** Readable relic signal. Depth-tested motes reveal a discovery, never a wallhack. */
@@ -70,4 +71,29 @@ export function illuminateRelic(root: THREE.Object3D, color = "#f5cc77") {
     mesh.material = Array.isArray(mesh.material) ? materials : materials[0];
     mesh.castShadow = false;
   });
+}
+
+/** A depth-tested emblem over the existing GLB, never an omniscient marker. */
+export function relicEmblem(glyph: Glyph, color: string) {
+  const svg = glyphSvg(glyph, "#ffffff").replace(
+    "<svg ",
+    '<svg xmlns="http://www.w3.org/2000/svg" ',
+  );
+  const texture = new THREE.TextureLoader().load(
+    `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`,
+  );
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: texture,
+      color,
+      transparent: true,
+      opacity: 0.85,
+      depthTest: true,
+      depthWrite: false,
+    }),
+  );
+  sprite.position.y = 1.1;
+  sprite.scale.set(0.48, 0.48, 1);
+  return sprite;
 }

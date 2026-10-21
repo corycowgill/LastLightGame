@@ -325,6 +325,9 @@ export class Game {
   cursedRelic = false;
   relicPulse = 18;
   relicEcho = 0;
+  get phaseTimeRemaining() {
+    return this.timer;
+  }
   get tensionHint() {
     return this.cursedRelic && this.artifacts > 0 && this.relicPulse <= 3
       ? `THE VOTIVE WHISPERS · CROUCH STILL TO MUFFLE IT · ${Math.ceil(this.relicPulse)}s`

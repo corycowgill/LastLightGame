@@ -1,3 +1,4 @@
+import { glyphSvg, relicGlyph, visualCue } from "./visual-language";
 import { BRAND_CONFIG } from "./brands";
 import { CONFIG, UPGRADES, type Upgrade } from "./simulation";
 import { relicIdentity } from "./relics";
@@ -479,9 +480,38 @@ function journal() {
   panel(
     `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (CONFIG.burnMultiplier * (1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
   );
+  const gallery = document.createElement("div");
+  gallery.className = "relic-gallery";
+  for (const item of game.items.filter(
+    (i) => i.kind === "artifact" && i.taken,
+  )) {
+    const r = relicIdentity(game.world.seed, item);
+    const tile = document.createElement("article");
+    tile.style.setProperty("--relic-color", r.color);
+    tile.innerHTML = glyphSvg(
+      item.kind === "artifact"
+        ? relicGlyph(game.world.seed, item)
+        : item.kind === "fuel"
+          ? "oil"
+          : "match",
+    );
+    const name = document.createElement("strong");
+    name.textContent = r.name;
+    tile.append(name);
+    const story = document.createElement("p");
+    story.textContent = r.story;
+    tile.append(story);
+    gallery.append(tile);
+  }
+  $("discoveries").append(gallery);
   const tools = document.createElement("p");
   tools.textContent = `Sealed votive: every 18 seconds it can cry out; crouch still when it whispers to muffle it. Throw one of three stones with T / D-pad Up / STONE to draw an unseen Hunter toward the impact. Five-second cooldown. Sight and player noise take priority. Environmental dangers: walk over unstable rubble instead of sprinting. Crouch through burial webs or hold Blaze within three metres for two seconds to burn a permanent opening. Crouch over loose bones and beneath hanging chains to avoid noise. Cold vents hiss for two seconds before a three-second burst; go around or wait. Active vapor slows movement and drains stamina. Burning brand: G / RB / BRAND. Cost ${BRAND_CONFIG.fuelCost / 6}s base Steady fuel; ${BRAND_CONFIG.lifetime}s stationary light, ${BRAND_CONFIG.repelRadius}m protection, ${BRAND_CONFIG.cooldown}s cooldown. During a Hunt, spend one match for instant stationary fire instead of a two-second torch relight. ${game.encounter ? `Bell Crypt return seal: ${game.shortcutOpen ? "OPEN" : game.shortcutUnlocked ? "VOTIVE RECOVERED — READY TO RAISE" : "SEALED — FIND ITS VOTIVE"}. Raising it is loud; retracing your route is quieter.` : "Explore this layout's crypts; no bell return seal was found on this expedition."}`;
-  $("discoveries").append(tools);
+  const reference = document.createElement("details");
+  reference.className = "journal-reference";
+  const referenceTitle = document.createElement("summary");
+  referenceTitle.textContent = "CONTROLS & SURVIVAL REFERENCE";
+  reference.append(referenceTitle, tools);
+  $("discoveries").append(reference);
   const summary = document.createElement("p");
   const votives = game.items.filter((i) => i.kind === "artifact");
   summary.textContent = `Votives recovered: ${votives.filter((i) => i.taken).length}/${votives.length}. Search burial recesses and side chambers for glimmers; the sealed ossuary reliquary holds three names. Prolonged Hunts draw a second Hunter: find fire or relight before the answering footsteps arrive.`;
@@ -617,6 +647,8 @@ function queueSave() {
 let hudTimer = 0;
 let hudPhase = "";
 let inventoryMarkup = "";
+let pouchMarkup = "";
+let cueMarkup = "";
 let observedGame: Game | undefined;
 let observedSeed = 0;
 let seenRelics = new Set<number>();
@@ -752,25 +784,62 @@ function updateHUD() {
   ) {
     observedGame = game;
     observedSeed = game.world.seed;
-    seenRelics = new Set(
-      game.items
-        .filter((i) => i.kind === "artifact" && i.taken)
-        .map((i) => i.id),
-    );
+    seenRelics = new Set(game.items.filter((i) => i.taken).map((i) => i.id));
     relicRevealUntil = 0;
   }
   for (const item of game.items) {
-    if (item.kind !== "artifact" || !item.taken || seenRelics.has(item.id))
-      continue;
+    if (!item.taken || seenRelics.has(item.id)) continue;
     seenRelics.add(item.id);
     const relic = relicIdentity(game.world.seed, item);
-    $("relicName").textContent = relic.name;
+    $("pickupTitle").textContent =
+      item.kind === "artifact" ? "VOTIVE RECOVERED" : "SUPPLY RECOVERED";
+    $("relicName").textContent =
+      item.kind === "artifact"
+        ? relic.name
+        : item.kind === "fuel"
+          ? "Torch oil"
+          : "Dry match";
     $("relicStory").textContent = relic.story;
     $("relicDiscovery").style.setProperty("--relic-color", relic.color);
-    relicRevealUntil = game.elapsed + 12;
+    $("relicEmblem").innerHTML = glyphSvg(relicGlyph(game.world.seed, item));
+    relicRevealUntil = game.elapsed + 4;
   }
   $("relicDiscovery").hidden =
     game.elapsed >= relicRevealUntil || game.phase !== "EXPLORING";
+  const carried =
+    game.artifacts > 0
+      ? game.items.filter((i) => i.taken && i.kind === "artifact")
+      : [];
+  const pouch = carried
+    .slice(-6)
+    .map((i) => {
+      const r = relicIdentity(game.world.seed, i);
+      return `<span class="pouch-relic" title="${r.name}" aria-label="${r.name}" style="color:${r.color}">${glyphSvg(relicGlyph(game.world.seed, i))}</span>`;
+    })
+    .join("");
+  if (pouch !== pouchMarkup) {
+    pouchMarkup = pouch;
+    $("relicPouch").innerHTML = pouch;
+  }
+  const visualSignal = visualCue(game);
+  $("visualCue").hidden = !visualSignal;
+  if (visualSignal) {
+    const markup = `<div class="cue-symbol">${glyphSvg(visualSignal.glyph)}</div><span class="cue-arrow">›</span><div class="cue-action">${glyphSvg(visualSignal.action)}</div><small>${visualSignal.label}</small>`;
+    if (markup !== cueMarkup) {
+      cueMarkup = markup;
+      $("visualCue").innerHTML = markup;
+    }
+    $("visualCue").style.setProperty(
+      "--cue-progress",
+      `${Math.round(Math.max(0, Math.min(1, visualSignal.progress)) * 360)}deg`,
+    );
+    $("visualCue").classList.toggle("urgent", visualSignal.urgent);
+    $("visualCue").setAttribute(
+      "aria-label",
+      game.tensionHint || game.hazardHint || visualSignal.label,
+    );
+  }
+  document.body.classList.toggle("visual-guidance", !!visualSignal);
   const stoneButton = document.querySelector<HTMLButtonElement>(
     '[data-touch-action="stone"]',
   );
@@ -878,6 +947,16 @@ function updateHUD() {
     /\bE to\b/g,
     inputSource === "touch" ? "Tap USE to" : `${useLabel} to`,
   );
+  $("notice").classList.toggle(
+    "visual-replaced",
+    !!visualSignal &&
+      (!!game.tensionHint ||
+        !game.message ||
+        game.message === game.hazardHint ||
+        /^(Bones crack|The chains ring|The loose stones|Follow the open passage|The last light dies|Something is waking)/.test(
+          game.message,
+        )),
+  );
   const hunt = game.phase.includes("HUNT");
   $("phase").textContent = hunt
     ? game.hunterWarning
@@ -901,6 +980,25 @@ function updateHUD() {
         ? `${useLabel} · STRIKE A MATCH`
         : "NO MATCHES · FIND GOLDEN FIRE"
       : "";
+  $("prompt").classList.toggle("timed-prompt", !!game.activeInteraction);
+  const pickup = game.nearbyItem;
+  if (pickup && !game.activeInteraction && !game.nearShortcut) {
+    const identity = relicIdentity(game.world.seed, pickup);
+    const icon =
+      pickup.kind === "artifact"
+        ? relicGlyph(game.world.seed, pickup)
+        : pickup.kind === "fuel"
+          ? "oil"
+          : "match";
+    const label =
+      pickup.kind === "artifact"
+        ? identity.name
+        : pickup.kind === "fuel"
+          ? "TORCH OIL"
+          : "DRY MATCH";
+    $("prompt").innerHTML =
+      `<span class="prompt-icon">${glyphSvg(icon)}</span><kbd>${useLabel}</kbd> ${label}${pickup.encounter === "reliquary" ? " · 3.5s" : ""}`;
+  }
   $("bearing").textContent = new URLSearchParams(location.search).has("debug")
     ? `${fps.toFixed(0)} FPS · ${game.phase} · ${game.hunter.state} · ${view.renderer.info.render.calls} DRAWS`
     : game.nearShortcut
