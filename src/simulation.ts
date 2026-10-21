@@ -1,3 +1,4 @@
+import { LivingMist, MIST_CONFIG } from "./living-mist";
 import {
   planEnvironmentHazards,
   hazardEffect,
@@ -318,6 +319,9 @@ export class Game {
     spark: 0,
     compass: 0,
   };
+  mist!: LivingMist;
+  mistCough = 0;
+  private mistCoughCooldown = 0;
   stones = 3;
   stoneCooldown = 0;
   distraction?: Point & { until: number; id: number };
@@ -542,6 +546,9 @@ export class Game {
     this.artifacts = 0;
     this.deathCause = "";
     this.deathAdvice = "";
+    this.mist = new LivingMist(this.world);
+    this.mistCough = 0;
+    this.mistCoughCooldown = 0;
     this.stones = 3;
     this.stoneCooldown = 0;
     this.distraction = undefined;
@@ -1084,6 +1091,18 @@ export class Game {
     if (["DEAD", "SANCTUARY"].includes(this.phase)) return;
     dt = Math.max(0, Math.min(dt, 0.1));
     this.elapsed += dt;
+    const fires = [
+      { ...this.start, radius: 8 },
+      { ...this.destination, radius: 8 },
+      ...this.brands.map((b) => ({ ...b, radius: 4 })),
+    ];
+    if (this.fuel > 0 && ["EXPLORING", "SANCTUARY"].includes(this.phase))
+      fires.push({ ...this.player, radius: [2.5, 4.5, 7][this.mode] ?? 4.5 });
+    this.mist.step(dt, this.player, fires, (a, b) =>
+      lineOfSight(this.world, a, b),
+    );
+    this.mistCoughCooldown = Math.max(0, this.mistCoughCooldown - dt);
+
     this.brands = stepBrands(this.brands, dt);
     this.brandCooldown = Math.max(0, this.brandCooldown - dt);
     this.stoneCooldown = Math.max(0, this.stoneCooldown - dt);
@@ -1180,6 +1199,7 @@ export class Game {
             : 1);
     const speed =
       surfaceSpeed *
+      (1 - this.mist.exposure * MIST_CONFIG.maxSlow) *
       (input.crouch ? CONFIG.crouch : sprint ? CONFIG.sprint : CONFIG.walk);
     const length = Math.max(1, Math.hypot(input.forward, input.strafe));
     const wantX =
@@ -1250,6 +1270,15 @@ export class Game {
         : moving
           ? this.footstepNoise(sprint, input.crouch)
           : 0;
+    if (
+      !this.mist.sheltered &&
+      this.mist.exposure >= MIST_CONFIG.coughThreshold &&
+      this.mistCoughCooldown <= 0
+    ) {
+      this.mistCough++;
+      this.mistCoughCooldown = MIST_CONFIG.coughCooldown;
+      this.noise = Math.max(this.noise, 7);
+    }
     if (
       this.cursedRelic &&
       this.artifacts > 0 &&
@@ -1807,6 +1836,8 @@ export class Game {
           mode: this.mode,
           matches: this.matches,
           artifacts: this.artifacts,
+          mist: this.mist.save(),
+          mistCoughCooldown: this.mistCoughCooldown,
           stones: this.stones,
           stoneCooldown: this.stoneCooldown,
           cursedRelic: this.cursedRelic,
@@ -1898,6 +1929,11 @@ export class Game {
         this.fuel = Math.max(0, Math.min(this.maxFuel, Number(d.fuel) || 0));
         this.matches = Math.max(0, Number(d.matches) || 0);
         this.setMode(d.mode);
+        this.mist.load(d.mist);
+        this.mistCoughCooldown = Math.max(
+          0,
+          Math.min(6, Number(d.mistCoughCooldown) || 0),
+        );
         this.artifacts = Math.max(0, Number(d.artifacts) || 0);
         this.stones = Number.isFinite(d.stones)
           ? Math.max(0, Math.min(3, Math.floor(d.stones)))

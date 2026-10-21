@@ -1,3 +1,4 @@
+import { MistVisuals } from "./mist-visuals";
 import { relicGlyph } from "./visual-language";
 import {
   createTorchFlame,
@@ -53,6 +54,7 @@ export function constrainCamera(
 export class GameScene {
   private catalog = new CatalogAssets();
   private contactShadows?: ContactShadows;
+  private mistVisuals?: MistVisuals;
   private wallFallbacks: THREE.Object3D[] = [];
   private archFallbacks: THREE.Object3D[] = [];
   private rubbleFallbacks: THREE.Object3D[] = [];
@@ -147,6 +149,7 @@ export class GameScene {
     }
     this.scene.add(this.ambient, this.darkAdaptation);
     this.contactShadows = new ContactShadows(this.scene);
+    this.mistVisuals = new MistVisuals(this.scene);
     const stone = new THREE.MeshStandardMaterial({
         color: 0x59636b,
         roughness: 0.96,
@@ -1421,6 +1424,7 @@ export class GameScene {
     this.target.z -= Math.cos(yaw) * 1.8;
     this.target.y += 0.15;
     this.camera.lookAt(this.target);
+    this.mistVisuals?.update(game.mist, game.player, game.elapsed);
     const renderStart = performance.now();
     this.flame.lookAt(this.camera.position);
     this.contactShadows?.update(game.player, game.hunter);

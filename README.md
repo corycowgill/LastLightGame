@@ -6,6 +6,14 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Living mist — 2026-10-21
+
+A drifting ground-mist field now fills the crypt. Torch modes clear different pockets (Ember 2.5m, Steady 4.5m, Blaze 7m); sanctuary fire and dropped brands also repel it. Cleared floor slowly refills when fire leaves. Fire clearing respects walls and the field persists in current-generation saves.
+
+Long exposure in darkness produces a mist warning, strained breathing and periodic coughs. A cough can lead a nearby Hunter to investigate through ordinary sound perception; the mist does not grant wall vision or spawn enemies. Exposure slows movement by up to 8%, leaving a clear-floor sprint faster than a pursuing Hunter. Fire immediately prevents further coughs and restores breathing over time. No resource tax, instant death or suffocation countdown was added.
+
+Validation: 161 tests, 100 seeded escape scenarios and production build pass. Chrome review observed the cleared torch pocket and surrounding cloud bank at about 57 FPS, with no shader errors. See [mechanics, rendering and limits](docs/LIVING_MIST.md).
+
 ## Visual gameplay UX — 2026-10-21
 
 Relics now have seven authored emblems (bell, ember, tear, coin, candle, key and sealed votive), shared by depth-tested world markers, brief collection reveals, a carried-relic pouch and a journal gallery. Oil and matches have distinct pickup symbols and sound cues. Long discovery prose stays in the journal; gameplay reveals last four seconds instead of twelve.

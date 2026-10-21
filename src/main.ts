@@ -505,7 +505,7 @@ function journal() {
   }
   $("discoveries").append(gallery);
   const tools = document.createElement("p");
-  tools.textContent = `Sealed votive: every 18 seconds it can cry out; crouch still when it whispers to muffle it. Throw one of three stones with T / D-pad Up / STONE to draw an unseen Hunter toward the impact. Five-second cooldown. Sight and player noise take priority. Environmental dangers: walk over unstable rubble instead of sprinting. Crouch through burial webs or hold Blaze within three metres for two seconds to burn a permanent opening. Crouch over loose bones and beneath hanging chains to avoid noise. Cold vents hiss for two seconds before a three-second burst; go around or wait. Active vapor slows movement and drains stamina. Burning brand: G / RB / BRAND. Cost ${BRAND_CONFIG.fuelCost / 6}s base Steady fuel; ${BRAND_CONFIG.lifetime}s stationary light, ${BRAND_CONFIG.repelRadius}m protection, ${BRAND_CONFIG.cooldown}s cooldown. During a Hunt, spend one match for instant stationary fire instead of a two-second torch relight. ${game.encounter ? `Bell Crypt return seal: ${game.shortcutOpen ? "OPEN" : game.shortcutUnlocked ? "VOTIVE RECOVERED — READY TO RAISE" : "SEALED — FIND ITS VOTIVE"}. Raising it is loud; retracing your route is quieter.` : "Explore this layout's crypts; no bell return seal was found on this expedition."}`;
+  tools.textContent = `Living mist: fire clears a moving pocket (Ember 2.5m, Steady 4.5m, Blaze 7m). In darkness, prolonged exposure slows you by up to 8% and causes coughs that nearby Hunters can investigate. Relight, use a brand or find sanctuary to recover. Sealed votive: every 18 seconds it can cry out; crouch still when it whispers to muffle it. Throw one of three stones with T / D-pad Up / STONE to draw an unseen Hunter toward the impact. Five-second cooldown. Sight and player noise take priority. Environmental dangers: walk over unstable rubble instead of sprinting. Crouch through burial webs or hold Blaze within three metres for two seconds to burn a permanent opening. Crouch over loose bones and beneath hanging chains to avoid noise. Cold vents hiss for two seconds before a three-second burst; go around or wait. Active vapor slows movement and drains stamina. Burning brand: G / RB / BRAND. Cost ${BRAND_CONFIG.fuelCost / 6}s base Steady fuel; ${BRAND_CONFIG.lifetime}s stationary light, ${BRAND_CONFIG.repelRadius}m protection, ${BRAND_CONFIG.cooldown}s cooldown. During a Hunt, spend one match for instant stationary fire instead of a two-second torch relight. ${game.encounter ? `Bell Crypt return seal: ${game.shortcutOpen ? "OPEN" : game.shortcutUnlocked ? "VOTIVE RECOVERED — READY TO RAISE" : "SEALED — FIND ITS VOTIVE"}. Raising it is loud; retracing your route is quieter.` : "Explore this layout's crypts; no bell return seal was found on this expedition."}`;
   const reference = document.createElement("details");
   reference.className = "journal-reference";
   const referenceTitle = document.createElement("summary");
@@ -866,6 +866,9 @@ function updateHUD() {
           ? "BRAND · 1M"
           : "BRAND";
   }
+  $("scene").dataset.mistExposure = game.mist.exposure.toFixed(2);
+  $("scene").dataset.mistDensity = game.mist.densityAt(game.player).toFixed(2);
+  $("scene").dataset.mistCough = String(game.mistCough);
   $("scene").dataset.brandCount = String(game.brands.length);
   $("scene").dataset.shortcutOpen = String(game.shortcutOpen);
   $("scene").dataset.audioSamples = String(audio.sampleCount);

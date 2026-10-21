@@ -97,6 +97,14 @@ export function visualCue(g: Game):
       progress: 1 - g.phaseTimeRemaining / g.relightDuration,
       urgent: false,
     };
+  if (g.mist?.exposure > 0.4)
+    return {
+      glyph: "vapor",
+      action: g.matches > 0 && g.fuel <= 0 ? "match" : "fire",
+      label: g.mist.exposure >= 0.65 ? "CHOKING MIST" : "MIST CLOSING",
+      progress: g.mist.exposure,
+      urgent: true,
+    };
   if (g.phase.includes("HUNT") || g.phase === "EXTINGUISHING")
     return {
       glyph: "ear",

@@ -18,6 +18,8 @@ export class GameAudio {
   private nextWarning = 0;
   private nextSealScrape = 0;
   private lastArtifacts = 0;
+  private lastMistCough = 0;
+  private nextMistBreath = 0;
   private lastMatches = 0;
   private lastStone = 0;
   private lastRelicEcho = 0;
@@ -178,6 +180,7 @@ export class GameAudio {
       this.lastStone = 0;
       this.lastRelicEcho = game.relicEcho;
       this.nextHeartbeat = 0;
+      this.lastMistCough = game.mistCough;
       this.lastMatches = game.matches;
       this.lastArtifacts = game.artifacts;
       this.lastFuel = game.fuel;
@@ -310,6 +313,15 @@ export class GameAudio {
     ) {
       this.tone(48, 0.14, 0.045 * (1 - proximity / 16), 30);
       this.nextHeartbeat = this.elapsed + 0.45 + proximity * 0.045;
+    }
+    if (game.mistCough !== this.lastMistCough) {
+      this.lastMistCough = game.mistCough;
+      this.air(0.26, 0.11, 420);
+      this.tone(92, 0.18, 0.025, 55);
+    }
+    if (game.mist.exposure > 0.3 && this.elapsed > this.nextMistBreath) {
+      this.air(0.9, 0.025 * game.mist.exposure, 330);
+      this.nextMistBreath = this.elapsed + 1.8;
     }
     const brandPlaced =
       !!game.brands[0] && game.brands[0].id !== this.lastBrandId;
