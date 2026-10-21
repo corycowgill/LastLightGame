@@ -523,7 +523,7 @@ test("sanctuary compass is locked until purchased and gives camera-relative bear
   assert.equal(g.upgrades.compass, 1);
 });
 
-test("Stalker cowers then retreats from every burning torch mode without draining fuel", () => {
+test("Stalker cowers then retreats from every burning torch mode, smothering the flame once at close range", () => {
   for (const mode of [0, 1, 2]) {
     const g = new Game(104729);
     away(g);
@@ -538,9 +538,67 @@ test("Stalker cowers then retreats from every burning torch mode without drainin
       Math.hypot(g.enemies[0].x - g.player.x, g.enemies[0].z - g.player.z) >
         2.5,
     );
-    assert.ok(Math.abs(fuel - g.fuel - g.fuelRate * 2.2) < 0.001);
+    assert.ok(
+      Math.abs(fuel - g.fuel - g.fuelRate * 2.2 - CONFIG.stalkerSmother) <
+        0.001,
+    );
+    assert.match(g.message, /torch gutters/);
     g.forceHunt();
     advance(g, 0.1);
     assert.ok(!["COWERING", "FLEEING"].includes(g.enemies[0].state));
   }
+});
+
+test("a Stalker driven off at the edge of the light does not smother it", () => {
+  const g = new Game(104729);
+  away(g);
+  g.setMode(2);
+  g.enemies = [
+    {
+      x: 28 + CONFIG.lightRepel[2] + 1,
+      z: 0,
+      kind: "stalker",
+      state: "LISTENING",
+    },
+  ];
+  const fuel = g.fuel;
+  advance(g, 0.5);
+  assert.equal(g.enemies[0].state, "COWERING");
+  assert.ok(Math.abs(fuel - g.fuel - g.fuelRate * 0.5) < 0.001);
+});
+test("smothering has a cooldown and never extinguishes the torch outright", () => {
+  const g = new Game(104729);
+  away(g);
+  g.fuel = 20;
+  g.enemies = [
+    { x: 30, z: 0, kind: "stalker", state: "LISTENING" },
+    { x: 26, z: 0, kind: "stalker", state: "LISTENING" },
+  ];
+  advance(g, 0.1);
+  assert.ok(g.fuel > 0);
+  assert.equal(g.phase, "EXPLORING");
+  assert.ok(g.smotherCooldown > 5);
+});
+test("deeper chambers hold heavier votives and some chambers hold no supplies", () => {
+  let deep = 0,
+    lean = 0;
+  for (let seed = 1; seed <= 20; seed++) {
+    const g = new Game(seed);
+    const rooms = g.world.layout!.rooms.filter((r) => r.kind !== "sanctuary");
+    if (g.items.some((i) => i.kind === "artifact" && i.value === 2)) deep++;
+    if (g.items.filter((i) => i.kind !== "artifact").length < rooms.length)
+      lean++;
+    // The opening two chambers always resupply.
+    for (const room of rooms.slice(0, 2))
+      assert.ok(
+        g.items.some(
+          (i) =>
+            i.kind !== "artifact" &&
+            Math.abs(i.x - room.x * 2) <= 6 &&
+            Math.abs(i.z - room.z * 2) <= 6,
+        ),
+      );
+  }
+  assert.ok(deep >= 18);
+  assert.ok(lean >= 18);
 });

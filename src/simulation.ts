@@ -63,7 +63,7 @@ export const CONFIG = {
   fuel: 720,
   burnMultiplier: 6,
   flameRates: [0.55, 1, 3.5],
-  fuelPickup: 180,
+  fuelPickup: 130,
   matchFuel: 120,
   lightRepel: [2.8, 6, 11],
   fireRepel: 8,
@@ -76,6 +76,11 @@ export const CONFIG = {
   sprintDrain: 0.13,
   relightMovement: 0.35,
   crouchSight: 0.55,
+  // A Stalker that reaches the flame before it recoils smothers part of it.
+  stalkerSmother: 60,
+  stalkerSmotherCooldown: 6,
+  // Rooms at or beyond this depth hold heavier, two-relic votives.
+  deepRelicDepth: 0.6,
 };
 export const UPGRADES = {
   compass: {
@@ -329,6 +334,7 @@ export class Game {
   cursedRelic = false;
   relicPulse = 18;
   relicEcho = 0;
+  smotherCooldown = 0;
   get phaseTimeRemaining() {
     return this.timer;
   }
@@ -556,6 +562,7 @@ export class Game {
     this.cursedRelic = false;
     this.relicPulse = 18;
     this.relicEcho = 0;
+    this.smotherCooldown = 0;
     this.elapsed = 0;
     this.completed = false;
     this.retreatTime = 0;
@@ -704,6 +711,27 @@ export class Game {
       )
         Object.assign(first, approach);
     }
+    // Not every chamber resupplies the flame, and deeper votives weigh more.
+    const emptied = new Set<number>();
+    for (const [index, room] of rooms.entries()) {
+      const variant =
+        ((this.world.seed >>> 0) ^ Math.imul(index + 7, 2246822519)) >>> 0;
+      const supply = this.items.find(
+        (i) =>
+          i.kind !== "artifact" &&
+          !i.encounter &&
+          roomAt(this.world, i.x, i.z) === room,
+      );
+      if (supply && index >= 2 && variant % 3 === 0) emptied.add(supply.id);
+      const relic = this.items.find(
+        (i) =>
+          i.kind === "artifact" &&
+          !i.encounter &&
+          roomAt(this.world, i.x, i.z) === room,
+      );
+      if (relic && room.depth >= CONFIG.deepRelicDepth) relic.value = 2;
+    }
+    this.items = this.items.filter((i) => !emptied.has(i.id));
     const guards = [
       [6, 0],
       [-6, 0],
@@ -1013,11 +1041,20 @@ export class Game {
       return;
     }
     if (dist(this.player, this.start) < 3) {
+      // Turning back is safe but costly: the first fire keeps half the haul.
+      const kept = Math.floor(this.artifacts / 2);
+      if (this.artifacts > 0 && kept === 0) {
+        this.fuel = this.maxFuel;
+        this.say(
+          "The first fire keeps half of what returns. One votive is not enough; press on.",
+        );
+        return;
+      }
       if (this.artifacts > 0) {
         this.archive = [
           ...new Set([...this.archive, ...this.discoveries]),
         ].slice(-100);
-        this.banked += this.artifacts;
+        this.banked += kept;
         this.artifacts = 0;
         this.fuel = this.maxFuel;
         this.phase = "SANCTUARY";
@@ -1106,6 +1143,7 @@ export class Game {
     this.brands = stepBrands(this.brands, dt);
     this.brandCooldown = Math.max(0, this.brandCooldown - dt);
     this.stoneCooldown = Math.max(0, this.stoneCooldown - dt);
+    this.smotherCooldown = Math.max(0, this.smotherCooldown - dt);
     if (this.distraction && this.distraction.until <= this.elapsed)
       this.distraction = undefined;
     this.cooldown -= dt;
@@ -1743,6 +1781,20 @@ export class Game {
           retreat = { cower: 0.7, retry: 0 };
           this.stalkerRetreats.set(e, retreat);
           this.routes.delete(e);
+          if (
+            !brand &&
+            lit &&
+            d < CONFIG.lightRepel[this.mode] &&
+            this.smotherCooldown <= 0
+          ) {
+            this.fuel = Math.max(1, this.fuel - CONFIG.stalkerSmother);
+            this.smotherCooldown = CONFIG.stalkerSmotherCooldown;
+            this.noise = Math.max(this.noise, 6);
+            this.noiseTimer = Math.max(this.noiseTimer, 1);
+            this.say(
+              "It lunges at the flame before recoiling. Your torch gutters.",
+            );
+          }
         }
         retreat.cower -= dt;
         retreat.retry -= dt;

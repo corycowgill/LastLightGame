@@ -191,18 +191,24 @@ test("pacing events are deterministic and never change fuel or inventory secretl
   assert.ok(a.discoveries.length > 0);
 });
 
-test("turning back banks loot and discoveries without awarding an empty refuge win", () => {
+test("turning back banks half the loot and discoveries without awarding an empty refuge win", () => {
   const g = new Game(104729);
   g.enemies = [];
   Object.assign(g.player, { x: g.start.x, z: g.start.z + 2 });
   g.interact();
   assert.equal(g.completed, false);
+  // A single votive is not worth a retreat; the run continues with it carried.
+  g.artifacts = 1;
+  g.interact();
+  assert.equal(g.completed, false);
+  assert.equal(g.artifacts, 1);
+  assert.equal(g.banked, 0);
   g.artifacts = 3;
   g.discoveries = ["A votive name recovered."];
   g.interact();
   assert.equal(g.phase, "SANCTUARY");
   assert.equal(g.completed, true);
-  assert.equal(g.banked, 3);
+  assert.equal(g.banked, 1);
   assert.equal(g.artifacts, 0);
   assert.ok(g.archive.includes("A votive name recovered."));
   g.reset(42);

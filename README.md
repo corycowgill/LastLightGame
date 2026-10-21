@@ -6,6 +6,12 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Tension and risk pass — 2026-10-21
+
+Seeded bot playtests showed that a run could be won in 13 seconds by returning the first relic to the first fire, that efficient players never dropped below about 80% fuel, and that no threat could touch a lit torch. Turning back now banks half the haul, oil is scarcer and uneven, deep votives are worth two relics, and close Stalkers smother part of the flame. In 20-seed bot runs, efficient players now bottom out at 26–82% fuel and full clears at 0–30%, with occasional burnouts into a Hunt. The bot plays the simulation, not the rendered game; human difficulty remains to be confirmed.
+
+Validation: 167 tests and production build pass.
+
 ## iPhone touch ergonomics — 2026-10-21
 
 Push the movement stick to its forward rim to sprint while keeping the other thumb free to turn the camera. Ease back to walk; crouching suppresses sprint. The existing hold-to-run button remains available. Portrait actions use three columns, zoom sits above the movement stick, and landscape HUD spacing leaves more room for the view. Rotation pauses play and releases held controls.
@@ -158,12 +164,13 @@ Optional Capture Mouse enables free look when supported; dragging remains availa
 For an iPhone, use the deployed HTTPS site. PC localhost is not reachable from the phone. For same-Wi-Fi development, explicitly run `npm run dev:lan` and use the PC LAN address on port 5173; controller APIs may require HTTPS. Physical Xbox/iPhone validation remains pending; automated input tests are not a substitute.
 
 - Ember conserves fuel, Steady supports exploration, and Blaze spends fuel quickly for stronger light. Deeper rooms increase fuel pressure.
-- A full basic torch burns for about 120 seconds in Steady, 218 seconds in Ember, or 34 seconds in Blaze before depth modifiers. Fuel pickups add about 30 base Steady seconds; matches provide about 20. Extinction gives an eight-second grace period, followed by an active searching Hunter.
+- A full basic torch burns for about 120 seconds in Steady, 218 seconds in Ember, or 34 seconds in Blaze before depth modifiers. Fuel pickups add about 22 base Steady seconds, and about a third of chambers beyond the first two hold no supplies; matches provide about 20. Extinction gives an eight-second grace period, followed by an active searching Hunter.
 - Relighting consumes a match, takes two seconds before upgrades, restores reserve fuel, slows movement and prevents sprinting. Find cover first.
 - Crouching quiets footsteps and reduces Hunter visual range; close detection and remembered positions still matter. Corners break line of sight.
 - Sprint stamina recovers after a brief rest. Flame Burst costs fuel and cannot repel creatures through masonry.
 - Relit torchlight makes the Hunter flee along navigable paths before banishment. Sanctuary fire provides safety. Stalkers threaten a weak flame; brighten it or retreat.
-- Bank carried relics at the destination sanctuary. Death loses carried relics; browser-local permanent upgrades survive. Saves belong to the browser and origin.
+- Bank carried relics at the destination sanctuary. Turning back to the first fire banks only half (rounded down), so a single relic is not worth the retreat. Votives in deeper chambers count as two relics.
+- A Stalker that reaches you around a corner, before your light drives it off, smothers part of the flame (about 10 Steady seconds, never a full extinction). Death loses carried relics; browser-local permanent upgrades survive. Saves belong to the browser and origin.
 
 At sanctuary, buy Reservoir (+90 fuel-seconds, one relic, five ranks), Efficient Wick (8% less burn/rank), Soft Boots (12% quieter footsteps/rank), Quick Spark (0.25 seconds faster relighting/rank), or Sanctuary Compass. The latter costs three relics and provides a bearing, not a route through walls; the other three upgrades cost two relics/rank, up to three ranks.
 
