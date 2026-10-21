@@ -919,8 +919,14 @@ function updateHUD() {
   const pct = Math.max(0, game.fuel / game.maxFuel);
   $("fuelBar").style.width = `${pct * 100}%`;
   $("staminaBar").style.width = `${game.player.stamina * 100}%`;
+  // The flame emblem and stamina line breathe with the torch and the body.
+  $("hud").style.setProperty("--fuel", pct.toFixed(3));
+  $("hud").dataset.flameMode = String(game.mode);
+  document.body.classList.toggle("rested", game.player.stamina > 0.98);
   $("fuelText").textContent =
-    `${Math.ceil(game.fuel / game.fuelRate)}s left${game.depth > 0 ? ` · +${Math.round(game.depth * 30)}% DRAIN` : ""}`;
+    game.fuel <= 0
+      ? "the flame is out"
+      : `${Math.ceil(game.fuel / game.fuelRate)}s left${game.depth > 0 ? ` · +${Math.round(game.depth * 30)}% DRAIN` : ""}`;
   $("mode").textContent = ["EMBER", "STEADY", "BLAZE"][game.mode] || "FLAME";
   const closeCreature = game.enemies.find(
     (e) =>
@@ -998,13 +1004,20 @@ function updateHUD() {
   document.body.classList.toggle("room-reveal", game.elapsed < roomRevealUntil);
   // Controls and mode legend only during the opening of an expedition.
   document.body.classList.toggle("learning", game.elapsed < 25);
-  $("prompt").textContent = game.interactionPrompt
-    ? `${game.activeInteraction ? "" : useLabel + " · "}${game.interactionPrompt}`
+  // Actions carry their key as a wax seal; plain warnings stay plain text.
+  const [promptKey, promptText] = game.interactionPrompt
+    ? [game.activeInteraction ? "" : useLabel, game.interactionPrompt]
     : game.fuel <= 0
       ? game.matches > 0
-        ? `${useLabel} · STRIKE A MATCH`
-        : "NO MATCHES · FIND GOLDEN FIRE"
-      : "";
+        ? [useLabel, "STRIKE A MATCH"]
+        : ["", "NO MATCHES · FIND GOLDEN FIRE"]
+      : ["", ""];
+  $("prompt").textContent = promptText;
+  if (promptKey) {
+    const key = document.createElement("kbd");
+    key.textContent = promptKey;
+    $("prompt").prepend(key, " ");
+  }
   $("prompt").classList.toggle("timed-prompt", !!game.activeInteraction);
   const pickup = game.nearbyItem;
   if (pickup && !game.activeInteraction && !game.nearShortcut) {

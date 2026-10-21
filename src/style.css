@@ -1759,3 +1759,237 @@ body[data-touch="true"] #movePad span,
   font-family: var(--hud-font);
   color: var(--ash);
 }
+
+/* Second pass: a living flame emblem, candle niches and wax-sealed keys. */
+.label {
+  justify-content: flex-start;
+  gap: 8px;
+}
+#fuelText {
+  margin-left: auto;
+}
+.flame-mark {
+  position: relative;
+  width: 14px;
+  height: 20px;
+  align-self: flex-end;
+}
+.flame-mark i {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 10px;
+  height: 18px;
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) scale(calc(0.25 + var(--fuel, 1) * 0.75));
+  border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+  background: radial-gradient(
+    ellipse at 50% 75%,
+    #fff6d6 0 18%,
+    #f2b45e 38%,
+    #c4521f 66%,
+    transparent 72%
+  );
+  filter: drop-shadow(0 0 6px #e0782faa);
+  animation: flame-dance 1.3s ease-in-out infinite alternate;
+}
+#hud[data-flame-mode="0"] .flame-mark i {
+  filter: drop-shadow(0 0 3px #e0782f77) saturate(0.7);
+}
+#hud[data-flame-mode="2"] .flame-mark i {
+  width: 12px;
+  filter: drop-shadow(0 0 11px #ffb460) brightness(1.15);
+  animation-duration: 0.55s;
+}
+.lowfuel .flame-mark i {
+  background: radial-gradient(
+    ellipse at 50% 80%,
+    #ffcf9a 0 12%,
+    #b03a1a 45%,
+    transparent 70%
+  );
+  animation: flame-gutter 0.45s steps(3) infinite;
+}
+.lowfuel #mode {
+  color: #d0603f;
+}
+.meter {
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #3b2a1e88 0 6px,
+    transparent 6px 8px
+  );
+}
+.stamina {
+  transition: opacity 0.8s;
+}
+.rested .stamina {
+  opacity: 0;
+}
+
+/* Whispers in sentence case read as a voice, not a sign. */
+#survivalHint {
+  text-transform: lowercase;
+  font-size: 13px;
+}
+#survivalHint::first-letter {
+  text-transform: uppercase;
+}
+
+/* Carried relics rest in small arched candle niches. */
+.pouch-relic {
+  width: 28px;
+  height: 36px;
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  border-radius: 14px 14px 2px 2px;
+  background: radial-gradient(
+    ellipse at 50% 70%,
+    color-mix(in srgb, currentColor 18%, transparent),
+    #000000b0 70%
+  );
+  box-shadow: inset 0 -6px 10px #000c;
+}
+
+/* Keys pressed into wax rather than printed on a label. */
+#prompt kbd {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 46% 54% 50% 50% / 52% 48% 52% 48%;
+  background: radial-gradient(circle at 38% 34%, #b2402a, #6e1a0f 62%, #3a0b06);
+  box-shadow:
+    0 1px 3px #000c,
+    inset 0 0 0 2px #00000040;
+  color: #f6dcc0;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-shadow: 0 1px 1px #0009;
+}
+#prompt {
+  letter-spacing: 0.12em;
+}
+
+/* Corner controls as faint engraved words, not boxes. */
+.view-controls button,
+#pauseButton {
+  background: none;
+  border: none;
+  border-bottom: 1px solid #cbbfa61f;
+  border-radius: 0;
+}
+.view-controls button:hover,
+#pauseButton:hover {
+  border-bottom-color: var(--ember);
+  color: #f2d6a8;
+}
+
+/* Hunt text bleeds like a bad memory. */
+.hunt #phase {
+  text-shadow:
+    -1px 0 #ff3b1f88,
+    1px 0 #3b8cff33,
+    0 0 16px #6d0f06;
+}
+
+/* Touch buttons as worn stone tablets; primary use is wax-red. */
+body[data-touch="true"] #touchControls button {
+  border-radius: 10px 10px 4px 4px;
+  background: linear-gradient(#17120ec8, #070605d8);
+  box-shadow:
+    inset 0 1px 0 #cbbfa61a,
+    0 2px 6px #000a;
+}
+body[data-touch="true"] #touchControls .touch-primary,
+body[data-touch="true"] #touchControls [data-touch-action="use"] {
+  background: radial-gradient(circle at 40% 35%, #8c2c1cd0, #3a0b06e0);
+  border-color: #c7563a88;
+}
+
+@keyframes flame-dance {
+  from {
+    transform: translateX(-50%) scale(calc(0.25 + var(--fuel, 1) * 0.75))
+      skewX(-3deg);
+  }
+  to {
+    transform: translateX(-50%)
+      scale(
+        calc((0.25 + var(--fuel, 1) * 0.75) * 0.94),
+        calc((0.25 + var(--fuel, 1) * 0.75) * 1.08)
+      )
+      skewX(4deg);
+  }
+}
+@keyframes flame-gutter {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flame-mark i {
+    animation: none !important;
+  }
+}
+.flame-mark {
+  width: 18px;
+  height: 26px;
+  margin: -6px 0 -2px;
+}
+.flame-mark i {
+  width: 13px;
+  height: 24px;
+}
+#hud[data-flame-mode="2"] .flame-mark i {
+  width: 15px;
+}
+#prompt kbd {
+  min-width: 26px;
+  width: auto;
+  padding: 0 7px;
+  margin-right: 4px;
+  border-radius: 13px;
+}
+@media (max-width: 950px), (pointer: coarse) {
+  .fuel {
+    width: 205px;
+  }
+  .label {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  #fuelText {
+    font-size: 11px;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+}
+#fuelText {
+  color: #b9ae98;
+}
+/* A soot smudge keeps the cluster legible over torch-bright stone. */
+.fuel {
+  position: relative;
+  isolation: isolate;
+}
+.fuel::before {
+  content: "";
+  position: absolute;
+  inset: -18px -26px -14px -22px;
+  z-index: -1;
+  background: radial-gradient(
+    ellipse at 40% 50%,
+    #000000b0 0%,
+    #00000070 45%,
+    transparent 72%
+  );
+  pointer-events: none;
+}
