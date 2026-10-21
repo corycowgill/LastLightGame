@@ -42,7 +42,7 @@ test("crouching avoids bone crunch and chain rattle; stationary players do not t
     assert.equal(hazardEffect(h, 0, true, false, true).noise, true);
   }
 });
-function fixture(kind: "bones" | "vapor") {
+function fixture(kind: "bones" | "vapor" | "webs" | "rubble") {
   const g = new Game(1);
   g.enemies = [];
   const p = g.hazards[0];
@@ -101,4 +101,92 @@ test("a loud environmental contact makes an out-of-view Hunter investigate", () 
   };
   g.step(1 / 60, { ...idle, forward: 1 });
   assert.equal(g.hunter.state, "INVESTIGATING");
+});
+
+test("webs slow upright movement but crouching avoids entanglement", () => {
+  const h = { id: 1, x: 0, z: 0, kind: "webs" as const, offset: 0 };
+  assert.equal(hazardEffect(h, 0, true, false, true).slow, true);
+  assert.equal(hazardEffect(h, 0, true, true, false).slow, false);
+  assert.equal(
+    hazardEffect({ ...h, burned: true }, 0, true, false, true).slow,
+    false,
+  );
+});
+test("webs require continuous nearby Blaze, spend only normal fuel, and stay cleared", () => {
+  const g = fixture("webs");
+  const h = g.hazards[0];
+  g.mode = 1;
+  for (let i = 0; i < 21; i++) g.step(0.1, idle);
+  assert.ok(!h.burned);
+  g.mode = 2;
+  for (let i = 0; i < 10; i++) g.step(0.1, idle);
+  assert.ok(!h.burned);
+  g.mode = 1;
+  g.step(0.1, idle);
+  assert.equal(h.burnProgress, 0);
+  g.mode = 2;
+  const fuel = g.fuel;
+  for (let i = 0; i < 21; i++) g.step(0.1, idle);
+  assert.equal(h.burned, true);
+  assert.ok(Math.abs(g.fuel - (fuel - 2.1 * g.fuelRate)) < 0.001);
+  assert.equal(g.hazardHint, "");
+  assert.equal(g.hazardEvent!.kind, "webs");
+});
+test("distant Blaze and a dark torch cannot burn webs", () => {
+  const g = fixture("webs");
+  g.mode = 2;
+  g.hazards[0].x += 4;
+  for (let i = 0; i < 21; i++) g.step(0.1, idle);
+  assert.ok(!g.hazards[0].burned);
+  g.hazards[0].x -= 4;
+  g.fuel = 0;
+  g.phase = "HUNT_GRACE";
+  for (let i = 0; i < 21; i++) g.step(0.1, idle);
+  assert.ok(!g.hazards[0].burned);
+});
+test("walking rubble is quiet; sprinting incurs a bounded stamina stumble", () => {
+  const walk = fixture("rubble");
+  walk.step(0.1, { ...idle, forward: 1 });
+  assert.equal(walk.hazardEvent, undefined);
+  const run = fixture("rubble");
+  run.step(0.1, { ...idle, forward: 1, sprint: true });
+  assert.equal(run.hazardEvent!.kind, "rubble");
+  assert.ok(run.player.stamina < 0.8);
+  const after = run.player.stamina;
+  run.step(0.1, { ...idle, forward: 1, sprint: true });
+  assert.ok(after - run.player.stamina < 0.02);
+});
+
+test("all five hazard archetypes appear in actual valid generated placements", () => {
+  const kinds = new Set<string>();
+  for (let seed = 1; seed <= 20; seed++)
+    for (const h of new Game(seed).hazards) kinds.add(h.kind);
+  assert.deepEqual([...kinds].sort(), [
+    "bones",
+    "chains",
+    "rubble",
+    "vapor",
+    "webs",
+  ]);
+});
+test("save/load retains cleared webs without clearing other patches", () => {
+  const memory = new Map<string, string>();
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => memory.get(k) ?? null,
+      setItem: (k: string, v: string) => memory.set(k, v),
+    },
+  });
+  const g = new Game(1);
+  const web = g.hazards.find((h) => h.kind === "webs")!;
+  assert.ok(web);
+  web.burned = true;
+  g.save();
+  const loaded = new Game(9);
+  assert.ok(loaded.load());
+  assert.equal(loaded.hazards.find((h) => h.id === web.id)!.burned, true);
+  assert.ok(
+    loaded.hazards.filter((h) => h.kind !== "webs").every((h) => !h.burned),
+  );
 });

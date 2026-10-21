@@ -4,6 +4,7 @@ import { vaporPhase, type EnvironmentHazard } from "./environment-hazards";
 /** Catalog meshes identify physical hazards; bounded particles are vapor effects only. */
 export class HazardVisuals {
   private ready = false;
+  private webs: { hazard: EnvironmentHazard; root: THREE.Group }[] = [];
   private mistTexture?: THREE.CanvasTexture;
   private vents: { hazard: EnvironmentHazard; mist: THREE.Points }[] = [];
   constructor(
@@ -38,14 +39,27 @@ export class HazardVisuals {
             1.6,
             0,
           );
+      } else if (h.kind === "webs") {
+        const root = new THREE.Group();
+        root.position.set(h.x, 0, h.z);
+        this.scene.add(root);
+        this.catalog.batch(
+          "dec_corner_cobweb",
+          root,
+          [new THREE.Matrix4().makeTranslation(0, 0.2, 0)],
+          [2.3, 2, 0.22],
+          () => {},
+        );
+        this.webs.push({ hazard: h, root });
       } else {
         this.catalog.batch(
           "pro_rubble",
           this.scene,
           [new THREE.Matrix4().makeTranslation(h.x, 0, h.z)],
-          [1.6, 0.24, 1.6],
+          [2.2, 0.24, 2.2],
           () => {},
         );
+        if (h.kind === "rubble") continue;
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute(
           "position",
@@ -70,6 +84,11 @@ export class HazardVisuals {
     }
   }
   update(elapsed: number) {
+    for (const { hazard, root } of this.webs) {
+      root.visible = !hazard.burned;
+      root.scale.y =
+        1 - Math.min(0.85, ((hazard.burnProgress ?? 0) / 2) * 0.85);
+    }
     for (const { hazard, mist } of this.vents) {
       const phase = vaporPhase(hazard, elapsed);
       (mist.material as THREE.PointsMaterial).opacity =

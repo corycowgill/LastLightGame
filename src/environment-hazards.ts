@@ -1,11 +1,13 @@
 import type { World, Point } from "./simulation";
 import { floorAt } from "./room-design";
 import { blockedByProp } from "./crypt-layout";
-export type HazardKind = "bones" | "chains" | "vapor";
+export type HazardKind = "bones" | "chains" | "vapor" | "webs" | "rubble";
 export type EnvironmentHazard = Point & {
   id: number;
   kind: HazardKind;
   offset: number;
+  burned?: boolean;
+  burnProgress?: number;
 };
 export const HAZARD_CONFIG = {
   radius: 1.25,
@@ -17,6 +19,11 @@ export const HAZARD_CONFIG = {
   staminaDrain: 0.32,
   noiseDuration: 2.2,
   triggerCooldown: 4,
+  webBurnTime: 2,
+  webBurnRange: 3,
+  webSpeed: 0.35,
+  rubbleSpeed: 0.55,
+  rubbleStamina: 0.22,
 };
 export function vaporPhase(h: EnvironmentHazard, elapsed: number) {
   const t =
@@ -34,7 +41,7 @@ export function planEnvironmentHazards(
   rewards: Point[] = [],
 ): EnvironmentHazard[] {
   const result: EnvironmentHazard[] = [];
-  const kinds: HazardKind[] = ["bones", "chains", "vapor"];
+  const kinds: HazardKind[] = ["bones", "chains", "vapor", "webs", "rubble"];
   for (const [index, room] of (world.layout?.rooms ?? []).entries()) {
     if (
       index < 2 ||
@@ -42,10 +49,6 @@ export function planEnvironmentHazards(
       Math.hypot(room.x * 2 - world.exit.x, room.z * 2 - world.exit.z) < 9
     )
       continue;
-    const kind =
-      room.design === "flooded"
-        ? "vapor"
-        : kinds[(index + (world.seed >>> 0)) % 3];
     const candidates = [
       [0, 3],
       [3, 0],
@@ -70,7 +73,7 @@ export function planEnvironmentHazards(
       result.push({
         ...p,
         id: index,
-        kind,
+        kind: kinds[(result.length + (world.seed >>> 0)) % kinds.length],
         offset: ((Math.imul(world.seed, 31) + index * 17) >>> 0) % 10,
       });
       break;
@@ -85,6 +88,12 @@ export function hazardEffect(
   crouched: boolean,
   sprint: boolean,
 ) {
+  if (h.kind === "webs") return { noise: false, slow: !h.burned && !crouched };
+  if (h.kind === "rubble")
+    return {
+      noise: moving && sprint && !crouched,
+      slow: moving && sprint && !crouched,
+    };
   if (h.kind === "vapor")
     return { noise: false, slow: vaporPhase(h, elapsed) === "active" };
   return {
@@ -97,6 +106,10 @@ export function hazardWarning(h: EnvironmentHazard, elapsed: number) {
     return "LOOSE BONES · CROUCH TO CROSS QUIETLY OR GO AROUND";
   if (h.kind === "chains")
     return "HANGING CHAINS · CROUCH UNDER THEM TO AVOID THE RATTLE";
+  if (h.kind === "webs")
+    return "BURIAL WEBS · CROUCH THROUGH OR HOLD BLAZE NEARBY TO BURN A PATH";
+  if (h.kind === "rubble")
+    return "UNSTABLE RUBBLE · WALK CAREFULLY; SPRINTING CAUSES A NOISY STUMBLE";
   const phase = vaporPhase(h, elapsed);
   return phase === "active"
     ? "FREEZING VAPOR · GO AROUND OR WAIT FOR IT TO CLEAR"

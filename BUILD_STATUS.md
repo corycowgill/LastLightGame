@@ -1,5 +1,11 @@
 # The Last Light — build status
 
+## Burial webs and unstable rubble — 2026-10-20
+
+Two more environmental challenges now join bones, chains and vents. Burial webs slow upright movement; crouch through, skirt the patch, or hold Blaze within three metres for two uninterrupted seconds to burn a permanent opening. Cleared webs survive save/load. Unstable rubble causes a noisy stamina-costing stumble when sprinted across; walking and crouching avoid it. Both reuse original catalog GLBs.
+
+Hazard selection now cycles across valid placements instead of correlating with room-design indices, ensuring all five archetypes can actually appear. Each eligible room still gets at most one small patch, with existing opening-room, sanctuary and reward clearance rules. Validation: 145 tests, 100 seeded escape scenarios and production build pass. Targeted browser review confirmed visible burial silk and clearing it with normal Blaze controls; ordinary-run pacing and physical-device validation remain open.
+
 ## Environmental dangers — 2026-10-20
 
 Catacombs now contain optional loose-bone patches, hanging chains and pulsing cold-vapor vents. Crossing bones or chains upright makes a loud contact that nearby enemies can investigate; crouching or going around avoids it. Vents hiss for two seconds before a three-second discharge, slowing movement and draining stamina while inside. These create pursuit and route choices without instant death or hidden fuel penalties.

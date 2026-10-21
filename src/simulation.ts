@@ -325,6 +325,7 @@ export class Game {
   private hazardEventId = 0;
   get hazardHint() {
     const near = this.hazards
+      .filter((h) => !h.burned)
       .filter(
         (h) =>
           dist(h, this.player) < HAZARD_CONFIG.warningRadius &&
@@ -1056,8 +1057,44 @@ export class Game {
                 : 0),
       ),
     );
+    for (const h of this.hazards) {
+      if (h.kind !== "webs" || h.burned) continue;
+      const burning =
+        this.phase === "EXPLORING" &&
+        this.fuel > 0 &&
+        this.mode === 2 &&
+        dist(h, this.player) < HAZARD_CONFIG.webBurnRange &&
+        lineOfSight(this.world, this.player, h);
+      h.burnProgress = burning ? (h.burnProgress ?? 0) + dt : 0;
+      if (h.burnProgress >= HAZARD_CONFIG.webBurnTime) {
+        h.burned = true;
+        this.hazardEvent = {
+          id: ++this.hazardEventId,
+          x: h.x,
+          z: h.z,
+          kind: "webs",
+        };
+        this.say("The burial silk curls into ash. This path will stay clear.");
+        this.save();
+      }
+    }
+    const inWebs = this.hazards.some(
+      (h) =>
+        h.kind === "webs" &&
+        !h.burned &&
+        !input.crouch &&
+        dist(h, this.player) < HAZARD_CONFIG.radius,
+    );
+    const inRubble =
+      sprint &&
+      moving &&
+      this.hazards.some(
+        (h) =>
+          h.kind === "rubble" && dist(h, this.player) < HAZARD_CONFIG.radius,
+      );
     const inVapor = this.hazards.some(
       (h) =>
+        h.kind === "vapor" &&
         dist(h, this.player) < HAZARD_CONFIG.radius &&
         hazardEffect(h, this.elapsed, moving, input.crouch, sprint).slow,
     );
@@ -1068,7 +1105,13 @@ export class Game {
       );
     const surfaceSpeed =
       (this.surface === "water" ? 0.78 : 1) *
-      (inVapor ? HAZARD_CONFIG.vaporSpeed : 1);
+      (inVapor
+        ? HAZARD_CONFIG.vaporSpeed
+        : inWebs
+          ? HAZARD_CONFIG.webSpeed
+          : inRubble
+            ? HAZARD_CONFIG.rubbleSpeed
+            : 1);
     const speed =
       surfaceSpeed *
       (input.crouch ? CONFIG.crouch : sprint ? CONFIG.sprint : CONFIG.walk);
@@ -1114,6 +1157,11 @@ export class Game {
         h.id,
         this.elapsed + HAZARD_CONFIG.triggerCooldown,
       );
+      if (h.kind === "rubble")
+        this.player.stamina = Math.max(
+          0,
+          this.player.stamina - HAZARD_CONFIG.rubbleStamina,
+        );
       this.noiseTimer = Math.max(this.noiseTimer, HAZARD_CONFIG.noiseDuration);
       this.hazardEvent = {
         id: ++this.hazardEventId,
@@ -1122,9 +1170,11 @@ export class Game {
         kind: h.kind,
       };
       this.say(
-        h.kind === "bones"
-          ? "Bones crack beneath your boots. Crouch or skirt the patch to stay quiet."
-          : "The chains ring out. Crouch beneath them next time.",
+        h.kind === "rubble"
+          ? "The loose stones give way under your boots. Walk carefully to keep your footing."
+          : h.kind === "bones"
+            ? "Bones crack beneath your boots. Crouch or skirt the patch to stay quiet."
+            : "The chains ring out. Crouch beneath them next time.",
       );
     }
     this.noiseTimer -= dt;
@@ -1664,6 +1714,9 @@ export class Game {
           huntElapsed: this.huntElapsed,
           reinforcementSpawned: this.reinforcementSpawned,
           shortcutOpen: this.shortcutOpen,
+          burnedWebs: this.hazards
+            .filter((h) => h.kind === "webs" && h.burned)
+            .map((h) => h.id),
           brands: this.brands,
           brandCooldown: this.brandCooldown,
           target: this.target,
@@ -1707,6 +1760,10 @@ export class Game {
           this.world.shortcutGate.open = Boolean(d.shortcutOpen);
           invalidateNavigation(this.world);
         }
+        for (const h of this.hazards)
+          if (h.kind === "webs")
+            h.burned =
+              Array.isArray(d.burnedWebs) && d.burnedWebs.includes(h.id);
         this.brands = Array.isArray(d.brands)
           ? d.brands
               .filter(

@@ -213,11 +213,23 @@ export class GameAudio {
       this.air(
         0.4,
         0.12 * cue.gain,
-        event.kind === "bones" ? 1500 : 2300,
+        event.kind === "rubble"
+          ? 450
+          : event.kind === "webs"
+            ? 1100
+            : event.kind === "bones"
+              ? 1500
+              : 2300,
         cue.pan,
       );
       this.tone(
-        event.kind === "bones" ? 160 : 680,
+        event.kind === "rubble"
+          ? 75
+          : event.kind === "webs"
+            ? 180
+            : event.kind === "bones"
+              ? 160
+              : 680,
         0.6,
         0.045 * cue.gain,
         100,

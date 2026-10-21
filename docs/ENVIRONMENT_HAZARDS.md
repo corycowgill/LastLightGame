@@ -1,5 +1,15 @@
 # Environment dangers
 
+## Extension: burial webs and unstable rubble
+
+Burial webs use the catalog `dec_corner_cobweb` GLB fitted into a small curtain. Upright movement inside 1.25m falls to 35% speed; crouching bypasses entanglement. Two uninterrupted seconds of nearby (under 3m), unobstructed Blaze burn a permanent opening. No additional fuel tax is applied beyond the normal Blaze rate. Progress resets when the player moves out of range, lowers the flame or loses sight. Burned patch IDs are saved; visuals shrink during burning and hide once cleared. The journal explains this choice.
+
+Unstable rubble reuses `pro_rubble`. Sprinting across it reduces speed to 55% and causes a loud stumble costing 0.22 stamina, at most once per four seconds per patch. Walking/crouching are safe. It does not block navigation, cause direct death or change fuel consumption. The existing AI noise system hears the disturbance.
+
+Selection now cycles kinds by successful placement count and seed. The old room-index cycle correlated with room designs and omitted some archetypes when furniture clearance rejected those rooms. A generated-world coverage test prevents regression. At most one hazard per eligible room remains; older saves stay compatible because no physical navigation geometry is changed. An absent burned-web list defaults to uncleared patches.
+
+Validation now totals 145 passing tests, including continuous Blaze requirements, crouch bypass, no burning with a dark/distant torch, no extra fuel cost, rubble retrigger limits, all-five-type placement coverage and cleared-web save/load. The 100-seed escape diagnostic and production build pass. Browser fixture `?debug&seed=1&hazard=webs` supports targeted visual/clearing review; enemies are removed in that fixture, so it is not an ordinary difficulty playthrough.
+
 ## Player decisions
 
 - **Loose bones:** an original catalog bone-pile GLB marks a noisy floor patch. Moving upright triggers a crunch; crouching or skirting it avoids the disturbance.
