@@ -1,5 +1,11 @@
 # The Last Light — build status
 
+## iPhone touch ergonomics — 2026-10-21
+
+Push the movement stick to its forward rim to sprint while keeping the other thumb free to turn the camera. Ease back to walk; crouching suppresses sprint. The existing hold-to-run button remains available. Portrait actions use three columns, zoom sits above the movement stick, and landscape HUD spacing leaves more room for the view. Rotation pauses play and releases held controls.
+
+Validation: 164 input/game tests and production build pass; Chrome layout review at 390×844 and 844×390 showed all touch controls within the viewport. This is responsive desktop review, not physical iPhone Safari, multi-touch or thermal-performance certification. Existing mobile low graphics defaults are retained; large-room performance remains unresolved.
+
 ## Horror presentation — 2026-10-21
 
 Both Hunters now have a dark, subtly shifting surface and rising shadow wisps, while their glowing eyes remain readable. Living mist rolls at varied heights with layered texture detail. These effects retain the original GLBs, rigs and gameplay perception rules. See [implementation and review limits](docs/HORROR_PRESENTATION.md).

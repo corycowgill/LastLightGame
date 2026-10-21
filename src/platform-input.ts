@@ -146,6 +146,15 @@ export class TouchInput {
   movement: Movement = { forward: 0, strafe: 0, sprint: false, crouch: false };
   private pointer: number | null = null;
   private sprintPointers = new Set<number>();
+  private stickSprint = false;
+  private syncSprint() {
+    this.movement.sprint =
+      !this.movement.crouch &&
+      (this.stickSprint || this.sprintPointers.size > 0);
+    this.root
+      .querySelector("#touchSprint")
+      ?.setAttribute("aria-pressed", String(this.movement.sprint));
+  }
   private cleanups: (() => void)[] = [];
   constructor(
     private root: HTMLElement,
@@ -166,6 +175,10 @@ export class TouchInput {
         v = stick(dx, dy, 0.08);
       this.movement.strafe = v.x;
       this.movement.forward = -v.y || 0;
+      // Hysteresis avoids flickering between walk and run near the rim.
+      this.stickSprint =
+        this.movement.forward > (this.stickSprint ? 0.78 : 0.94);
+      this.syncSprint();
       knob.style.transform = `translate(${v.x * radius}px,${v.y * radius}px)`;
     };
     this.listen(pad, "pointerdown", (e: PointerEvent) => {
@@ -183,6 +196,8 @@ export class TouchInput {
       if (e.pointerId !== this.pointer) return;
       this.pointer = null;
       this.movement.forward = this.movement.strafe = 0;
+      this.stickSprint = false;
+      this.syncSprint();
       knob.style.transform = "";
     };
     this.listen(doc, "pointerup", end);
@@ -203,14 +218,14 @@ export class TouchInput {
       e.preventDefault();
       this.used();
       this.sprintPointers.add(e.pointerId);
-      this.movement.sprint = true;
+      this.syncSprint();
       try {
         sprint.setPointerCapture(e.pointerId);
       } catch {}
     });
     const releaseSprint = (e: PointerEvent) => {
       this.sprintPointers.delete(e.pointerId);
-      this.movement.sprint = this.sprintPointers.size > 0;
+      this.syncSprint();
     };
     this.listen(doc, "pointerup", releaseSprint);
     this.listen(doc, "pointercancel", releaseSprint);
@@ -220,6 +235,7 @@ export class TouchInput {
       if (!this.active()) return;
       this.used();
       this.movement.crouch = !this.movement.crouch;
+      this.syncSprint();
       crouch.setAttribute("aria-pressed", String(this.movement.crouch));
     });
     for (const button of root.querySelectorAll<HTMLButtonElement>(
@@ -261,7 +277,9 @@ export class TouchInput {
   reset() {
     this.pointer = null;
     this.sprintPointers.clear();
+    this.stickSprint = false;
     this.movement = { forward: 0, strafe: 0, sprint: false, crouch: false };
+    this.syncSprint();
     const knob = this.root.querySelector<HTMLElement>("#moveKnob");
     if (knob) knob.style.transform = "";
     this.root

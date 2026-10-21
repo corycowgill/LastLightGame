@@ -261,3 +261,23 @@ test("D-pad Up throws one stone per press during play", () => {
   c.update(pad([], [12]), 1 / 60, true);
   assert.deepEqual(actions, ["stone"]);
 });
+
+test("forward joystick rim sprints without a third finger and releases safely", () => {
+  const s = touchSetup(),
+    pad = s.root.children.get("#movePad")!;
+  send(pad, "pointerdown", { pointerId: 1, clientX: 60, clientY: 35 });
+  assert.equal(s.touch.movement.sprint, false);
+  send(s.doc, "pointermove", { pointerId: 1, clientX: 60, clientY: 18 });
+  assert.equal(s.touch.movement.sprint, true);
+  send(s.root.children.get("#touchCrouch")!, "click");
+  assert.equal(s.touch.movement.sprint, false);
+  send(s.root.children.get("#touchCrouch")!, "click");
+  assert.equal(s.touch.movement.sprint, true);
+  send(s.doc, "pointermove", { pointerId: 1, clientX: 60, clientY: 35 });
+  assert.equal(s.touch.movement.sprint, false);
+  send(s.doc, "pointermove", { pointerId: 1, clientX: 60, clientY: 18 });
+  send(s.doc, "pointercancel", { pointerId: 1 });
+  assert.equal(s.touch.movement.sprint, false);
+  assert.equal(s.touch.movement.forward, 0);
+  s.touch.dispose();
+});

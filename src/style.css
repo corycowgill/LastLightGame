@@ -1192,3 +1192,59 @@ body[data-touch="true"] #relicDiscovery {
   font-size: 11px;
   letter-spacing: 1px;
 }
+
+/* Phone controls reserve the lower corners for thumbs and the centre for looking. */
+body[data-touch="true"] {
+  overscroll-behavior: none;
+  -webkit-touch-callout: none;
+}
+body[data-touch="true"] #touchControls button {
+  min-height: 48px;
+  font-size: 10px;
+}
+body[data-touch="true"] #movePad {
+  background: radial-gradient(
+    circle,
+    #0b152375 58%,
+    #b58c3738 60%,
+    #0b152375 74%
+  );
+}
+body[data-touch="true"] #lookHint {
+  display: none;
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  body[data-touch="true"] .touch-actions {
+    grid-template-columns: repeat(3, 48px);
+    gap: 6px;
+  }
+  body[data-touch="true"] #movePad {
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + 12px);
+  }
+  body[data-touch="true"] .touch-modes {
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + 180px);
+  }
+  body[data-touch="true"] .touch-zoom {
+    left: max(18px, env(safe-area-inset-left));
+    transform: none;
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + 140px);
+  }
+  body[data-touch="true"] .touch-look-label {
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + 238px);
+    right: 18px;
+  }
+  body[data-touch="true"] #prompt {
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + 260px);
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  body[data-touch="true"] .brand span {
+    display: none;
+  }
+  body[data-touch="true"] footer {
+    top: calc(max(12px, env(safe-area-inset-top)) + 42px);
+  }
+  body[data-touch="true"] .touch-look-label {
+    bottom: calc(max(20px, env(safe-area-inset-bottom)) + 118px);
+  }
+}
