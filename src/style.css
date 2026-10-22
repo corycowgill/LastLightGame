@@ -1993,3 +1993,335 @@ body[data-touch="true"] #touchControls [data-touch-action="use"] {
   );
   pointer-events: none;
 }
+
+/* Third pass: aligned to the art bible (docs/art-direction/ART_BIBLE.md §3, §9).
+   Ember, flame gold and chalk ivory on soot; serif for voice, sans for numbers;
+   the Hunt drains warmth to cold navy instead of turning red. */
+:root {
+  --deep: #080f1c;
+  --navy: #152739;
+  --ember: #d45b27;
+  --gold: #f6b85b;
+  --core: #fff0c2;
+  --ivory: #ddd7be;
+  --teal: #547e7b;
+  --violet: #514659;
+  --brass: #9c7c48;
+  --bone: var(--ivory);
+  --ash: #8f8d84;
+  --ui-sans: Inter, Arial, sans-serif;
+}
+
+/* Numbers, keys and counts stay crisp; prose and names keep the engraved voice. */
+#fuelText,
+#inventory,
+#inventory b,
+.modes,
+.hint,
+#lookHint,
+#prompt kbd,
+.view-controls button,
+#pauseButton,
+#visualCue small,
+body[data-touch="true"] #touchControls button {
+  font-family: var(--ui-sans);
+  font-style: normal;
+}
+#fuelText {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #c8c2ae;
+  font-variant-numeric: tabular-nums;
+}
+.label {
+  color: var(--gold);
+}
+#survivalHint {
+  font-family: var(--ui-sans);
+  font-style: normal;
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: #bdb6a3;
+}
+.hint {
+  font-size: 10px;
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+}
+.view-controls button,
+#pauseButton {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+}
+
+/* Thin worn brass dividers. */
+#roomName {
+  padding-bottom: 7px;
+  background: linear-gradient(
+      90deg,
+      transparent,
+      var(--brass) 18%,
+      #c9a76a 50%,
+      var(--brass) 82%,
+      transparent
+    )
+    bottom / 100% 1px no-repeat;
+}
+.label {
+  padding-bottom: 6px;
+  background: linear-gradient(90deg, #9c7c4866, #9c7c4822 70%, transparent)
+    bottom / 100% 1px no-repeat;
+}
+.meter {
+  margin-top: 6px;
+}
+
+/* The flame emblem rides an iron basket that remains when the fire dies. */
+.flame-mark b {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 12px;
+  height: 6px;
+  transform: translateX(-50%);
+  border: 1.5px solid #6b6e70;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  background: repeating-linear-gradient(90deg, #0000 0 2px, #6b6e7088 2px 3px);
+}
+.flame-mark i {
+  bottom: 3px;
+}
+#hud[data-lit="false"] .flame-mark i {
+  width: 4px;
+  height: 4px;
+  bottom: 3px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: var(--ember);
+  filter: drop-shadow(0 0 3px var(--ember));
+  animation: last-ember 2.4s ease-in-out infinite;
+}
+
+/* Fuel warnings: waning below 25%, unmistakable below 10%. No red. */
+.waning .meter i {
+  background: linear-gradient(90deg, #5a2410, var(--ember));
+}
+.waning #mode::after,
+.lowfuel #mode::after {
+  content: " · WANING";
+  font-family: var(--ui-sans);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--ember);
+}
+.lowfuel #mode::after {
+  content: " · FAILING";
+  color: var(--gold);
+}
+.lowfuel #mode {
+  color: var(--ember);
+}
+.lowfuel .meter i {
+  background: linear-gradient(90deg, #3a1608, var(--ember));
+  animation: falter 0.7s ease-in-out infinite;
+}
+.lowfuel #survivalHint {
+  color: var(--gold);
+  animation: none;
+}
+.lowfuel #vignette {
+  background: radial-gradient(
+    ellipse at 50% 48%,
+    transparent 22%,
+    #080f1cb0 55%,
+    var(--deep) 100%
+  );
+}
+
+/* Exploration edges are soot with a breath of navy depth. */
+#vignette {
+  background: radial-gradient(
+    ellipse at 50% 46%,
+    transparent 40%,
+    #080f1c50 62%,
+    #080f1ce0 100%
+  );
+}
+#vignette::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 2.5s;
+  background:
+    radial-gradient(
+      ellipse 70% 60% at 30% 40%,
+      transparent 55%,
+      #152739cc 85%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 65% 70% at 70% 60%,
+      transparent 52%,
+      #080f1ce6 88%,
+      transparent 100%
+    );
+  mix-blend-mode: multiply;
+}
+
+/* The Hunt: warmth leaves, cold creeps in from irregular, breathing edges. */
+.hunt #vignette {
+  box-shadow:
+    inset 0 0 220px #080f1c,
+    inset 0 0 90px #152739aa;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 30%,
+    #08101ccc 70%,
+    var(--deep) 100%
+  );
+  animation: cold-breath 4.2s ease-in-out infinite;
+}
+.hunt #vignette::before {
+  opacity: 1;
+  animation: creeping-edge 9s ease-in-out infinite alternate;
+}
+.hunt .meter i,
+.hunt #inventory svg,
+.hunt #relicPouch {
+  filter: saturate(0.25) brightness(0.9);
+  transition: filter 2s;
+}
+.hunt .label {
+  color: #a9a593;
+}
+#phase {
+  font-size: 15px;
+  letter-spacing: 0.55em;
+  color: var(--ivory);
+  text-shadow:
+    0 0 18px #152739,
+    0 0 3px #000;
+}
+.hunt #phase {
+  animation: none;
+  text-shadow:
+    0 0 20px #547e7b66,
+    0 0 3px #000;
+}
+#visualCue.urgent {
+  color: var(--gold);
+  animation: cue-breath 1.4s ease-in-out infinite alternate;
+}
+.hunt #visualCue {
+  color: #c9d3cf;
+}
+.hunt .cue-symbol {
+  background: conic-gradient(
+    var(--teal) var(--cue-progress, 0deg),
+    #ffffff0a 0
+  );
+}
+
+/* Keys as iron studs with a brass rim, not wax. */
+#prompt kbd {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 40% 35%, #3a3b3d, #141516 70%);
+  box-shadow:
+    0 0 0 1px var(--brass),
+    0 0 10px #f6b85b33,
+    0 2px 3px #000c;
+  color: var(--core);
+  font-size: 11px;
+  font-weight: 600;
+}
+#prompt {
+  color: var(--ivory);
+}
+body[data-touch="true"] #touchControls .touch-primary {
+  background: radial-gradient(circle at 40% 35%, #5a2a12d8, #1a0e08e8);
+  border-color: var(--brass);
+  color: var(--core);
+  box-shadow:
+    0 0 14px #d45b2740,
+    inset 0 1px 0 #f6b85b33;
+}
+body[data-touch="true"] #touchControls button[aria-pressed="true"] {
+  background: #3a1a0cb0;
+  border-color: var(--gold);
+  color: var(--core);
+}
+.pouch-relic {
+  border-color: #9c7c4866;
+}
+
+@keyframes cold-breath {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes creeping-edge {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.06) translate(-1.5%, 1%);
+  }
+}
+@keyframes last-ember {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #vignette::before,
+  .hunt #vignette,
+  .flame-mark i,
+  .lowfuel .meter i {
+    animation: none !important;
+  }
+}
+.lowfuel .flame-mark i {
+  background: radial-gradient(
+    ellipse at 50% 80%,
+    var(--core) 0 12%,
+    var(--ember) 45%,
+    transparent 70%
+  );
+}
+
+/* Mode and warning on one line, the remaining burn quietly beneath it. */
+.label,
+.label:is(*) {
+  flex-wrap: wrap;
+  row-gap: 3px;
+}
+#fuelText,
+#fuelText:is(*) {
+  order: 3;
+  flex-basis: 100%;
+  margin-left: 26px;
+  font-size: 11px;
+  text-align: left;
+}
+.hunt .fuel::before {
+  background: radial-gradient(
+    ellipse at 40% 50%,
+    #080f1c90 0%,
+    #080f1c40 45%,
+    transparent 72%
+  );
+}

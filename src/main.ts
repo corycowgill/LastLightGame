@@ -922,6 +922,7 @@ function updateHUD() {
   // The flame emblem and stamina line breathe with the torch and the body.
   $("hud").style.setProperty("--fuel", pct.toFixed(3));
   $("hud").dataset.flameMode = String(game.mode);
+  $("hud").dataset.lit = String(game.fuel > 0);
   document.body.classList.toggle("rested", game.player.stamina > 0.98);
   $("fuelText").textContent =
     game.fuel <= 0
@@ -994,6 +995,8 @@ function updateHUD() {
     visualSignal.label.toUpperCase() === $("phase").textContent;
   document.body.classList.toggle("hunt", hunt);
   document.body.classList.toggle("lowfuel", pct < 0.1);
+  // The art bible asks for a warning below 25% and urgency below 10%.
+  document.body.classList.toggle("waning", pct >= 0.1 && pct < 0.25);
   // Room names surface briefly on entry, then sink back into the dark.
   const roomName = game.currentRoom?.name ?? "THE WHISPER PASSAGE";
   if (roomName !== shownRoom) {
