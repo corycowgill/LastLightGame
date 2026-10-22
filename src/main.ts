@@ -937,8 +937,15 @@ function updateHUD() {
       Math.hypot(e.x - game.player.x, e.z - game.player.z) < 8 &&
       lineOfSight(game.world, e, game.player),
   );
-  $("survivalHint").textContent =
-    game.fuel <= 0
+  const hunting = ["HUNT_GRACE", "HUNT_ACTIVE"].includes(game.phase);
+  const exposure = game.hidingExposure;
+  document.body.classList.toggle("hidden-nook", game.hidden && hunting);
+  document.body.classList.toggle("sensed", exposure > 0.35);
+  $("survivalHint").textContent = game.hidden
+    ? exposure > 0.35
+      ? "IT LINGERS · IT CAN SENSE YOU · SLIP AWAY OR HOLD"
+      : "HIDDEN IN THE TOMB'S SHADOW · STAY CROUCHED"
+    : game.fuel <= 0
       ? game.matches > 0
         ? "STRIKE A MATCH · KEEP MOVING"
         : "FIND GOLDEN FIRE · STAY QUIET"
@@ -1011,13 +1018,28 @@ function updateHUD() {
   // Controls and mode legend only during the opening of an expedition.
   document.body.classList.toggle("learning", game.elapsed < 25);
   // Actions carry their key as a wax seal; plain warnings stay plain text.
+  const crouchLabel =
+    inputSource === "gamepad" ? "B" : inputSource === "touch" ? "CROUCH" : "C";
+  const nookNearby =
+    hunting &&
+    !game.hidden &&
+    game.hidingSpots.some(
+      (spot) =>
+        Math.hypot(spot.x - game.player.x, spot.z - game.player.z) < 2.5,
+    );
   const [promptKey, promptText] = game.interactionPrompt
     ? [game.activeInteraction ? "" : useLabel, game.interactionPrompt]
-    : game.fuel <= 0
-      ? game.matches > 0
-        ? [useLabel, "STRIKE A MATCH"]
-        : ["", "NO MATCHES · FIND GOLDEN FIRE"]
-      : ["", ""];
+    : nookNearby
+      ? game.tuckedIn
+        ? [crouchLabel, "CROUCH TO HIDE"]
+        : game.hidingSpot
+          ? ["", "PRESS DEEPER INTO THE NOOK · INSIDE THE CHALK RING"]
+          : ["", "A DARK NOOK BEHIND THE TOMB · HIDE THERE"]
+      : game.fuel <= 0
+        ? game.matches > 0
+          ? [useLabel, "STRIKE A MATCH"]
+          : ["", "NO MATCHES · FIND GOLDEN FIRE"]
+        : ["", ""];
   $("prompt").textContent = promptText;
   if (promptKey) {
     const key = document.createElement("kbd");

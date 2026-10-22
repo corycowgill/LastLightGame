@@ -6,6 +6,16 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Tomb nooks: hiding during the Hunt — 2026-10-22
+
+Each crypt chamber's hiding tombs now have a dark nook between tomb and wall, off every line a Hunter walks. During a Hunt a faint chalk ring marks each one. Step inside the ring and crouch to hide (**C / Xbox B / touch CROUCH**): a Hunter will not see you beyond arm's reach (0.7 m) and cannot grab you by brushing past. Two things still find you: a Hunter that watched you go in, and one that lingers within 2.5 m for 3.5 seconds and senses you. The HUD warns when one starts to sense you, so you can slip away or hold your nerve.
+
+In controlled runs, a quietly hidden player was found 1–3% of the time over 30 seconds of searching nearby. When the Hunter had heard the player enter and investigated that exact spot, it found them 67% of the time within 20 seconds. Approach quietly.
+
+Enemies now route to the nearest navigable cell when a target lies just off the grid, and a pursuer that has seen its prey closes the last metres directly. Previously a player standing in an off-grid pocket could not be reached at all.
+
+Validation: tests cover nook placement and clearance across 40 seeds, concealment, arm's-reach and sensed discovery, catching a sensed player, and pursuit after being seen entering.
+
 ## 3D presentation pass — 2026-10-22
 
 A review of rendered frames, rigs and clips found and fixed:

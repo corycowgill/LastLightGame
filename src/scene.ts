@@ -139,6 +139,7 @@ export class GameScene {
   private boxes: THREE.Mesh[] = [];
   private items = new Map<string, THREE.Object3D>();
   private chalk = new THREE.Group();
+  private nookMarks?: THREE.Group;
   private particles: THREE.Points;
   private ray = new THREE.Raycaster();
   private target = new THREE.Vector3();
@@ -1507,6 +1508,37 @@ export class GameScene {
         const crest = mesh.userData.relicCrest as THREE.Object3D | undefined;
         if (crest) crest.rotation.y = this.elapsed * 0.24;
       }
+    }
+    // Tomb nooks carry a faint pale scratch, legible only in Hunt darkness.
+    if (!this.nookMarks && game.hidingSpots?.length) {
+      this.nookMarks = new THREE.Group();
+      const material = new THREE.MeshBasicMaterial({
+        color: 0x9fbcbc,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+      });
+      for (const spot of game.hidingSpots) {
+        const mark = new THREE.Mesh(
+          new THREE.RingGeometry(0.42, 0.47, 20, 1, 0.35, Math.PI * 1.3),
+          material,
+        );
+        mark.rotation.x = -Math.PI / 2;
+        mark.position.set(spot.x, 0.014, spot.z);
+        this.nookMarks.add(mark);
+      }
+      this.scene.add(this.nookMarks);
+    }
+    if (this.nookMarks) {
+      const material = (this.nookMarks.children[0] as THREE.Mesh)
+        .material as THREE.MeshBasicMaterial;
+      material.opacity = THREE.MathUtils.damp(
+        material.opacity,
+        game.phase.includes("HUNT") ? 0.55 : 0,
+        3,
+        dt,
+      );
+      this.nookMarks.visible = material.opacity > 0.01;
     }
     while (this.chalk.children.length < (game.chalk || []).length) {
       const mark = new THREE.Mesh(

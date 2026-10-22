@@ -21,7 +21,11 @@ import { floorAt } from "./room-design";
 import { relicIdentity } from "./relics";
 import { ROOM_DESIGNS, roomAt } from "./room-design";
 import { buildLabyrinth, type Layout } from "./worldgen";
-import { blockedByProp, propSegmentClear } from "./crypt-layout";
+import {
+  blockedByProp,
+  environmentBlocks,
+  propSegmentClear,
+} from "./crypt-layout";
 export type Hunter = {
   x: number;
   z: number;
@@ -29,6 +33,8 @@ export type Hunter = {
   yaw?: number;
   readiness?: number;
   temporaryRetreat?: boolean;
+  /** Seconds this Hunter has lingered beside a hidden Torchbearer. */
+  sense?: number;
 };
 export type Point = { x: number; z: number };
 export type World = {
@@ -76,6 +82,14 @@ export const CONFIG = {
   sprintDrain: 0.13,
   relightMovement: 0.35,
   crouchSight: 0.55,
+  // Crouching in a tomb nook hides you unless a Hunter is within arm's reach,
+  // or lingers close long enough to sense you.
+  hideRadius: 0.85,
+  hideReveal: 0.7,
+  senseRange: 2.5,
+  senseTime: 3.5,
+  // Nooks sit this far from any line a Hunter walks, clear of reveal/capture.
+  nookClearance: 1.05,
   // A Stalker that reaches the flame before it recoils smothers part of it.
   stalkerSmother: 60,
   stalkerSmotherCooldown: 6,
@@ -211,6 +225,40 @@ function cachedPath(w: World, a: Point, b: Point): Point[] {
   }
   return path;
 }
+/**
+ * Distance from a point to the nearest segment enemies can walk. Enemies only
+ * travel between adjacent navigation cell centres, so this is exact.
+ */
+export function navigationClearance(w: World, p: Point) {
+  const allowed = grid(w);
+  const cx = Math.round(p.x / 2),
+    cz = Math.round(p.z / 2);
+  let best = Infinity;
+  const toSegment = (a: Point, b: Point) => {
+    const dx = b.x - a.x,
+      dz = b.z - a.z;
+    const t = Math.max(
+      0,
+      Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / (dx * dx + dz * dz)),
+    );
+    return Math.hypot(p.x - (a.x + dx * t), p.z - (a.z + dz * t));
+  };
+  for (let x = cx - 2; x <= cx + 2; x++)
+    for (let z = cz - 2; z <= cz + 2; z++) {
+      if (!allowed.has(key(x, z))) continue;
+      const a = { x: x * 2, z: z * 2 };
+      best = Math.min(best, dist(a, p));
+      for (const [dx, dz] of [
+        [1, 0],
+        [0, 1],
+      ]) {
+        const n = { x: x + dx, z: z + dz };
+        if (allowed.has(key(n.x, n.z)) && clearEdge(w, { x, z }, n))
+          best = Math.min(best, toSegment(a, { x: n.x * 2, z: n.z * 2 }));
+      }
+    }
+  return best;
+}
 export function findPath(w: World, a: Point, b: Point): Point[] {
   // Consumers shorten their routes; never expose the cached mutable array.
   return cachedPath(w, a, b).map((p) => ({ ...p }));
@@ -337,6 +385,62 @@ export class Game {
   smotherCooldown = 0;
   /** Relics carried at the moment of death, for an honest defeat summary. */
   lostRelics = 0;
+  /** Nooks behind hiding tombs, where a crouched Torchbearer can hide. */
+  hidingSpots: Point[] = [];
+  get hidingSpot() {
+    return this.hidingSpots.find(
+      (spot) => dist(spot, this.player) < CONFIG.hideRadius,
+    );
+  }
+  /** A clear straight walk into `p` from a navigable cell linked to the start. */
+  private reachableOnFoot(p: Point) {
+    const cx = Math.round(p.x / 2),
+      cz = Math.round(p.z / 2);
+    for (let x = cx - 1; x <= cx + 1; x++)
+      for (let z = cz - 1; z <= cz + 1; z++) {
+        const from = { x: x * 2, z: z * 2 };
+        if (
+          dist(from, p) > 2.9 ||
+          !findPath(this.world, this.start, from).length
+        )
+          continue;
+        const steps = Math.ceil(dist(from, p) / 0.1);
+        let clear = true;
+        for (let i = 1; i <= steps && clear; i++) {
+          const q = {
+            x: from.x + ((p.x - from.x) * i) / steps,
+            z: from.z + ((p.z - from.z) * i) / steps,
+          };
+          clear =
+            walkable(this.world, q.x, q.z) &&
+            !blockedByProp(this.world, q.x, q.z, 0.3);
+        }
+        if (clear) return true;
+      }
+    return false;
+  }
+  /** At a nook and tucked far enough from every Hunter route to hide. */
+  get tuckedIn() {
+    return (
+      !!this.hidingSpot &&
+      navigationClearance(this.world, this.player) > CONFIG.hideReveal + 0.05
+    );
+  }
+  /** Crouched while tucked into a nook. */
+  get hidden() {
+    return this.player.crouched && this.tuckedIn;
+  }
+  /** How close any Hunter is to sensing the hidden Torchbearer (0..1). */
+  get hidingExposure() {
+    if (!this.hidden) return 0;
+    return Math.min(
+      1,
+      Math.max(
+        this.hunter.sense ?? 0,
+        ...this.additionalHunters.map((h) => h.sense ?? 0),
+      ) / CONFIG.senseTime,
+    );
+  }
   get phaseTimeRemaining() {
     return this.timer;
   }
@@ -747,6 +851,40 @@ export class Game {
         findPath(this.world, this.start, p).length > 0,
     ) ?? { x: vault.x * 2, z: vault.z * 2 + 2 };
     this.enemies = [{ ...guard, kind: "stalker", state: "LISTENING" }];
+    // The open side of each hiding tomb that faces away from its chamber's
+    // centre: a dark nook between tomb and wall.
+    this.hidingSpots = environmentBlocks(this.world)
+      .filter((block) => block.id === "lan_hiding_tomb")
+      .flatMap((tomb) => {
+        const room = roomAt(this.world, tomb.x, tomb.z);
+        const centre = room
+          ? { x: room.x * 2, z: room.z * 2 }
+          : { x: tomb.x, z: tomb.z };
+        // Ring of candidates around the tomb. A nook must be off every line a
+        // Hunter walks (or it would simply stumble onto you), yet reachable on
+        // foot from the crypt's navigable floor.
+        const spot = [1.0, 1.2, 1.4, 1.6]
+          .flatMap((reach) =>
+            Array.from({ length: 16 }, (_, i) => ({
+              x: tomb.x + Math.cos((i * Math.PI) / 8) * reach,
+              z: tomb.z + Math.sin((i * Math.PI) / 8) * reach,
+            })),
+          )
+          .filter(
+            (p) =>
+              walkable(this.world, p.x, p.z) &&
+              !blockedByProp(this.world, p.x, p.z, 0.3) &&
+              navigationClearance(this.world, p) > CONFIG.nookClearance &&
+              this.reachableOnFoot(p),
+          )
+          .sort(
+            (a, b) =>
+              navigationClearance(this.world, b) -
+                navigationClearance(this.world, a) ||
+              dist(b, centre) - dist(a, centre),
+          )[0];
+        return spot ? [spot] : [];
+      });
     if (this.encounter) {
       const room = this.world.layout!.rooms[this.encounter.landmarkRoomIndex];
       const candidates = [
@@ -1589,16 +1727,56 @@ export class Game {
       if (this.phase === "DEAD") this.save();
     }
   }
-  private moveEnemy(enemy: Point, target: Point, speed: number, dt: number) {
+  private moveEnemy(
+    enemy: Point,
+    target: Point,
+    speed: number,
+    dt: number,
+    finalApproach = false,
+  ) {
     let route = this.routes.get(enemy);
     if (!route || route.points.length === 0 || dist(route.target, target) > 3) {
       const start = route?.points[0] ?? enemy;
-      const points = findPath(this.world, start, target);
+      let points = findPath(this.world, start, target);
+      // Targets just off the grid (tomb nooks) route to the nearest
+      // navigable cell beside them; the final approach covers the rest.
+      if (!points.length) {
+        const cx = Math.round(target.x / 2),
+          cz = Math.round(target.z / 2);
+        const near = [-1, 0, 1]
+          .flatMap((dx) =>
+            [-1, 0, 1].map((dz) => ({ x: (cx + dx) * 2, z: (cz + dz) * 2 })),
+          )
+          .sort((a, b) => dist(a, target) - dist(b, target));
+        for (const cell of near) {
+          points = findPath(this.world, start, cell);
+          if (points.length) break;
+        }
+      }
       if (points[0] && dist(enemy, points[0]) < 0.05) points.shift();
       route = { points, target: { ...target } };
       this.routes.set(enemy, route);
     }
-    const next = route.points[0];
+    let next: Point | undefined = route.points[0];
+    // Off-grid targets (a Torchbearer in a tomb nook): once the grid route is
+    // spent, a pursuer that has seen its prey closes the final metres in a
+    // straight, unobstructed line. Sound alone only leads to the nearby floor.
+    if (
+      !next &&
+      finalApproach &&
+      dist(enemy, target) < 3 &&
+      dist(enemy, target) > 0.02
+    ) {
+      const steps = Math.ceil(dist(enemy, target) / 0.1);
+      let clear = true;
+      for (let i = 1; i <= steps && clear; i++) {
+        const x = enemy.x + ((target.x - enemy.x) * i) / steps,
+          z = enemy.z + ((target.z - enemy.z) * i) / steps;
+        clear =
+          walkable(this.world, x, z) && !blockedByProp(this.world, x, z, 0.3);
+      }
+      if (clear) next = target;
+    }
     if (!next) return;
     const length = dist(next, enemy);
     if (length < 0.02) {
@@ -1611,7 +1789,8 @@ export class Game {
     if (walkable(this.world, x, z) && !blockedByProp(this.world, x, z, 0.3)) {
       enemy.x = x;
       enemy.z = z;
-      if (move >= length - 0.001) route.points.shift();
+      if (move >= length - 0.001 && route.points[0] === next)
+        route.points.shift();
     }
   }
   private updateHunter(dt: number) {
@@ -1657,12 +1836,22 @@ export class Game {
     const facing = this.hunter.yaw ?? heading;
     const inCone =
       d < 2.5 || Math.cos(heading - facing) > Math.cos((Math.PI * 70) / 180);
+    // A hidden Torchbearer is only found at arm's reach, or once a Hunter
+    // has lingered close enough for long enough to sense them.
+    const hidden = this.hidden;
+    if (hidden && d < CONFIG.senseRange && this.hunter.state !== "PURSUING")
+      this.hunter.sense = (this.hunter.sense ?? 0) + dt;
+    else this.hunter.sense = Math.max(0, (this.hunter.sense ?? 0) - dt * 0.5);
+    const sensed = hidden && (this.hunter.sense ?? 0) >= CONFIG.senseTime;
     const seen =
-      inCone &&
-      d <
-        CONFIG.sight *
-          (1 + this.depth * 0.15) *
-          (this.player.crouched ? CONFIG.crouchSight : 1) &&
+      (sensed ||
+        (hidden
+          ? d < CONFIG.hideReveal
+          : inCone &&
+            d <
+              CONFIG.sight *
+                (1 + this.depth * 0.15) *
+                (this.player.crouched ? CONFIG.crouchSight : 1))) &&
       lineOfSight(this.world, this.hunter, this.player);
     const heard =
       !seen &&
@@ -1717,12 +1906,16 @@ export class Game {
             (this.hunterReadiness < 1 ? 0.4 : 1)
         : CONFIG.hunterSearch,
       dt,
+      this.hunter.state === "PURSUING",
     );
     if (dist(before, this.hunter) > 0.001)
       this.hunter.yaw =
         Math.atan2(-(this.hunter.x - before.x), -(this.hunter.z - before.z)) ||
         0;
-    if (dist(this.hunter, this.player) < 1.1) {
+    // Brushing past a hidden Torchbearer is not a capture: the Hunter must
+    // first notice them (arm's reach or sensing) and give chase.
+    const unnoticed = this.hidden && this.hunter.state !== "PURSUING";
+    if (dist(this.hunter, this.player) < 1.1 && !unnoticed) {
       this.phase = "DEAD";
       this.deathCause = "Hunter";
       this.deathAdvice =

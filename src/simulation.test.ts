@@ -7,6 +7,7 @@ import {
   findPath,
   lineOfSight,
   walkable,
+  navigationClearance,
 } from "./simulation";
 import * as THREE from "three";
 import { constrainCamera, hunterScaleFor } from "./scene";
@@ -645,4 +646,131 @@ test("the Hunter grows in tall chambers but every pose still clears the ceiling"
       `${ceiling.toFixed(2)} m ceiling: ${(tallest * scale).toFixed(2)} m pose`,
     );
   }
+});
+
+const hideSetup = () => {
+  const g = new Game(104729);
+  g.enemies = [];
+  const spot = g.hidingSpots[0];
+  Object.assign(g.player, { x: spot.x, z: spot.z, crouched: true });
+  g.phase = "HUNT_ACTIVE";
+  g.fuel = 0;
+  // A floor point about `d` metres from the nook with a clear view into it.
+  const at = (d: number) => {
+    let best: { x: number; z: number } | undefined,
+      error = Infinity;
+    for (let a = 0; a < 64; a++)
+      for (const r of [d - 0.3, d, d + 0.3]) {
+        const p = {
+          x: spot.x + Math.cos((a * Math.PI) / 32) * r,
+          z: spot.z + Math.sin((a * Math.PI) / 32) * r,
+        };
+        if (
+          walkable(g.world, p.x, p.z) &&
+          lineOfSight(g.world, p, spot) &&
+          Math.abs(r - d) < error
+        ) {
+          best = p;
+          error = Math.abs(r - d);
+        }
+      }
+    assert.ok(best, `no clear vantage ${d} m from the nook`);
+    return best!;
+  };
+  const facing = (p: { x: number; z: number }) =>
+    Math.atan2(-(spot.x - p.x), -(spot.z - p.z));
+  return { g, spot, at, facing };
+};
+const still = { ...idle, crouch: true };
+test("every expedition offers tomb nooks off the Hunters' walking lines", () => {
+  // Tombs walled in behind burial shelves are decorative and yield no nook.
+  for (let seed = 1; seed <= 40; seed++) {
+    const g = new Game(seed);
+    assert.ok(g.hidingSpots.length >= 2, `seed ${seed}`);
+    for (const spot of g.hidingSpots) {
+      assert.ok(walkable(g.world, spot.x, spot.z));
+      // Standing on the nook itself is hidden when crouched.
+      Object.assign(g.player, { x: spot.x, z: spot.z, crouched: true });
+      assert.equal(g.hidden, true);
+      assert.ok(navigationClearance(g.world, spot) > CONFIG.nookClearance);
+      assert.ok(Math.hypot(spot.x - g.start.x, spot.z - g.start.z) > 8);
+    }
+  }
+});
+test("a crouched Torchbearer in a nook is hidden from a searching Hunter in plain view", () => {
+  const { g, at, facing } = hideSetup();
+  const p = at(4);
+  g.hunter = { ...p, state: "SEARCHING", yaw: facing(p) };
+  g.step(1 / 60, still);
+  assert.equal(g.hidden, true);
+  assert.notEqual(g.hunter.state, "PURSUING");
+  // Standing up in the same place gives the hiding away.
+  g.hunter = { ...p, state: "SEARCHING", yaw: facing(p) };
+  g.step(1 / 60, idle);
+  assert.equal(g.hidden, false);
+  assert.equal(g.hunter.state, "PURSUING");
+});
+test("a searching Hunter's own routes never stumble onto a hidden Torchbearer", () => {
+  let found = 0,
+    trials = 0;
+  for (const seed of [1, 3, 7, 104729]) {
+    for (const spot of new Game(seed).hidingSpots) {
+      const g = new Game(seed);
+      g.enemies = [];
+      Object.assign(g.player, { x: spot.x, z: spot.z, crouched: true });
+      g.phase = "HUNT_ACTIVE";
+      g.fuel = 0;
+      const start = g.world.cells
+        .map((c) => ({ x: c.x * 2, z: c.z * 2 }))
+        .find((c) => Math.abs(Math.hypot(c.x - spot.x, c.z - spot.z) - 8) < 1);
+      if (!start) continue;
+      trials++;
+      g.hunter = { ...start, state: "SEARCHING" };
+      for (let i = 0; i < 60 * 20 && g.phase !== "DEAD"; i++)
+        g.step(1 / 60, still);
+      if (g.phase === "DEAD" || g.hunter.state === "PURSUING") found++;
+    }
+  }
+  assert.ok(trials >= 8);
+  // Only lingering long enough to sense the nook may reveal it.
+  assert.ok(found / trials < 0.25, `${found}/${trials} found`);
+});
+test("a Hunter at arm's reach, or one that lingers close, finds and catches the hidden Torchbearer", () => {
+  {
+    const { g, at, facing } = hideSetup();
+    const p = at(0.55);
+    g.hunter = { ...p, state: "SEARCHING", yaw: facing(p) };
+    g.step(1 / 60, still);
+    assert.equal(g.hunter.state, "PURSUING");
+  }
+  {
+    const { g, at } = hideSetup();
+    const p = at(2);
+    let sensedAt = -1;
+    for (let i = 0; i < 60 * 5 && sensedAt < 0; i++) {
+      // Hold the Hunter in place two metres away, as if sniffing the nook.
+      Object.assign(g.hunter, { ...p, state: "SEARCHING" });
+      g.step(1 / 60, still);
+      if (i === 120) assert.ok(g.hidingExposure > 0.4);
+      if (g.hunter.state === "PURSUING") sensedAt = i;
+    }
+    assert.ok(
+      sensedAt > 60 * 3,
+      "lingering for the sense time reveals the nook",
+    );
+    for (let i = 0; i < 60 * 4 && g.phase !== "DEAD"; i++)
+      g.step(1 / 60, still);
+    assert.equal(g.phase, "DEAD", "a sensed Torchbearer can still be reached");
+  }
+});
+test("hiding does not save you from a Hunter that watched you go in", () => {
+  const { g, at, facing, spot } = hideSetup();
+  g.player.crouched = false;
+  const p = at(5);
+  g.hunter = { ...p, state: "SEARCHING", yaw: facing(p) };
+  g.step(1 / 60, idle); // sees the Torchbearer standing at the nook
+  assert.equal(g.hunter.state, "PURSUING");
+  for (let i = 0; i < 60 * 6 && g.phase !== "DEAD"; i++) g.step(1 / 60, still);
+  assert.equal(g.phase, "DEAD");
+  assert.ok(Math.hypot(g.player.x - spot.x, g.player.z - spot.z) < 0.5);
 });

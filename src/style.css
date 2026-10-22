@@ -2360,3 +2360,28 @@ body[data-touch="true"] #touchControls button[aria-pressed="true"] {
 .stats .lost {
   color: var(--ember);
 }
+
+/* Hidden in a tomb nook: the world narrows to a sliver; being sensed tightens it. */
+.hidden-nook #vignette {
+  background: radial-gradient(
+    ellipse 60% 70% at 50% 50%,
+    transparent 28%,
+    #080f1cc8 62%,
+    var(--deep) 100%
+  );
+}
+.hidden-nook footer {
+  opacity: 0.55;
+  transition: opacity 1s;
+}
+.sensed #vignette {
+  background: radial-gradient(
+    ellipse 50% 60% at 50% 50%,
+    transparent 18%,
+    #080f1ce0 52%,
+    var(--deep) 100%
+  );
+}
+.sensed #survivalHint {
+  color: var(--gold);
+}
