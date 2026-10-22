@@ -251,7 +251,8 @@ export class GameScene {
       );
       (c.surface === "water" ? wetFloorPlacements : floorPlacements).push(
         new THREE.Matrix4()
-          .makeTranslation(c.x * 2, -0.14, c.z * 2)
+          // Flattened relief (below) keeps the walking surface at -0.02 m.
+          .makeTranslation(c.x * 2, -0.07, c.z * 2)
           .multiply(turn),
       );
       ceilingPlacements.push(
@@ -710,11 +711,13 @@ export class GameScene {
         });
       },
     );
+    // Generated floor tiles have deep tray rims; a shallower fit makes the
+    // joints read as worn flagstone edges instead of a grid of trays.
     this.catalog.batch(
       "arc_floor_2m",
       this.scene,
       floorPlacements,
-      [2, 0.12, 2],
+      [2, 0.05, 2],
       () => {
         floors.visible = false;
       },
@@ -757,7 +760,7 @@ export class GameScene {
         "arc_floor_2m",
         this.scene,
         wetFloorPlacements,
-        [2, 0.12, 2],
+        [2, 0.05, 2],
         () => {},
         { tint: 0x548c9c, roughness: 0.22 },
       );
@@ -765,7 +768,7 @@ export class GameScene {
       "arc_floor_2m",
       this.scene,
       ceilingPlacements,
-      [2, 0.12, 2],
+      [2, 0.05, 2],
       () => {
         ceiling.visible = false;
       },
