@@ -293,3 +293,106 @@ test("shipped GLBs load with bound skeletons, required clips and an animated han
     }
   }
 });
+
+test("locomotion playback rates come from measured planted-foot speed in the shipped clips", async () => {
+  const { LOCOMOTION, locomotionTimeScale } = await import("./character");
+  const plantedSpeed = async (file: string, clipName: string) => {
+    const bytes = await readFile(
+      new URL(`../public/models/${file}.glb`, import.meta.url),
+    );
+    const loader = new GLTFLoader().register(() => ({
+      name: "HeadlessTexture",
+      loadTexture: async () => new THREE.Texture(),
+    }));
+    const gltf = await loader.parseAsync(
+      bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+      "",
+    );
+    const clip = gltf.animations.find((c) => c.name === clipName)!;
+    const feet = ["foot_L", "foot_R"].map((n) =>
+      gltf.scene.getObjectByName(n)!,
+    );
+    const mixer = new THREE.AnimationMixer(gltf.scene);
+    mixer.clipAction(clip).play();
+    const samples: THREE.Vector3[][] = [];
+    for (let i = 0; i <= 240; i++) {
+      mixer.setTime((clip.duration * i) / 240);
+      gltf.scene.updateMatrixWorld(true);
+      samples.push(feet.map((f) => f.getWorldPosition(new THREE.Vector3())));
+    }
+    const dt = clip.duration / 240;
+    // Average horizontal foot speed over the lowest 40% of each foot's arc:
+    // robust for clips that barely plant (chase) as well as slow walks.
+    const speeds = feet.map((_, k) => {
+      const heights = samples.map((s) => s[k].y).sort((a, b) => a - b);
+      const cut = heights[Math.floor(heights.length * 0.4)];
+      let dist = 0,
+        time = 0;
+      for (let i = 1; i < samples.length; i++) {
+        const a = samples[i - 1][k],
+          b = samples[i][k];
+        if (a.y <= cut && b.y <= cut) {
+          dist += Math.hypot(b.x - a.x, b.z - a.z);
+          time += dt;
+        }
+      }
+      return dist / time;
+    });
+    return (speeds[0] + speeds[1]) / 2;
+  };
+  // Tolerance covers sampling and left/right stride asymmetry.
+  for (const [model, clip] of [
+    ["torchbearer", "walk"],
+    ["torchbearer", "sprint"],
+    ["torchbearer", "crouch_walk"],
+    ["hunter", "search"],
+    ["hunter", "pursue"],
+    ["hunter", "flee"],
+    ["hunter", "crawl"],
+    ["stalker", "investigate"],
+    ["stalker", "investigate_fast"],
+  ] as const) {
+    const measured = await plantedSpeed(model, clip);
+    const table = LOCOMOTION[model][clip].natural;
+    assert.ok(
+      Math.abs(measured - table) / table < 0.25,
+      `${model} ${clip}: table ${table} vs measured ${measured.toFixed(2)}`,
+    );
+  }
+  // The Hunter's chase plays near natural pace; the Stalker no longer glides.
+  assert.ok(
+    Math.abs(locomotionTimeScale("hunter", "pursue", 4.5)! - 4.5 / 4.0) < 1e-9,
+  );
+  assert.equal(locomotionTimeScale("stalker", "investigate_fast", 2.8), 3);
+  assert.equal(locomotionTimeScale("torchbearer", "idle", 0), undefined);
+});
+
+test("sunken Hunter clips are lifted to ankle height; grounded rigs are untouched", async () => {
+  const { measureGroundLift } = await import("./character");
+  const load = async (file: string) => {
+    const bytes = await readFile(
+      new URL(`../public/models/${file}.glb`, import.meta.url),
+    );
+    const loader = new GLTFLoader().register(() => ({
+      name: "HeadlessTexture",
+      loadTexture: async () => new THREE.Texture(),
+    }));
+    return loader.parseAsync(
+      bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+      "",
+    );
+  };
+  const hunter = await load("hunter");
+  const lifts = measureGroundLift(hunter.scene, hunter.animations);
+  for (const clip of ["idle", "search", "pursue", "flee"])
+    assert.ok(
+      lifts.get(clip)! > 0.18 && lifts.get(clip)! < 0.3,
+      `${clip} lift ${lifts.get(clip)}`,
+    );
+  for (const clip of ["crawl", "listen"])
+    assert.ok(lifts.get(clip)! < 0.01, `${clip} already grounded`);
+  const player = await load("torchbearer");
+  const playerLifts = measureGroundLift(player.scene, player.animations);
+  for (const clip of ["idle", "walk", "sprint", "crouch_walk"])
+    assert.ok(playerLifts.get(clip)! < 0.01, `torchbearer ${clip}`);
+});

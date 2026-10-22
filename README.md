@@ -6,6 +6,22 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## 3D presentation pass — 2026-10-22
+
+A review of rendered frames, rigs and clips found and fixed:
+
+- **Sunken Hunter.** In idle, search, pursue, flee, capture and banish its feet sat 18–24 cm below the floor (only crawl and listen had been grounded). Each clip's lowest foot joint is now measured at load and lifted to ankle height, blended by animation weight.
+- **Undersized Hunter.** The rigged Hunter was 1.54 m tall, shorter than the 1.63 m Torchbearer, against an art-bible target of 3.0–3.3 m. It now grows with the ceiling up to 1.3× (about 2.15 m idle, 2.4 m in pursuit), capped so hanging arms never look longer than the real 1.1 m capture reach. Low corridors keep its crawl fitting.
+- **Foot sliding.** Locomotion playback rates now come from measured planted-foot speed in the shipped clips instead of hand-picked constants, for all three characters. The Stalker glided about 80% of its movement and the searching Hunter about 55%; fleeing Hunter legs outran the body. Cadence caps keep short authored strides from looking frantic, so some sprint slide remains until longer-stride clips exist.
+- **Stalker.** It now faces where it walks (not always at the player), uses its faster gait at speed, and no longer floats on a sine bob.
+- **Sanctuary fire.** The destination landmark was an opaque stretched icosahedron; it is now three animated flame layers and a soft glow sharing the torch shader.
+- **Blue seams.** Generated wall, floor and ceiling modules do not tile perfectly, letting fog colour show through as blue lines. Near-black instanced backings (three draw calls) close every seam; floor and ceiling tiles also take a seeded quarter turn to break texture repetition.
+- **Flooded rooms** gain a translucent water sheet with drifting procedural ripple normals, so torchlight shimmers on it.
+- **Camera clipping.** The boom now uses a small fan of rays for a camera-sized clearance, so protruding stonework cannot fill the lens.
+- **Lighting.** The cool ambient fill drops from 0.46 to 0.34 while the torch burns, letting the torch act as the key light.
+
+Validation: tests cover measured gait speeds, foot grounding, Hunter ceiling clearance and side clearance for the camera. Visual review used software-rendered frames; live motion, frame rate on real hardware and physical devices remain unreviewed.
+
 ## Relics, presence and defeat — 2026-10-22
 
 Eighteen authored votives (three per emblem) replace six, and each chamber's relic is assigned so no votive repeats within an expedition. Heard footsteps now gather a cold shadow at the screen edge they come from; it is driven by the same audio contact as the footstep cue, so it reveals nothing the player could not already hear. The defeat screen states how many carried relics were lost beside the banked total, and live HUD warnings no longer show through result screens.

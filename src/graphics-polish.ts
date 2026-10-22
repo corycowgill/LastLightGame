@@ -41,6 +41,100 @@ export function createTorchFlame() {
     }),
   );
 }
+/**
+ * Sanctuary fire: three crossed analytic flame layers plus a soft glow,
+ * sharing the torch shader. Far larger than the torch so it reads as the
+ * stable destination cue the art bible asks for.
+ */
+export function createSanctuaryFire(glow: THREE.Texture) {
+  const group = new THREE.Group();
+  const layers: THREE.Mesh[] = [];
+  for (const [i, [w, h, x, phase]] of [
+    [1.0, 1.0, 0, 0],
+    [0.78, 0.82, -0.13, 1.7],
+    [0.72, 0.76, 0.14, 3.1],
+  ].entries()) {
+    const flame = createTorchFlame();
+    flame.scale.set(w * 5.2, h * 7.2, 1);
+    flame.position.set(x, 0.62 * h, i * 0.01);
+    flame.userData.phase = phase;
+    flame.userData.base = flame.scale.clone();
+    flame.renderOrder = 2;
+    group.add(flame);
+    layers.push(flame);
+  }
+  const halo = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: glow,
+      color: 0xffb35c,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false,
+    }),
+  );
+  halo.scale.set(1.9, 1.5, 1);
+  halo.position.y = 0.35;
+  group.add(halo);
+  return {
+    group,
+    update(elapsed: number, camera: THREE.Camera) {
+      // Yaw-only billboard keeps the fire upright from any camera pitch.
+      const world = group.getWorldPosition(new THREE.Vector3());
+      group.rotation.y = Math.atan2(
+        camera.position.x - world.x,
+        camera.position.z - world.z,
+      );
+      for (const flame of layers) {
+        const t = elapsed + flame.userData.phase;
+        const base = flame.userData.base as THREE.Vector3;
+        (flame.material as THREE.ShaderMaterial).uniforms.time.value = t * 0.8;
+        flame.scale.set(
+          base.x * (1 + 0.06 * Math.sin(t * 5.3)),
+          base.y * (1 + 0.1 * Math.sin(t * 7.1) + 0.05 * Math.sin(t * 13)),
+          1,
+        );
+      }
+      halo.material.opacity = 0.5 + 0.08 * Math.sin(elapsed * 6.3);
+    },
+  };
+}
+/** Tileable ripple normals from a few interfering sine waves (no assets). */
+export function createRippleNormals(size = 128) {
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d")!;
+  const image = ctx.createImageData(size, size);
+  const tau = Math.PI * 2;
+  // Integer wave counts keep the field seamless across tile edges.
+  const waves = [
+    [3, 1, 0.5],
+    [-2, 4, 0.35],
+    [5, -3, 0.2],
+    [1, 6, 0.15],
+  ];
+  for (let y = 0; y < size; y++)
+    for (let x = 0; x < size; x++) {
+      let dx = 0,
+        dy = 0;
+      for (const [kx, ky, a] of waves) {
+        const phase = (tau * (kx * x + ky * y)) / size;
+        dx += a * kx * Math.cos(phase);
+        dy += a * ky * Math.cos(phase);
+      }
+      const n = new THREE.Vector3(-dx * 0.08, -dy * 0.08, 1).normalize();
+      const i = (y * size + x) * 4;
+      image.data[i] = (n.x * 0.5 + 0.5) * 255;
+      image.data[i + 1] = (n.y * 0.5 + 0.5) * 255;
+      image.data[i + 2] = (n.z * 0.5 + 0.5) * 255;
+      image.data[i + 3] = 255;
+    }
+  ctx.putImageData(image, 0, 0);
+  const texture = new THREE.CanvasTexture(c);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  return texture;
+}
 export class ContactShadows {
   private texture: THREE.CanvasTexture;
   private player: THREE.Mesh;

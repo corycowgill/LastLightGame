@@ -5,6 +5,8 @@ import {
   createTorchFlame,
   ContactShadows,
   createEmberGlow,
+  createSanctuaryFire,
+  createRippleNormals,
 } from "./graphics-polish";
 import { HazardVisuals } from "./hazard-visuals";
 import {
@@ -35,22 +37,60 @@ import { environmentBlocks, pillarRows } from "./crypt-layout";
 import { addCryptDecals } from "./crypt-decals";
 import * as THREE from "three";
 import type { World, Game } from "./simulation";
+const CAMERA_UP = new THREE.Vector3(0, 1, 0);
+/**
+ * Pull the camera in front of the nearest wall along the boom. A small fan of
+ * rays toward points around the camera keeps a camera-sized clearance, so
+ * decorative stone that protrudes past the collision shells (pilasters,
+ * arches) cannot end up filling the lens.
+ */
 export function constrainCamera(
   anchor: THREE.Vector3,
   desired: THREE.Vector3,
   walls: THREE.Object3D[],
+  radius = 0.3,
 ) {
   const delta = desired.clone().sub(anchor),
-    ray = new THREE.Raycaster(
-      anchor,
-      delta.clone().normalize(),
+    length = delta.length();
+  if (length < 1e-6) return desired.clone();
+  const forward = delta.clone().divideScalar(length);
+  const side = new THREE.Vector3().crossVectors(forward, CAMERA_UP);
+  if (side.lengthSq() < 1e-6) side.set(1, 0, 0);
+  side.normalize();
+  const up = new THREE.Vector3().crossVectors(side, forward).normalize();
+  let allowed = length;
+  for (const offset of [
+    new THREE.Vector3(),
+    side.clone().multiplyScalar(radius),
+    side.clone().multiplyScalar(-radius),
+    up.clone().multiplyScalar(radius),
+    up.clone().multiplyScalar(-radius),
+  ]) {
+    // Side rays start half a radius out (still clear of the player's own
+    // collision margin) so they also guard the middle of the boom.
+    const origin = anchor.clone().addScaledVector(offset, 0.5);
+    const target = desired.clone().add(offset).sub(origin);
+    const reach = target.length();
+    const hit = new THREE.Raycaster(
+      origin,
+      target.divideScalar(reach),
       0,
-      delta.length(),
-    );
-  const hit = ray.intersectObjects(walls, false)[0];
-  return hit
-    ? anchor.clone().add(delta.setLength(Math.max(0.15, hit.distance - 0.25)))
+      reach,
+    ).intersectObjects(walls, false)[0];
+    // Project the hit back onto the boom so offsets limit distance, not angle.
+    if (hit) allowed = Math.min(allowed, (hit.distance / reach) * length);
+  }
+  return allowed < length
+    ? anchor.clone().addScaledVector(forward, Math.max(0.15, allowed - 0.25))
     : desired.clone();
+}
+/**
+ * The rigged Hunter is human-sized; the art bible asks for an unnaturally tall
+ * shape. Grow it where the ceiling allows, capped so hanging arms never look
+ * longer than the real 1.1 m capture reach. Tallest grounded pose is ~1.95 m.
+ */
+export function hunterScaleFor(ceiling: number) {
+  return THREE.MathUtils.clamp((ceiling - 0.25) / 1.95, 1, 1.3);
 }
 export class GameScene {
   private catalog = new CatalogAssets();
@@ -71,6 +111,9 @@ export class GameScene {
   // Bounded near-field light avoids clipping the adjacent hood to white.
   private torch = new THREE.PointLight(0xffa347, 2.2, 18, 0);
   private sanctuaryLights: THREE.PointLight[] = [];
+  private sanctuaryFires: ReturnType<typeof createSanctuaryFire>[] = [];
+  private emberGlow = createEmberGlow();
+  private waterNormals?: THREE.Texture;
   private lowQuality = false;
   private renderBudget = new RenderBudget();
   private metricSeconds = 0;
@@ -107,6 +150,12 @@ export class GameScene {
   private stalkerActor?: AnimatedCharacter;
   private lastHunterState = "DORMANT";
   private banishTime = 0;
+  // Smoothed ground speeds drive gait playback so feet stay planted.
+  private hunterSpeed = 0;
+  private hunterScale = 1;
+  private secondHunterScale = 1;
+  private secondHunterSpeed = 0;
+  private stalkerSpeed = 0;
   private lastMessage = "";
   private lastArtifacts = 0;
   private darkAdaptation = new THREE.PointLight(0x91b6dc, 0, 3.2, 1.6);
@@ -195,12 +244,20 @@ export class GameScene {
       dummy.rotation.set(0, 0, 0);
       dummy.updateMatrix();
       floors.setMatrixAt(i, dummy.matrix);
+      // Quarter-turn each square tile so its texture never repeats in step.
+      const turn = new THREE.Matrix4().makeRotationY(
+        ((((c.x * 73856093) ^ (c.z * 19349663) ^ world.seed) >>> 0) % 4) *
+          (Math.PI / 2),
+      );
       (c.surface === "water" ? wetFloorPlacements : floorPlacements).push(
-        new THREE.Matrix4().makeTranslation(c.x * 2, -0.14, c.z * 2),
+        new THREE.Matrix4()
+          .makeTranslation(c.x * 2, -0.14, c.z * 2)
+          .multiply(turn),
       );
       ceilingPlacements.push(
         new THREE.Matrix4()
           .makeTranslation(c.x * 2, height + 0.05, c.z * 2)
+          .multiply(turn)
           .multiply(new THREE.Matrix4().makeRotationX(Math.PI)),
       );
       const color = new THREE.Color(
@@ -362,13 +419,10 @@ export class GameScene {
       this.catalog.add("pro_brazier", this.scene, x, 0, z, 1, 0, () => {
         basin.visible = false;
       });
-      const fire = new THREE.Mesh(
-        new THREE.IcosahedronGeometry(0.35, 1),
-        new THREE.MeshBasicMaterial({ color: 0xffc677 }),
-      );
-      fire.position.set(x, 1, z);
-      fire.scale.y = 2;
-      this.scene.add(fire);
+      const fire = createSanctuaryFire(this.emberGlow);
+      fire.group.position.set(x, 0.62, z);
+      this.scene.add(fire.group);
+      this.sanctuaryFires.push(fire);
       const light = new THREE.PointLight(0xffb85b, 12, 21, 1.6);
       light.position.set(x, 1.6, z);
       light.shadow.mapSize.set(512, 512);
@@ -606,6 +660,44 @@ export class GameScene {
       this.kit.push({ root, offset: new THREE.Vector3(x, y, z) });
     }
     this.chalkStick = this.catalog.add("pro_chalk", this.player);
+    // Generated wall, floor and ceiling modules do not tile perfectly; thin
+    // near-black backings keep fog colour out of every seam (3 draw calls).
+    {
+      const seam = new THREE.MeshBasicMaterial({ color: 0x0c0e11 });
+      const wallGeometry = new THREE.BoxGeometry(2.08, 4.5, 0.05);
+      wallGeometry.translate(0, 2.25, 0);
+      const walls = new THREE.InstancedMesh(
+        wallGeometry,
+        seam,
+        wallPlacements.length,
+      );
+      wallPlacements.forEach((matrix, i) => walls.setMatrixAt(i, matrix));
+      const slab = new THREE.PlaneGeometry(2.1, 2.1).rotateX(-Math.PI / 2);
+      const under = new THREE.InstancedMesh(slab, seam, world.cells.length);
+      const over = new THREE.InstancedMesh(
+        slab.clone().rotateX(Math.PI),
+        seam,
+        world.cells.length,
+      );
+      world.cells.forEach((c, i) => {
+        under.setMatrixAt(
+          i,
+          new THREE.Matrix4().makeTranslation(c.x * 2, -0.17, c.z * 2),
+        );
+        over.setMatrixAt(
+          i,
+          new THREE.Matrix4().makeTranslation(
+            c.x * 2,
+            (c.ceiling ?? 4) + 0.1,
+            c.z * 2,
+          ),
+        );
+      });
+      for (const backing of [walls, under, over]) {
+        backing.computeBoundingSphere();
+        this.scene.add(backing);
+      }
+    }
     this.catalog.batch(
       "arc_wall_2m",
       this.scene,
@@ -627,6 +719,39 @@ export class GameScene {
         floors.visible = false;
       },
     );
+    if (wetFloorPlacements.length) {
+      // Shallow standing water: a dark translucent sheet whose drifting ripple
+      // normals make torchlight shimmer, so flooded floors read as water.
+      this.waterNormals = createRippleNormals();
+      const water = new THREE.InstancedMesh(
+        new THREE.PlaneGeometry(2, 2).rotateX(-Math.PI / 2),
+        new THREE.MeshStandardMaterial({
+          color: 0x0d2a31,
+          roughness: 0.06,
+          metalness: 0,
+          transparent: true,
+          opacity: 0.7,
+          depthWrite: false,
+          normalMap: this.waterNormals,
+          normalScale: new THREE.Vector2(0.45, 0.45),
+        }),
+        wetFloorPlacements.length,
+      );
+      wetFloorPlacements.forEach((placement, i) =>
+        water.setMatrixAt(
+          i,
+          new THREE.Matrix4().makeTranslation(
+            placement.elements[12],
+            0.005,
+            placement.elements[14],
+          ),
+        ),
+      );
+      water.receiveShadow = true;
+      water.renderOrder = 1;
+      water.computeBoundingSphere();
+      this.scene.add(water);
+    }
     if (wetFloorPlacements.length)
       this.catalog.batch(
         "arc_floor_2m",
@@ -1066,7 +1191,8 @@ export class GameScene {
     this.burst = Math.max(0, this.burst - dt * 2);
     this.ambient.intensity = THREE.MathUtils.damp(
       this.ambient.intensity,
-      burning ? 0.46 : 0.3,
+      // A lower cool fill lets the torch be the key light (art bible §1).
+      burning ? 0.34 : 0.3,
       2,
       dt,
     );
@@ -1131,16 +1257,29 @@ export class GameScene {
       this.ceilings.get(
         `${Math.round(game.hunter.x / 2)},${Math.round(game.hunter.z / 2)}`,
       ) ?? 2.7;
-    const hunterMoving =
-      Math.hypot(
-        game.hunter.x - this.hunter.position.x,
-        game.hunter.z - this.hunter.position.z,
-      ) > 0.005;
+    const hunterStep = Math.hypot(
+      game.hunter.x - this.hunter.position.x,
+      game.hunter.z - this.hunter.position.z,
+    );
+    const hunterMoving = hunterStep > 0.005;
+    this.hunterSpeed = THREE.MathUtils.damp(
+      this.hunterSpeed,
+      dt > 0 && hunterStep < 2 ? hunterStep / dt : 0,
+      10,
+      dt,
+    );
     this.hunterShroud?.update(game.elapsed, game.hunter.state);
     this.secondShroud?.update(
       game.elapsed,
       game.additionalHunters[0]?.state ?? "DORMANT",
     );
+    this.hunterScale = THREE.MathUtils.damp(
+      this.hunterScale,
+      hunterScaleFor(hunterCeiling),
+      3,
+      dt,
+    );
+    this.hunterActor?.root.scale.setScalar(this.hunterScale);
     this.hunterActor?.update(
       game.phase === "DEAD"
         ? "capture"
@@ -1155,10 +1294,9 @@ export class GameScene {
                 : !hunterMoving && game.hunter.state === "SEARCHING"
                   ? "listen"
                   : "search",
-      dt *
-        (game.hunter.state === "PURSUING" && game.hunterReadiness < 1
-          ? 0.4
-          : 1),
+      dt,
+      // A larger body takes proportionally longer strides.
+      this.hunterSpeed / this.hunterScale,
     );
     if (this.hunter.visible) {
       const dx = game.hunter.x - this.hunter.position.x,
@@ -1179,9 +1317,17 @@ export class GameScene {
       const { root, actor } = this.additionalHunter;
       root.visible = !!extra && !["DORMANT", "BANISHED"].includes(extra.state);
       if (extra && root.visible) {
-        const moving =
-          Math.hypot(extra.x - root.position.x, extra.z - root.position.z) >
-          0.005;
+        const step = Math.hypot(
+          extra.x - root.position.x,
+          extra.z - root.position.z,
+        );
+        const moving = step > 0.005;
+        this.secondHunterSpeed = THREE.MathUtils.damp(
+          this.secondHunterSpeed,
+          dt > 0 && step < 2 ? step / dt : 0,
+          10,
+          dt,
+        );
         const ceiling =
           this.ceilings.get(
             `${Math.round(extra.x / 2)},${Math.round(extra.z / 2)}`,
@@ -1198,11 +1344,16 @@ export class GameScene {
                   : moving
                     ? "search"
                     : "listen",
-          dt *
-            (extra.state === "PURSUING" && (extra.readiness ?? 1) < 1
-              ? 0.4
-              : 1),
+          dt,
+          this.secondHunterSpeed / this.secondHunterScale,
         );
+        this.secondHunterScale = THREE.MathUtils.damp(
+          this.secondHunterScale,
+          hunterScaleFor(ceiling),
+          3,
+          dt,
+        );
+        actor.root.scale.setScalar(this.secondHunterScale);
         root.position.set(extra.x, 0, extra.z);
         root.rotation.y = smoothFacing(
           root.rotation.y,
@@ -1217,25 +1368,37 @@ export class GameScene {
     if (e) {
       const oldX = this.stalker.position.x,
         oldZ = this.stalker.position.z;
+      const dx = e.x - oldX,
+        dz = e.z - oldZ,
+        step = Math.hypot(dx, dz);
+      this.stalkerSpeed = THREE.MathUtils.damp(
+        this.stalkerSpeed,
+        dt > 0 && step < 2 ? step / dt : 0,
+        10,
+        dt,
+      );
+      const walking = this.stalkerSpeed > 0.25;
       this.stalkerActor?.update(
         e.state === "COWERING" || e.state === "REPELLED"
           ? "cower"
           : e.state === "FLEEING"
             ? "crawl"
-            : e.state === "LISTENING"
+            : e.state === "LISTENING" || !walking
               ? "idle"
-              : "investigate",
+              : this.stalkerSpeed > 1.2
+                ? "investigate_fast"
+                : "investigate",
         dt,
+        this.stalkerSpeed,
       );
-      this.stalker.position.set(e.x, Math.sin(this.elapsed * 4) * 0.02, e.z);
-      const fleeing = e.state === "FLEEING";
-      const dx = e.x - oldX,
-        dz = e.z - oldZ;
-      const facing = fleeing
-        ? Math.hypot(dx, dz) > 0.001
+      // Grounded: the clip carries its own body motion.
+      this.stalker.position.set(e.x, 0, e.z);
+      // Face where it walks (toward a stone, around a corner); only a
+      // stationary Stalker turns its head-on attention to the player.
+      const facing =
+        step > 0.001
           ? Math.atan2(dx, dz) + Math.PI
-          : this.stalker.rotation.y
-        : Math.atan2(game.player.x - e.x, game.player.z - e.z) + Math.PI;
+          : Math.atan2(game.player.x - e.x, game.player.z - e.z) + Math.PI;
       this.stalker.rotation.y = smoothFacing(
         this.stalker.rotation.y,
         facing,
@@ -1443,6 +1606,9 @@ export class GameScene {
     this.mistVisuals?.update(game.mist, game.player, game.elapsed);
     const renderStart = performance.now();
     this.flame.lookAt(this.camera.position);
+    for (const fire of this.sanctuaryFires)
+      fire.update(this.elapsed, this.camera);
+    this.waterNormals?.offset.set(this.elapsed * 0.011, this.elapsed * 0.006);
     this.contactShadows?.update(game.player, game.hunter);
     this.renderer.render(this.scene, this.camera);
     this.renderSubmitMs =
@@ -1515,6 +1681,7 @@ export class GameScene {
       const standard = m as THREE.MeshStandardMaterial;
       if (standard.map) textures.add(standard.map);
       if (standard.bumpMap) textures.add(standard.bumpMap);
+      if (standard.normalMap) textures.add(standard.normalMap);
       m.dispose();
     });
     textures.forEach((t) => t.dispose());

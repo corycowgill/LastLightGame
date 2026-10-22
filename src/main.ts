@@ -1153,6 +1153,9 @@ requestAnimationFrame(frame);
   get view() {
     return view;
   },
+  get camera() {
+    return cameraControls;
+  },
   begin,
   resume,
 };

@@ -9,7 +9,7 @@ import {
   walkable,
 } from "./simulation";
 import * as THREE from "three";
-import { constrainCamera } from "./scene";
+import { constrainCamera, hunterScaleFor } from "./scene";
 import { ExpeditionCheck } from "./qa";
 const idle = { forward: 0, strafe: 0, sprint: false, crouch: false, yaw: 0 };
 const advance = (g: Game, seconds: number, input = idle) => {
@@ -338,6 +338,22 @@ test("camera collision retracts before walls and preserves clear camera rays", (
   wall.geometry.dispose();
   wall.material.dispose();
 });
+test("camera keeps clearance from stonework just beside the boom line", () => {
+  // A pilaster 0.2 m to the side of the boom: a single centre ray misses it.
+  const pilaster = new THREE.Mesh(
+    new THREE.BoxGeometry(0.25, 4, 0.25),
+    new THREE.MeshBasicMaterial(),
+  );
+  pilaster.position.set(0.32, 1.5, 2.5);
+  pilaster.updateMatrixWorld(true);
+  const anchor = new THREE.Vector3(0, 1.5, 0),
+    desired = new THREE.Vector3(0, 1.5, 4);
+  const safe = constrainCamera(anchor, desired, [pilaster]);
+  assert.ok(safe.z < 2.3, `camera stays in front of the pilaster: ${safe.z}`);
+  assert.ok(safe.distanceTo(anchor) > 1);
+  pilaster.geometry.dispose();
+  pilaster.material.dispose();
+});
 test("Hunter investigates audible footsteps without seeing through corner", () => {
   const g = new Game();
   g.enemies = [];
@@ -614,4 +630,19 @@ test("death records how many carried relics the dark kept", () => {
   assert.equal(g.artifacts, 0);
   g.reset(7);
   assert.equal(g.lostRelics, 0);
+});
+
+test("the Hunter grows in tall chambers but every pose still clears the ceiling", () => {
+  // Grounded clip tops measured from hunter.glb: listen 1.93, pursue 1.87, crawl 1.38.
+  assert.equal(hunterScaleFor(4), 1.3);
+  for (let ceiling = 2.5; ceiling <= 4.5; ceiling += 0.05) {
+    const scale = hunterScaleFor(ceiling);
+    assert.ok(scale >= 1 && scale <= 1.3);
+    // Below 3.1 m the scene switches to the crawl pose.
+    const tallest = ceiling < 3.1 ? 1.38 : 1.95;
+    assert.ok(
+      tallest * scale < ceiling - 0.05 || scale === 1,
+      `${ceiling.toFixed(2)} m ceiling: ${(tallest * scale).toFixed(2)} m pose`,
+    );
+  }
 });
