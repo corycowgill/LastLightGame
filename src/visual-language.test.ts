@@ -4,7 +4,9 @@ import { Game } from "./simulation";
 import { relicGlyph, visualCue, glyphSvg } from "./visual-language";
 test("authored relic emblems cover six identities and reserve a seventh for the sealed votive", () => {
   const glyphs = new Set(
-    Array.from({ length: 6 }, (_, id) => relicGlyph(1, { id })),
+    Array.from({ length: 18 }, (_, chamber) =>
+      relicGlyph(1, { id: chamber * 2 }),
+    ),
   );
   assert.equal(glyphs.size, 6);
   assert.equal(relicGlyph(1, { id: 9, encounter: "reliquary" }), "votive");

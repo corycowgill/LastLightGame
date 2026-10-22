@@ -6,6 +6,12 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Relics, presence and defeat — 2026-10-22
+
+Eighteen authored votives (three per emblem) replace six, and each chamber's relic is assigned so no votive repeats within an expedition. Heard footsteps now gather a cold shadow at the screen edge they come from; it is driven by the same audio contact as the footstep cue, so it reveals nothing the player could not already hear. The defeat screen states how many carried relics were lost beside the banked total, and live HUD warnings no longer show through result screens.
+
+Validation: 169 tests (including no-repeat relics across 40 seeds) and production build pass. Visual review used desktop screenshots over captured frames; live animation and physical devices remain unreviewed.
+
 ## Tension and risk pass — 2026-10-21
 
 Seeded bot playtests showed that a run could be won in 13 seconds by returning the first relic to the first fire, that efficient players never dropped below about 80% fuel, and that no threat could touch a lit torch. Turning back now banks half the haul, oil is scarcer and uneven, deep votives are worth two relics, and close Stalkers smother part of the flame. In 20-seed bot runs, efficient players now bottom out at 26–82% fuel and full clears at 0–30%, with occasional burnouts into a Hunt. The bot plays the simulation, not the rendered game; human difficulty remains to be confirmed.

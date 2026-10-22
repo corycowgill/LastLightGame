@@ -602,3 +602,16 @@ test("deeper chambers hold heavier votives and some chambers hold no supplies", 
   assert.ok(deep >= 18);
   assert.ok(lean >= 18);
 });
+test("death records how many carried relics the dark kept", () => {
+  const g = new Game();
+  away(g);
+  g.phase = "HUNT_ACTIVE";
+  g.artifacts = 3;
+  g.hunter = { x: g.player.x + 0.2, z: g.player.z, state: "PURSUING" };
+  g.step(1 / 60, idle);
+  assert.equal(g.phase, "DEAD");
+  assert.equal(g.lostRelics, 3);
+  assert.equal(g.artifacts, 0);
+  g.reset(7);
+  assert.equal(g.lostRelics, 0);
+});

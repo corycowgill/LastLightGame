@@ -547,8 +547,11 @@ function ended() {
     console.info(check.status);
   }
   const dead = game.phase === "DEAD";
+  // The result screen speaks alone; live HUD warnings would contradict it.
+  $("hud").hidden = true;
+  $("presence").style.opacity = "0";
   panel(
-    `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}</div><h2 id="resultTitle">${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? "Unbanked relics are lost. Banked upgrades and stories endure." : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${dead ? `<p id="deathAdvice" class="learning-note"></p>` : ""}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
+    `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}</div><h2 id="resultTitle">${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? (game.lostRelics ? `The dark keeps the ${game.lostRelics === 1 ? "relic" : `${game.lostRelics} relics`} you carried. Banked relics, upgrades and stories endure.` : "You carried nothing the dark could keep. Banked relics, upgrades and stories endure.") : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${dead ? `<p id="deathAdvice" class="learning-note"></p>` : ""}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats">${dead ? `<span class="lost">${game.lostRelics}<small>RELICS LOST</small></span>` : ""}<span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
   );
   if (dead) {
     if (game.deathCause)
@@ -1057,6 +1060,27 @@ function updateHUD() {
   $("scene").dataset.playerX = game.player.x.toFixed(2);
   $("scene").dataset.playerZ = game.player.z.toFixed(2);
   const threat = audio.threatFootstep;
+  // Heard footsteps darken the screen edge they come from; it shows nothing
+  // the player could not already hear, so walls still hide silent threats.
+  const presence = $("presence");
+  if (threat && !game.completed && game.phase !== "DEAD") {
+    const dx = threat.x - game.player.x,
+      dz = threat.z - game.player.z,
+      d = Math.max(1, Math.hypot(dx, dz));
+    const side =
+      (dx * Math.cos(cameraControls.pose.yaw) -
+        dz * Math.sin(cameraControls.pose.yaw)) /
+      d;
+    const ahead =
+      (-dx * Math.sin(cameraControls.pose.yaw) -
+        dz * Math.cos(cameraControls.pose.yaw)) /
+      d;
+    presence.style.setProperty("--px", `${50 + side * 62}%`);
+    presence.style.setProperty("--py", `${50 - ahead * 62}%`);
+    presence.style.opacity = Math.min(1, Math.max(0.15, (20 - d) / 12)).toFixed(
+      2,
+    );
+  } else presence.style.opacity = "0";
   let cue = "";
   if (settings.cues && threat) {
     const dx = threat.x - game.player.x,

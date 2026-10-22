@@ -1,6 +1,7 @@
 import type { Game } from "./simulation";
 import { lineOfSight } from "./simulation";
 import { vaporPhase } from "./environment-hazards";
+import { relicIdentity } from "./relics";
 export type Glyph =
   | "bell"
   | "ember"
@@ -58,11 +59,7 @@ export function relicGlyph(
   seed: number,
   item: { id: number; encounter?: string },
 ): Glyph {
-  return item.encounter === "reliquary"
-    ? "votive"
-    : (["bell", "ember", "tear", "coin", "candle", "key"] as Glyph[])[
-        ((Math.imul(seed | 0, 31) + item.id * 7) >>> 0) % 6
-      ];
+  return relicIdentity(seed, item).glyph;
 }
 export function visualCue(g: Game):
   | {

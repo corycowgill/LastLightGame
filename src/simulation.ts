@@ -335,6 +335,8 @@ export class Game {
   relicPulse = 18;
   relicEcho = 0;
   smotherCooldown = 0;
+  /** Relics carried at the moment of death, for an honest defeat summary. */
+  lostRelics = 0;
   get phaseTimeRemaining() {
     return this.timer;
   }
@@ -563,6 +565,7 @@ export class Game {
     this.relicPulse = 18;
     this.relicEcho = 0;
     this.smotherCooldown = 0;
+    this.lostRelics = 0;
     this.elapsed = 0;
     this.completed = false;
     this.retreatTime = 0;
@@ -1724,6 +1727,7 @@ export class Game {
       this.deathCause = "Hunter";
       this.deathAdvice =
         "Break sight around corners, then crouch to quiet your footsteps. Use a match to relight, or reach sanctuary fire.";
+      this.lostRelics = this.artifacts;
       this.artifacts = 0;
       this.say("The darkness found you. Banked relics remain safe.");
       if (!this.updatingAdditional) this.save();
@@ -1867,6 +1871,7 @@ export class Game {
         this.deathCause = "Stalker";
         this.deathAdvice =
           "The Stalker follows sound. Crouch when fire dies; relight with a match or escape toward sanctuary fire.";
+        this.lostRelics = this.artifacts;
         this.artifacts = 0;
         this.say("Without fire, the Stalker closes in.");
       }
