@@ -672,6 +672,21 @@ let worstFrame = 0;
 let longFrames = 0;
 let metricTimer = 0;
 function frame(now: number) {
+  // Hold the 3D scene while the studio intro plays so it animates smoothly on
+  // slower devices; a controller button still skips it.
+  if (document.getElementById("hallucinated-studio-intro")) {
+    try {
+      if (
+        [...(navigator.getGamepads?.() ?? [])].some(
+          (pad) => pad?.connected && pad.buttons.some((b) => b.pressed),
+        )
+      )
+        window.dispatchEvent(new KeyboardEvent("keydown"));
+    } catch {}
+    last = now;
+    requestAnimationFrame(frame);
+    return;
+  }
   const rawDt = (now - last) / 1000;
   const dt = Math.min(rawDt, 0.1);
   last = now;
@@ -1167,6 +1182,25 @@ function updateHUD() {
 game.load();
 rebuild();
 menu();
+// The Hallucinated Games studio intro, shared with the studio's other games,
+// plays once per page load over the title while the crypt finishes loading.
+if (!new URLSearchParams(location.search).has("debug")) {
+  const intro = (
+    window as {
+      HallucinatedIntro?: {
+        play(options: { skippable: boolean; sound: boolean }): Promise<unknown>;
+      };
+    }
+  ).HallucinatedIntro;
+  intro
+    ?.play({ skippable: true, sound: false })
+    .catch((error: unknown) =>
+      console.warn("Studio intro unavailable; continuing to the crypt.", error),
+    )
+    .finally(() =>
+      document.getElementById("hallucinated-studio-intro")?.remove(),
+    );
+}
 requestAnimationFrame(frame);
 (window as any).__lastLight = {
   get game() {
