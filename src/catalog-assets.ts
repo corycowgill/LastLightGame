@@ -2,6 +2,7 @@ import { polishCatalogSurface } from "./graphics-polish";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { LoadQueue } from "./load-queue";
+const NON_SHADOW_CASTERS = /^(arc_floor_2m|dre_crypt_skull|dec_corner_cobweb)$/;
 const loads = new LoadQueue(2);
 
 /** Shared decoded templates: one download per catalog ID, ownership per expedition. */
@@ -230,7 +231,11 @@ export class CatalogAssets {
               );
             }
           });
-          instances.castShadow = instances.receiveShadow = true;
+          // Floors and ceilings can never shadow anything visible, and skulls
+          // and cobwebs are too small to read; skipping them keeps every point
+          // light's six-face shadow passes for geometry that matters.
+          instances.castShadow = !NON_SHADOW_CASTERS.test(id);
+          instances.receiveShadow = true;
           instances.matrixAutoUpdate = false;
           instances.name = id;
           instances.computeBoundingSphere();

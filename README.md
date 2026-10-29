@@ -6,6 +6,14 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Rendering load cut by more than half — 2026-10-29
+
+Profiling the production build at High quality found 5–20 million triangles per frame, mostly from generated dressing far denser than its size: 12,000-triangle skulls (651 per map), 24,000-triangle bone piles and cobwebs, 18,000-triangle wall niches. Every catalog batch also cast shadows, including floor and ceiling tiles that can never shadow anything visible, multiplied by six cube faces per point-light shadow refresh.
+
+Five dressing models now ship as seam-preserving LODs made with gltfpack 0.24 (skull 1,200, bone pile 2,400, cobweb 3,600, chain 2,700, wall niche 3,600 triangles), with updated provenance in the catalog manifest. Floors, ceilings, skulls and cobwebs no longer cast shadows. Per-frame triangles fell 55–70% in every room type (refuge 20.5M → 8.6M, corridor 18.5M → 7.7M, flooded 5.1M → 1.5M). An aggressive topology-ignoring pass reached 80% but tore texture seams, so it was rejected after a rendered review; floor and wall tiles cannot be simplified without tearing and keep their source meshes. A test now holds dressing to a per-instance budget while still requiring real generated geometry.
+
+Validation: 185 tests and production build pass; rendered High-quality frames of burial shelves and the ossuary show intact textures. Frame rate on real phones and desktops still needs measuring.
+
 ## Descents and approximate hearing — 2026-10-29
 
 **Descents** give the game a goal after upgrades are maxed. Each escape to the far sanctuary unlocks the next Descent (up to IX); choose it from the result screen or the main menu's **Choose Descent**. Each level past the first burns fuel 12% faster, shortens the grace after extinction by a second (never under four), makes searching Hunters 0.3 m/s quicker and 2 s more persistent, adds a second Stalker deep in the crypt, and removes a starting match every two levels (never below one). Banking at the far sanctuary pays half a relic extra per relic per level; turning back to the first fire never does. Dying drops you one Descent. Chase speed never rises, so a sprint can still outrun pursuit.

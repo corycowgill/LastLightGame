@@ -5,7 +5,7 @@ import { dungeonDressing } from "./dungeon-dressing";
 import { generateWorld } from "./simulation";
 import { readFile } from "node:fs/promises";
 
-test("every dungeon detail is backed by a detailed neural GLB", async () => {
+test("every dungeon detail is a real neural GLB within a per-instance budget", async () => {
   const manifest = JSON.parse(
     await readFile(
       new URL("../public/models/catalog/manifest.json", import.meta.url),
@@ -17,14 +17,17 @@ test("every dungeon detail is backed by a detailed neural GLB", async () => {
     assert.ok(entry, detail.id);
     assert.equal(entry.method, "image_to_3d");
     assert.ok(entry.file.endsWith(".glb"));
-    assert.ok(
-      entry.triangles >=
-        (detail.id.startsWith("pro_")
-          ? 2000
-          : detail.id === "dre_urn_broken"
-            ? 9000
-            : 12000),
+    // Real geometry, never a placeholder card or box...
+    assert.ok(entry.triangles >= 1000, `${detail.id} too coarse`);
+    // ...yet hundreds of small details per map must stay cheap: the original
+    // 12-24k triangle skulls and bone piles cost ~20M triangles per frame.
+    // The urn and lid keep their source meshes: collision bounds pin them.
+    const pinned = ["dre_urn_broken", "dre_sarcophagus_lid"].includes(
       detail.id,
+    );
+    assert.ok(
+      entry.triangles <= (pinned ? 12000 : 4000),
+      `${detail.id} over budget: ${entry.triangles}`,
     );
   }
   const web = manifest.assets.find((a: any) => a.id === "dec_corner_cobweb");
