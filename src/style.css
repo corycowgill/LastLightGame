@@ -2396,3 +2396,93 @@ body[data-touch="true"] #touchControls button[aria-pressed="true"] {
 .stats .bonus {
   color: var(--gold);
 }
+
+/* Charcoal crypt sketch in the journal and on the result screen. */
+.sketch-wrap {
+  margin: 14px 0 6px;
+  padding: 10px 12px 8px;
+  border: 1px solid #a28b5b44;
+  border-radius: 6px;
+  background:
+    radial-gradient(ellipse at 50% 40%, #1a2533 0%, #0c131d 75%), #0c131d;
+}
+.sketch-wrap figcaption {
+  margin-bottom: 6px;
+}
+.crypt-sketch {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sketch-wrap.compact .crypt-sketch {
+  max-height: 170px;
+}
+.sketch-wall {
+  fill: none;
+  stroke: #ddd7be;
+  stroke-opacity: 0.72;
+  stroke-width: 0.9;
+}
+.sketch-retrace {
+  fill: none;
+  stroke: #ddd7be;
+  stroke-opacity: 0.22;
+  stroke-width: 0.6;
+}
+.sketch-stub {
+  fill: none;
+  stroke: #d8bd84;
+  stroke-opacity: 0.6;
+  stroke-width: 0.8;
+  stroke-dasharray: 1.4 1.6;
+}
+.sketch-water {
+  fill: none;
+  stroke: #547e7b;
+  stroke-width: 0.7;
+}
+.sketch-chalk {
+  stroke: #f1eee4;
+  stroke-width: 0.6;
+}
+.sketch-relic {
+  fill: #f6b85b;
+}
+.sketch-fire {
+  fill: #f6b85b;
+  filter: drop-shadow(0 0 1.5px #d45b27);
+}
+.sketch-you {
+  fill: #d45b27;
+  stroke: #fff0c2;
+  stroke-width: 0.4;
+}
+.sketch-wrap small {
+  display: block;
+  margin-top: 4px;
+  color: #ddd7be99;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+}
+.sketch-wrap small b {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 3px;
+  vertical-align: 0;
+}
+.key-fire {
+  border-radius: 50%;
+  background: #f6b85b;
+}
+.key-relic {
+  background: #f6b85b;
+  transform: rotate(45deg) scale(0.8);
+}
+.key-chalk {
+  background:
+    linear-gradient(45deg, transparent 42%, #f1eee4 42% 58%, transparent 58%),
+    linear-gradient(-45deg, transparent 42%, #f1eee4 42% 58%, transparent 58%);
+}

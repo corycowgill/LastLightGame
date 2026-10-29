@@ -1,3 +1,4 @@
+import { cryptSketch, unexploredPassages } from "./crypt-sketch";
 import { glyphSvg, relicGlyph, visualCue } from "./visual-language";
 import { BRAND_CONFIG } from "./brands";
 import {
@@ -505,6 +506,10 @@ function showSettings() {
     previousScreen === "menu" ? menu() : started ? resume() : menu();
   });
 }
+function sketchFigure(title: string, compact = false) {
+  const open = unexploredPassages(game);
+  return `<figure class="sketch-wrap${compact ? " compact" : ""}"><figcaption class="eyebrow">${title}</figcaption>${cryptSketch(game)}<small><b class="key-fire"></b> fire · <b class="key-relic"></b> relic lifted · <b class="key-chalk"></b> chalk${open ? ` · ${open} passage${open === 1 ? "" : "s"} not yet taken` : ""}</small></figure>`;
+}
 function journal() {
   screen = "journal";
   keys.clear();
@@ -512,7 +517,7 @@ function journal() {
   running = false;
   cameraControls.release();
   panel(
-    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}${game.descent > 1 ? ` · DESCENT ${roman(game.descent)}` : ""}</div>${game.omen.id !== "quiet" ? `<p class="descent-note"><strong>${game.omen.name}.</strong> ${game.omen.text}</p>` : ""}<h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / ((game.fuelRate * CONFIG.flameRates[1]) / CONFIG.flameRates[game.mode]))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
+    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}${game.descent > 1 ? ` · DESCENT ${roman(game.descent)}` : ""}</div>${game.omen.id !== "quiet" ? `<p class="descent-note"><strong>${game.omen.name}.</strong> ${game.omen.text}</p>` : ""}<h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${sketchFigure("CRYPT SKETCH")}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / ((game.fuelRate * CONFIG.flameRates[1]) / CONFIG.flameRates[game.mode]))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
   );
   const gallery = document.createElement("div");
   gallery.className = "relic-gallery";
@@ -577,7 +582,7 @@ function ended() {
   $("hud").hidden = true;
   $("presence").style.opacity = "0";
   panel(
-    `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}${game.deepestDescent > 1 || game.fellFrom ? ` · DESCENT ${roman(game.fellFrom || game.descent)}` : ""}</div><h2 id="resultTitle">${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? (game.lostRelics ? `The dark keeps the ${game.lostRelics === 1 ? "relic" : `${game.lostRelics} relics`} you carried. Banked relics, upgrades and stories endure.` : "You carried nothing the dark could keep. Banked relics, upgrades and stories endure.") : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${dead && game.fellFrom ? `<p class="descent-note">The crypt pushes you back: Descent ${roman(game.fellFrom)} → ${roman(game.descent)}.</p>` : ""}${!dead && game.deepestDescent > game.descent ? `<p class="descent-note">Descent ${roman(game.descent + 1)} is open: fuel burns ${Math.round(DESCENT.fuelDrain * 100 * game.descent)}% faster and a second Stalker waits below, but every banked relic pays more.</p>` : ""}${dead ? `<p id="deathAdvice" class="learning-note"></p>` : ""}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats">${dead ? `<span class="lost">${game.lostRelics}<small>RELICS LOST</small></span>` : ""}${!dead && game.descentBonus ? `<span class="bonus">+${game.descentBonus}<small>DESCENT BONUS</small></span>` : ""}<span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
+    `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}${game.deepestDescent > 1 || game.fellFrom ? ` · DESCENT ${roman(game.fellFrom || game.descent)}` : ""}</div><h2 id="resultTitle">${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? (game.lostRelics ? `The dark keeps the ${game.lostRelics === 1 ? "relic" : `${game.lostRelics} relics`} you carried. Banked relics, upgrades and stories endure.` : "You carried nothing the dark could keep. Banked relics, upgrades and stories endure.") : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${dead && game.fellFrom ? `<p class="descent-note">The crypt pushes you back: Descent ${roman(game.fellFrom)} → ${roman(game.descent)}.</p>` : ""}${!dead && game.deepestDescent > game.descent ? `<p class="descent-note">Descent ${roman(game.descent + 1)} is open: fuel burns ${Math.round(DESCENT.fuelDrain * 100 * game.descent)}% faster and a second Stalker waits below, but every banked relic pays more.</p>` : ""}${dead ? `<p id="deathAdvice" class="learning-note"></p>` : ""}${sketchFigure(dead ? "WHERE THE DARK TOOK YOU" : "YOUR ROUTE TO THE LIGHT", true)}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats">${dead ? `<span class="lost">${game.lostRelics}<small>RELICS LOST</small></span>` : ""}${!dead && game.descentBonus ? `<span class="bonus">+${game.descentBonus}<small>DESCENT BONUS</small></span>` : ""}<span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
   );
   if (dead) {
     if (game.deathCause)

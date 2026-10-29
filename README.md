@@ -6,11 +6,17 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Crypt sketch — 2026-10-30
+
+The journal (TAB) now opens on a charcoal sketch of the crypt as the Torchbearer has seen it. It shows the chambers you have entered, the passages between them, and dashed stubs for passages you have not taken yet. It also marks the fires you have found, your chalk marks, the places you lifted relics, flooded chambers, and where you stand, with an arrow for your facing. The far sanctuary only appears once you have reached its chamber, so the sketch helps you find your way without revealing the route. A caption counts the passages not yet taken. The result screen shows the same sketch as _your route to the light_ or _where the dark took you_.
+
+The drawing comes from `cryptSketch()` in `crypt-sketch.ts`, an inline SVG built from layout data. It is seeded, so it does not redraw differently each time you open it. `crypt-sketch.test.ts` covers what the sketch reveals and that the drawing is stable.
+
 ## Sound for hiding, smothering and Omens — 2026-10-30
 
 The newer mechanics are now audible, all synthesized with the existing tone and filtered-air voices, so no new files ship:
 
-- **Smother.** When a Stalker lunges at the flame, a guttering *whump* plays: a filtered air burst over a falling low tone. The cue fires once per lunge, from a `smotherEvent` counter on the simulation.
+- **Smother.** When a Stalker lunges at the flame, a guttering _whump_ plays: a filtered air burst over a falling low tone. The cue fires once per lunge, from a `smotherEvent` counter on the simulation.
 - **Being sensed in a nook.** While a Hunter senses a hidden Torchbearer, a low pressure pulse plays. It rises in pitch, grows louder and quickens with `hidingExposure`, so you hear the danger before the Hunter turns. It is silent while you are unsensed.
 - **Omens.** A low three-partial bell tolls once as an expedition with an Omen begins. Plain expeditions start silently.
 
@@ -30,13 +36,13 @@ Triangles per frame, original → now: refuge 20.5M → 5.1M, corridor 18.5M →
 
 **Omens** vary every expedition after the first. Each run draws one seeded condition, always a trade, announced at the start and kept in the journal:
 
-| Omen | Drawback | Benefit |
-| --- | --- | --- |
-| A Quiet Crypt (about a quarter of runs) | — | — |
-| Echoing Halls | footsteps carry 25% farther | +2 throwing stones |
-| Thin Oil | oil pickups worth 30% less | +1 match |
-| Restless Dead | a second Stalker even at Descent I | +1 relic per 3 banked at the far fire |
-| Ember Wind | the Hunter wakes 3 s sooner | the torch burns 7% slower |
+| Omen                                    | Drawback                           | Benefit                               |
+| --------------------------------------- | ---------------------------------- | ------------------------------------- |
+| A Quiet Crypt (about a quarter of runs) | —                                  | —                                     |
+| Echoing Halls                           | footsteps carry 25% farther        | +2 throwing stones                    |
+| Thin Oil                                | oil pickups worth 30% less         | +1 match                              |
+| Restless Dead                           | a second Stalker even at Descent I | +1 relic per 3 banked at the far fire |
+| Ember Wind                              | the Hunter wakes 3 s sooner        | the torch burns 7% slower             |
 
 A first-ever expedition always plays plain.
 
