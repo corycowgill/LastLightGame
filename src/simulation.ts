@@ -169,6 +169,44 @@ export const OMENS = [
     matches: 1,
   },
 ] as const;
+/**
+ * Vows: one optional oath per expedition, sworn at the first fire. Keeping it
+ * to the far sanctuary pays extra relics; turning back forfeits it.
+ */
+export const VOWS = [
+  {
+    id: "ember",
+    name: "Vow of Embers",
+    text: "Never raise the flame to Blaze.",
+    broken: "You raised the Blaze. Your Vow of Embers is broken.",
+  },
+  {
+    id: "silence",
+    name: "Vow of Silence",
+    text: "Never break into a run.",
+    broken: "You ran. Your Vow of Silence is broken.",
+  },
+  {
+    id: "flame",
+    name: "Vow of the Unbroken Flame",
+    text: "Never let the torch go out.",
+    broken: "The flame died. Your Vow of the Unbroken Flame is broken.",
+  },
+  {
+    id: "burden",
+    name: "Vow of Burden",
+    text: "Bring at least five relics to the far fire.",
+    broken: "",
+  },
+  {
+    id: "haste",
+    name: "Vow of Haste",
+    text: "Reach the far fire within four minutes.",
+    broken: "Four minutes have passed. Your Vow of Haste is broken.",
+  },
+] as const;
+export type Vow = (typeof VOWS)[number];
+export const VOW_CONFIG = { reward: 2, burden: 5, haste: 240 };
 export type Omen = (typeof OMENS)[number] & {
   noise?: number;
   stones?: number;
@@ -491,6 +529,27 @@ export class Game {
     if (this.omen.extraStalker) this.spawnSecondStalker();
     this.say(`${this.omen.name}. ${this.omen.text}`);
     this.save();
+  }
+  /** This expedition's Vow; -1 when none was sworn. */
+  vowIndex = -1;
+  vowBroken = false;
+  /** Relics the kept Vow paid at the far fire. */
+  vowBonus = 0;
+  get vow(): Vow | undefined {
+    return VOWS[this.vowIndex];
+  }
+  /** Swear this expedition's seeded Vow (never on a first-ever expedition). */
+  rollVow() {
+    const novice = this.banked === 0 && this.archive.length === 0;
+    const hash = Math.imul((this.world.seed ^ 0x27d4eb2f) >>> 0, 0x165667b1);
+    this.vowIndex = novice ? -1 : (hash >>> 0) % VOWS.length;
+    this.vowBroken = false;
+    this.vowBonus = 0;
+  }
+  private breakVow(id: Vow["id"]) {
+    if (this.vow?.id !== id || this.vowBroken) return;
+    this.vowBroken = true;
+    if (this.vow.broken) this.say(this.vow.broken);
   }
   /** Provisions bought for the next expedition, not yet carried. */
   provisions: Record<Provision, number> = { match: 0, stones: 0 };
@@ -1083,6 +1142,9 @@ export class Game {
     }
     this.hazards = planEnvironmentHazards(this.world, this.items);
     this.omenIndex = 0;
+    this.vowIndex = -1;
+    this.vowBroken = false;
+    this.vowBonus = 0;
     if (this.descentLevel > 0) this.spawnSecondStalker();
   }
   /** A second Stalker listens in the deepest chamber away from the vault. */
@@ -1375,7 +1437,13 @@ export class Game {
         (this.omen.bankEvery
           ? Math.floor(this.artifacts / this.omen.bankEvery)
           : 0);
-      this.banked += this.artifacts + this.descentBonus;
+      const kept =
+        !!this.vow &&
+        !this.vowBroken &&
+        (this.vow.id !== "burden" || this.artifacts >= VOW_CONFIG.burden);
+      this.vowBonus = kept ? VOW_CONFIG.reward : 0;
+      if (this.vow && !kept) this.vowBroken = true;
+      this.banked += this.artifacts + this.descentBonus + this.vowBonus;
       this.deepestDescent = Math.min(
         DESCENT.max,
         Math.max(this.deepestDescent, this.descent + 1),
@@ -1387,7 +1455,11 @@ export class Game {
       for (const hunter of this.additionalHunters) hunter.state = "BANISHED";
       this.hunterWarning = "";
       this.completed = true;
-      this.say("Your discoveries are safe in the golden light.");
+      this.say(
+        this.vowBonus
+          ? `Your discoveries are safe in the golden light. The ${this.vow!.name} is kept: +${this.vowBonus} relics.`
+          : "Your discoveries are safe in the golden light.",
+      );
       this.save();
       return;
     }
@@ -1479,6 +1551,14 @@ export class Game {
     if (["DEAD", "SANCTUARY"].includes(this.phase)) return;
     dt = Math.max(0, Math.min(dt, 0.1));
     this.elapsed += dt;
+    if (this.mode === 2) this.breakVow("ember");
+    if (
+      ["EXTINGUISHING", "HUNT_GRACE", "HUNT_ACTIVE", "RELIGHTING"].includes(
+        this.phase,
+      )
+    )
+      this.breakVow("flame");
+    if (this.elapsed > VOW_CONFIG.haste) this.breakVow("haste");
     const fires = [
       { ...this.start, radius: 8 },
       { ...this.destination, radius: 8 },
@@ -1516,6 +1596,7 @@ export class Game {
     const relighting = this.phase === "RELIGHTING";
     const sprint =
       input.sprint && !this.exhausted && !input.crouch && !relighting;
+    if (sprint && moving) this.breakVow("silence");
     if (sprint && moving) this.staminaDelay = CONFIG.staminaRecoveryDelay;
     else this.staminaDelay = Math.max(0, this.staminaDelay - dt);
     this.player.stamina = Math.max(
@@ -2301,6 +2382,8 @@ export class Game {
           descent: this.descent,
           provisions: this.provisions,
           omen: this.omenIndex,
+          vow: this.vowIndex,
+          vowBroken: this.vowBroken,
           deepestDescent: this.deepestDescent,
           maxFuel: this.maxFuel,
           upgrades: this.upgrades,
@@ -2362,6 +2445,9 @@ export class Game {
       this.reset(Number(d.seed) || 1);
       const omen = Math.floor(Number(d.omen) || 0);
       this.omenIndex = omen >= 0 && omen < OMENS.length ? omen : 0;
+      const vow = Math.floor(Number(d.vow ?? -1));
+      this.vowIndex = vow >= 0 && vow < VOWS.length ? vow : -1;
+      this.vowBroken = !!d.vowBroken;
       for (const kind of Object.keys(PROVISIONS) as Provision[])
         this.provisions[kind] = Math.min(
           PROVISIONS[kind].cap,

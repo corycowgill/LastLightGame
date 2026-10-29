@@ -6,6 +6,20 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Vows — 2026-10-30
+
+From the second expedition on, the Torchbearer swears one seeded Vow at the first fire. Keep it all the way to the far sanctuary and it pays **+2 relics**. Turning back to the first fire forfeits it, and it dies with you.
+
+| Vow                       | Oath                                        |
+| ------------------------- | ------------------------------------------- |
+| Vow of Embers             | Never raise the flame to Blaze.             |
+| Vow of Silence            | Never break into a run.                     |
+| Vow of the Unbroken Flame | Never let the torch go out.                 |
+| Vow of Burden             | Bring at least five relics to the far fire. |
+| Vow of Haste              | Reach the far fire within four minutes.     |
+
+Each Vow pulls against a habit (Blaze for safety, sprinting from danger, relighting in the dark, banking early), so the same crypt plays differently from run to run. The HUD shows the Vow in small gold italics under the room name. The full oath shows for the first 25 seconds, then a live status: a countdown for Haste, a relic count for Burden, or KEPT. A broken Vow is struck through and announced once. The journal and the result screen show its outcome, and the result shows **+2 VOW KEPT** beside the Descent bonus. Vows are saved with the expedition. `vows.test.ts` covers the seeded roll, each way to break a Vow, the reward, forfeiting by turning back, and save/load.
+
 ## Crypt sketch — 2026-10-30
 
 The journal (TAB) now opens on a charcoal sketch of the crypt as the Torchbearer has seen it. It is drawn like a dungeon map: chambers with doorway gaps, double-walled passages between them, and dashed stubs marked “?” for passages you have not taken yet. Each chamber carries a small motif for its kind: tomb slabs for burial vaults, crossed bones for ossuaries, arches for tunnels, rubble for collapses and ripples for flooded rooms. The chamber you stand in glows ember, and after a death an ember ✕ marks where the dark took you. It also marks the fires you have found, your chalk marks, the places you lifted relics, flooded chambers, and where you stand, with an arrow for your facing. The far sanctuary only appears once you have reached its chamber, so the sketch helps you find your way without revealing the route. A caption counts the passages not yet taken. The result screen shows the same sketch as _your route to the light_ or _where the dark took you_.

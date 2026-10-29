@@ -2505,3 +2505,45 @@ body[data-touch="true"] #touchControls button[aria-pressed="true"] {
     serif;
   text-anchor: middle;
 }
+
+/* The sworn Vow: a quiet gold oath under the room name, struck when broken. */
+#vow {
+  margin-top: 6px;
+  font: italic 11px var(--hud-font, Georgia, serif);
+  letter-spacing: 0.1em;
+  color: #d8bd84;
+  opacity: 0.7;
+  transition:
+    opacity 0.6s,
+    color 0.6s;
+}
+#vow[data-broken="true"] {
+  color: var(--ash, #8d979e);
+  text-decoration: line-through;
+  text-decoration-color: #d45b27aa;
+  opacity: 0.4;
+}
+.vow-note strong {
+  color: #f6b85b;
+}
+.vow-note.broken {
+  opacity: 0.6;
+}
+.vow-note.broken strong {
+  text-decoration: line-through;
+  text-decoration-color: #d45b27aa;
+}
+@media (max-width: 950px), (pointer: coarse) {
+  #vow {
+    margin-top: 3px;
+    font-size: 10px;
+    max-width: 62vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* The oath takes one line under the room name; the fuel cluster steps down. */
+  body:has(#vow:not([hidden])) footer {
+    top: calc(max(12px, env(safe-area-inset-top)) + 64px);
+  }
+}

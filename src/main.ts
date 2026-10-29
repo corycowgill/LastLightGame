@@ -6,6 +6,7 @@ import {
   DESCENT,
   PROVISIONS,
   UPGRADES,
+  VOW_CONFIG,
   type Provision,
   type Upgrade,
 } from "./simulation";
@@ -342,6 +343,7 @@ async function begin(load: boolean) {
     );
     game.applyProvisions();
     game.rollOmen();
+    game.rollVow();
   }
   if (load) cameraControls.pose.yaw = game.player.yaw;
   else game.player.yaw = cameraControls.pose.yaw = game.startingHeading;
@@ -517,7 +519,7 @@ function journal() {
   running = false;
   cameraControls.release();
   panel(
-    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}${game.descent > 1 ? ` · DESCENT ${roman(game.descent)}` : ""}</div>${game.omen.id !== "quiet" ? `<p class="descent-note"><strong>${game.omen.name}.</strong> ${game.omen.text}</p>` : ""}<h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${sketchFigure("CRYPT SKETCH")}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / ((game.fuelRate * CONFIG.flameRates[1]) / CONFIG.flameRates[game.mode]))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
+    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}${game.descent > 1 ? ` · DESCENT ${roman(game.descent)}` : ""}</div>${game.omen.id !== "quiet" ? `<p class="descent-note"><strong>${game.omen.name}.</strong> ${game.omen.text}</p>` : ""}${game.vow ? `<p class="descent-note vow-note${game.vowBroken ? " broken" : ""}"><strong>${game.vow.name}.</strong> ${game.vow.text} ${game.vowBroken ? "Broken." : `Keep it to the far fire for +${VOW_CONFIG.reward} relics.`}</p>` : ""}<h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${sketchFigure("CRYPT SKETCH")}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / ((game.fuelRate * CONFIG.flameRates[1]) / CONFIG.flameRates[game.mode]))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
   );
   const gallery = document.createElement("div");
   gallery.className = "relic-gallery";
@@ -582,7 +584,7 @@ function ended() {
   $("hud").hidden = true;
   $("presence").style.opacity = "0";
   panel(
-    `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}${game.deepestDescent > 1 || game.fellFrom ? ` · DESCENT ${roman(game.fellFrom || game.descent)}` : ""}</div><h2 id="resultTitle">${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? (game.lostRelics ? `The dark keeps the ${game.lostRelics === 1 ? "relic" : `${game.lostRelics} relics`} you carried. Banked relics, upgrades and stories endure.` : "You carried nothing the dark could keep. Banked relics, upgrades and stories endure.") : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${dead && game.fellFrom ? `<p class="descent-note">The crypt pushes you back: Descent ${roman(game.fellFrom)} → ${roman(game.descent)}.</p>` : ""}${!dead && game.deepestDescent > game.descent ? `<p class="descent-note">Descent ${roman(game.descent + 1)} is open: fuel burns ${Math.round(DESCENT.fuelDrain * 100 * game.descent)}% faster and a second Stalker waits below, but every banked relic pays more.</p>` : ""}${dead ? `<p id="deathAdvice" class="learning-note"></p>` : ""}${sketchFigure(dead ? "WHERE THE DARK TOOK YOU" : "YOUR ROUTE TO THE LIGHT", true)}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats">${dead ? `<span class="lost">${game.lostRelics}<small>RELICS LOST</small></span>` : ""}${!dead && game.descentBonus ? `<span class="bonus">+${game.descentBonus}<small>DESCENT BONUS</small></span>` : ""}<span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
+    `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}${game.deepestDescent > 1 || game.fellFrom ? ` · DESCENT ${roman(game.fellFrom || game.descent)}` : ""}</div><h2 id="resultTitle">${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? (game.lostRelics ? `The dark keeps the ${game.lostRelics === 1 ? "relic" : `${game.lostRelics} relics`} you carried. Banked relics, upgrades and stories endure.` : "You carried nothing the dark could keep. Banked relics, upgrades and stories endure.") : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${dead && game.fellFrom ? `<p class="descent-note">The crypt pushes you back: Descent ${roman(game.fellFrom)} → ${roman(game.descent)}.</p>` : ""}${!dead && game.deepestDescent > game.descent ? `<p class="descent-note">Descent ${roman(game.descent + 1)} is open: fuel burns ${Math.round(DESCENT.fuelDrain * 100 * game.descent)}% faster and a second Stalker waits below, but every banked relic pays more.</p>` : ""}${game.vow ? `<p class="descent-note vow-note${game.vowBonus ? "" : " broken"}"><strong>${game.vow.name}</strong> ${game.vowBonus ? `kept: +${game.vowBonus} relics.` : dead ? "dies with you." : "is unfulfilled."}</p>` : ""}${dead ? `<p id="deathAdvice" class="learning-note"></p>` : ""}${sketchFigure(dead ? "WHERE THE DARK TOOK YOU" : "YOUR ROUTE TO THE LIGHT", true)}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats">${dead ? `<span class="lost">${game.lostRelics}<small>RELICS LOST</small></span>` : ""}${!dead && game.descentBonus ? `<span class="bonus">+${game.descentBonus}<small>DESCENT BONUS</small></span>` : ""}${!dead && game.vowBonus ? `<span class="bonus">+${game.vowBonus}<small>VOW KEPT</small></span>` : ""}<span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
   );
   if (dead) {
     if (game.deathCause)
@@ -1138,6 +1140,20 @@ function updateHUD() {
           : "DRY MATCH";
     $("prompt").innerHTML =
       `<span class="prompt-icon">${glyphSvg(icon)}</span><kbd>${useLabel}</kbd> ${label}${pickup.encounter === "reliquary" ? " · 3.5s" : ""}`;
+  }
+  const vowEl = $("vow");
+  vowEl.hidden = !game.vow;
+  if (game.vow) {
+    const left = Math.max(0, VOW_CONFIG.haste - game.elapsed);
+    const status = game.vowBroken
+      ? "BROKEN"
+      : game.vow.id === "haste"
+        ? `${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, "0")}`
+        : game.vow.id === "burden"
+          ? `${Math.min(game.artifacts, VOW_CONFIG.burden)}/${VOW_CONFIG.burden} RELICS`
+          : "KEPT";
+    vowEl.textContent = `${game.vow.name} · ${game.elapsed < 25 && !game.vowBroken ? game.vow.text : status}`;
+    vowEl.dataset.broken = String(game.vowBroken);
   }
   $("bearing").textContent = new URLSearchParams(location.search).has("debug")
     ? `${fps.toFixed(0)} FPS · ${game.phase} · ${game.hunter.state} · ${view.renderer.info.render.calls} DRAWS`
