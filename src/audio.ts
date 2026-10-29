@@ -47,6 +47,8 @@ export class GameAudio {
   private nextVentHiss = 0;
   private nextBrandCrackle = 0;
   private lastShortcutOpen = false;
+  private lastSmother = 0;
+  private nextSensePulse = 0;
   private musicLevel = 0.7;
   setMusicVolume(value: number) {
     this.musicLevel = Math.max(0, Math.min(1, value));
@@ -190,6 +192,14 @@ export class GameAudio {
       this.lastShortcutOpen = game.shortcutOpen;
       this.lastHunterWarning = "";
       this.lastThreatContact = undefined;
+      this.lastSmother = game.smotherEvent;
+      this.nextSensePulse = 0;
+      // An Omen is tolled once, as the expedition it shadows begins.
+      if (game.omen.id !== "quiet") {
+        this.tone(73, 3.2, 0.07, 71);
+        this.tone(146.5, 2.4, 0.035, 145);
+        this.tone(219, 1.6, 0.018, 216);
+      }
     }
     const threats = [game.hunter, ...game.additionalHunters, ...game.enemies];
     const nearbyThreat = threats.some(
@@ -433,6 +443,25 @@ export class GameAudio {
       this.phase = phase;
     }
     if (phase === "DEAD") return;
+    if (game.smotherEvent !== this.lastSmother) {
+      // A Stalker's lunge: a guttering whump as the flame is crushed down.
+      this.lastSmother = game.smotherEvent;
+      this.air(0.55, 0.11, 220);
+      this.tone(120, 0.45, 0.07, 38);
+      this.air(0.25, 0.04, 1400);
+    }
+    const exposure = game.hidingExposure;
+    if (exposure > 0.05 && this.elapsed >= this.nextSensePulse) {
+      // Being sensed in a nook: a low pressure that rises and quickens.
+      this.tone(
+        38 + 34 * exposure,
+        0.7,
+        0.02 + 0.06 * exposure,
+        44 + 40 * exposure,
+      );
+      this.air(0.6, 0.015 + 0.03 * exposure, 160 + 140 * exposure);
+      this.nextSensePulse = this.elapsed + 0.95 - 0.6 * exposure;
+    }
     if (
       game.fuel > 0 &&
       !this.samples?.has("torch") &&

@@ -6,6 +6,16 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Sound for hiding, smothering and Omens — 2026-10-30
+
+The newer mechanics are now audible, all synthesized with the existing tone and filtered-air voices, so no new files ship:
+
+- **Smother.** When a Stalker lunges at the flame, a guttering *whump* plays: a filtered air burst over a falling low tone. The cue fires once per lunge, from a `smotherEvent` counter on the simulation.
+- **Being sensed in a nook.** While a Hunter senses a hidden Torchbearer, a low pressure pulse plays. It rises in pitch, grows louder and quickens with `hidingExposure`, so you hear the danger before the Hunter turns. It is silent while you are unsensed.
+- **Omens.** A low three-partial bell tolls once as an expedition with an Omen begins. Plain expeditions start silently.
+
+`audio-cues.test.ts` checks each cue's trigger and pacing against a recorded voice list.
+
 ## Torchlight pool — 2026-10-30
 
 The torch now casts a warm pool on the floor around the Torchbearer, matching the art bible's compact orange pool in Ember and amber key in Steady. It is a single additive floor quad, not another light: its radius follows the mode's mist-clearing reach (2.5, 4.5 and 7 m), it flickers and gutters with the flame, and it vanishes the moment the torch stops burning. The torch light itself keeps its flat near falloff, so the ivory hood beside the flame still does not blow out. Rendered High-quality frames of the ossuary, start room and burial shelves were reviewed.

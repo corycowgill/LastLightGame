@@ -472,6 +472,8 @@ export class Game {
   relicPulse = 18;
   relicEcho = 0;
   smotherCooldown = 0;
+  /** Counts Stalker lunges that smothered the flame, for sound and effects. */
+  smotherEvent = 0;
   /** This expedition's Omen; plain until an expedition rolls one. */
   omenIndex = 0;
   get omen(): Omen {
@@ -2201,6 +2203,7 @@ export class Game {
           ) {
             this.fuel = Math.max(1, this.fuel - CONFIG.stalkerSmother);
             this.smotherCooldown = CONFIG.stalkerSmotherCooldown;
+            this.smotherEvent++;
             this.noise = Math.max(this.noise, 6);
             this.noiseTimer = Math.max(this.noiseTimer, 1);
             this.say(
