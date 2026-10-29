@@ -80,13 +80,14 @@ test("each Omen applies its trade and nothing else", () => {
     const seed = seedFor("ember_wind"),
       g = veteran(seed),
       base = plain(seed);
-    assert.ok(Math.abs(g.fuelRate / base.fuelRate - 0.9) < 1e-9);
+    const wind = OMENS.find((o) => o.id === "ember_wind")!;
+    assert.ok(Math.abs(g.fuelRate / base.fuelRate - wind.fuelRate) < 1e-9);
     g.enemies = [];
     Object.assign(g.player, { x: 28, z: 0 });
     g.fuel = 0.01;
     for (let i = 0; i < 60 * 3 && g.phase !== "HUNT_GRACE"; i++)
       g.step(1 / 60, idle);
-    assert.equal(Math.round(g.phaseTimeRemaining), CONFIG.grace - 2);
+    assert.equal(Math.round(g.phaseTimeRemaining), CONFIG.grace + wind.grace);
   }
 });
 

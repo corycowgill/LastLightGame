@@ -149,9 +149,9 @@ export const OMENS = [
   {
     id: "ember_wind",
     name: "Ember Wind",
-    text: "A slow draught feeds the flame: 10% less burn. The Hunter wakes two seconds sooner.",
-    fuelRate: 0.9,
-    grace: -2,
+    text: "A slow draught feeds the flame: 7% less burn. The Hunter wakes three seconds sooner.",
+    fuelRate: 0.93,
+    grace: -3,
   },
   { id: "quiet", name: "A Quiet Crypt", text: "Nothing stirs but you." },
   {

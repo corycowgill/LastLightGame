@@ -16,11 +16,15 @@ Expeditions now generate **12–18 chambers** with changing routes, branches, lo
 | Echoing Halls | footsteps carry 25% farther | +2 throwing stones |
 | Thin Oil | oil pickups worth 30% less | +1 match |
 | Restless Dead | a second Stalker even at Descent I | +1 relic per 3 banked at the far fire |
-| Ember Wind | the Hunter wakes 2 s sooner | the torch burns 10% slower |
+| Ember Wind | the Hunter wakes 3 s sooner | the torch burns 7% slower |
 
 A first-ever expedition always plays plain.
 
 **Provisions** give banked relics a use after upgrades are maxed. Between expeditions, after an escape or a death, spend a relic on a spare match (up to two) or a pouch of two extra throwing stones. They are carried into the next expedition only and survive closing the game.
+
+A balance sweep (80 seeds each at Descents I and III) found Ember Wind nearly free: its slower burn helped all expedition while its drawback only mattered after extinction. It now gives 7% less burn and wakes the Hunter three seconds sooner. The expedition journal's "seconds in Steady mode" also now uses the real burn rate, including Descent and Omen effects.
+
+End-to-end check: the built-in expedition driver passed extinction, active Hunt, navigated escape and sanctuary through the real main loop on three seeds, and on a Descent III veteran save with Restless Dead and both provisions bought, with no console errors.
 
 Validation: 190 tests and production build pass, covering Omen seeding and coverage, each Omen's exact trade, the plain first expedition, clearing between runs, provision purchase rules, one-expedition use and save/load bounds. A browser check confirmed the start announcement and buying a provision after a death.
 
