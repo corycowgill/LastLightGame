@@ -1,6 +1,13 @@
 import { glyphSvg, relicGlyph, visualCue } from "./visual-language";
 import { BRAND_CONFIG } from "./brands";
-import { CONFIG, DESCENT, UPGRADES, type Upgrade } from "./simulation";
+import {
+  CONFIG,
+  DESCENT,
+  PROVISIONS,
+  UPGRADES,
+  type Provision,
+  type Upgrade,
+} from "./simulation";
 import { relicIdentity } from "./relics";
 import "./style.css";
 import { CameraControls, orbit, zoom } from "./controls";
@@ -327,11 +334,14 @@ async function begin(load: boolean) {
     try {
       game.load();
     } catch {}
-  } else
+  } else {
     game.reset(
       Number(new URLSearchParams(location.search).get("seed")) ||
         Date.now() % 1000000,
     );
+    game.applyProvisions();
+    game.rollOmen();
+  }
   if (load) cameraControls.pose.yaw = game.player.yaw;
   else game.player.yaw = cameraControls.pose.yaw = game.startingHeading;
   // Reproducible art-review position using the real world, light and game renderer.
@@ -502,7 +512,7 @@ function journal() {
   running = false;
   cameraControls.release();
   panel(
-    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}</div><h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (CONFIG.burnMultiplier * (1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
+    `<div class="eyebrow">EXPEDITION JOURNAL · SEED ${game.world.seed}${game.descent > 1 ? ` · DESCENT ${roman(game.descent)}` : ""}</div>${game.omen.id !== "quiet" ? `<p class="descent-note"><strong>${game.omen.name}.</strong> ${game.omen.text}</p>` : ""}<h2>${game.world.layout?.theme ?? "What remains of us."}</h2><p>Find the far sanctuary and bank the relics you carry.<br>Follow carved arches, chalk marks, and golden fire.</p>${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats"><span>${game.artifacts}<small>RELICS CARRIED</small></span><span>${game.banked}<small>RELICS BANKED</small></span><span>${game.chalk.length}<small>CHALK MARKS</small></span></div><p>Fuel: ${Math.ceil(game.fuel / (CONFIG.burnMultiplier * (1 - 0.08 * game.upgrades.wick) * (1 + game.depth * 0.3)))} seconds in Steady mode.<br>Matches: ${game.matches} · Elapsed: ${Math.floor(game.elapsed / 60)} minutes.</p><p>Optional: open the noisy sealed reliquary for three relics, or seek the larger oil cache. In flooded rooms, dry edges are quieter.</p><div id="discoveries"></div><div id="actions"></div>`,
   );
   const gallery = document.createElement("div");
   gallery.className = "relic-gallery";
@@ -596,6 +606,22 @@ function ended() {
       ($(`upgrade-${kind}`) as HTMLButtonElement).disabled =
         level >= spec.cap || game.banked < spec.cost;
     }
+  }
+  // Provisions: spend banked relics on supplies for the next expedition only.
+  for (const kind of Object.keys(PROVISIONS) as Provision[]) {
+    const spec = PROVISIONS[kind],
+      bought = game.provisions[kind];
+    const what =
+      kind === "match" ? "+1 MATCH" : `+${spec.amount} THROWING STONES`;
+    button(
+      `provision-${kind}`,
+      `${spec.name.toUpperCase()} | ${what} NEXT EXPEDITION | ${bought}/${spec.cap} | ${spec.cost} RELIC`,
+      () => {
+        if (game.buyProvision(kind)) ended();
+      },
+    );
+    ($(`provision-${kind}`) as HTMLButtonElement).disabled =
+      bought >= spec.cap || game.banked < spec.cost;
   }
   if (!dead && game.deepestDescent > game.descent)
     button(

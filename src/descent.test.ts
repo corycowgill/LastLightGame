@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CONFIG, DESCENT, Game } from "./simulation";
+import { CONFIG, DESCENT, Game, PROVISIONS } from "./simulation";
 
 const idle = { forward: 0, strafe: 0, sprint: false, crouch: false, yaw: 0 };
 const at = (descent: number, seed = 104729) => {
@@ -116,4 +116,53 @@ test("deeper Descents start with fewer matches, never fewer than one", () => {
     [1, 2, 3, 4, 5, 7, DESCENT.max].map((d) => at(d).matches),
     [2, 2, 1, 1, 1, 1, 1],
   );
+});
+
+test("provisions are bought between expeditions and carried into exactly the next one", () => {
+  const g = at(3);
+  g.enemies = [];
+  g.banked = 3;
+  // Not mid-expedition.
+  assert.equal(g.buyProvision("match"), false);
+  g.phase = "SANCTUARY";
+  assert.equal(g.buyProvision("match"), true);
+  assert.equal(g.buyProvision("match"), true);
+  assert.equal(g.buyProvision("match"), false, "two spare matches at most");
+  assert.equal(g.buyProvision("stones"), true);
+  assert.equal(g.banked, 0);
+  g.banked = 0;
+  g.provisions.stones = 0;
+  assert.equal(g.buyProvision("stones"), false, "needs a banked relic");
+  g.provisions.stones = 1;
+  g.reset(7);
+  const matches = g.matches,
+    stones = g.stones;
+  g.applyProvisions();
+  assert.equal(g.matches, matches + 2);
+  assert.equal(g.stones, stones + PROVISIONS.stones.amount);
+  g.reset(8);
+  g.applyProvisions();
+  assert.equal(g.matches, matches, "provisions last one expedition");
+});
+
+test("unspent provisions survive save and load, bounded by their caps", () => {
+  const memory = new Map<string, string>();
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => memory.get(k) ?? null,
+      setItem: (k: string, v: string) => memory.set(k, v),
+    },
+  });
+  const g = at(1);
+  g.provisions = { match: 2, stones: 1 };
+  g.save();
+  const loaded = new Game();
+  loaded.load();
+  assert.deepEqual(loaded.provisions, { match: 2, stones: 1 });
+  const tampered = JSON.parse(memory.get("lastlight-save")!);
+  tampered.provisions = { match: 40, stones: -3 };
+  memory.set("lastlight-save", JSON.stringify(tampered));
+  loaded.load();
+  assert.deepEqual(loaded.provisions, { match: 2, stones: 0 });
 });

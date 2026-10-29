@@ -119,6 +119,72 @@ export const DESCENT = {
   matchLossEvery: 2,
   minMatches: 1,
 };
+/**
+ * Omens: one seeded condition per expedition, always a trade. "Quiet" holds
+ * two of the eight slots so roughly a quarter of expeditions play plain.
+ */
+export const OMENS = [
+  { id: "quiet", name: "A Quiet Crypt", text: "Nothing stirs but you." },
+  {
+    id: "echoes",
+    name: "Echoing Halls",
+    text: "Footsteps carry a quarter farther. You pack two extra stones.",
+    noise: 1.25,
+    stones: 2,
+  },
+  {
+    id: "thin_oil",
+    name: "Thin Oil",
+    text: "Oil found below burns thin, worth 30% less. You carry a spare match.",
+    oil: 0.7,
+    matches: 1,
+  },
+  {
+    id: "restless",
+    name: "Restless Dead",
+    text: "A second Stalker walks even here. Every three relics banked at the far fire earn one more.",
+    extraStalker: true,
+    bankEvery: 3,
+  },
+  {
+    id: "ember_wind",
+    name: "Ember Wind",
+    text: "A slow draught feeds the flame: 10% less burn. The Hunter wakes two seconds sooner.",
+    fuelRate: 0.9,
+    grace: -2,
+  },
+  { id: "quiet", name: "A Quiet Crypt", text: "Nothing stirs but you." },
+  {
+    id: "echoes",
+    name: "Echoing Halls",
+    text: "Footsteps carry a quarter farther. You pack two extra stones.",
+    noise: 1.25,
+    stones: 2,
+  },
+  {
+    id: "thin_oil",
+    name: "Thin Oil",
+    text: "Oil found below burns thin, worth 30% less. You carry a spare match.",
+    oil: 0.7,
+    matches: 1,
+  },
+] as const;
+export type Omen = (typeof OMENS)[number] & {
+  noise?: number;
+  stones?: number;
+  oil?: number;
+  matches?: number;
+  extraStalker?: boolean;
+  bankEvery?: number;
+  fuelRate?: number;
+  grace?: number;
+};
+/** One-expedition supplies bought with banked relics between expeditions. */
+export const PROVISIONS = {
+  match: { name: "Spare match", cost: 1, cap: 2, amount: 1 },
+  stones: { name: "Stone pouch", cost: 1, cap: 1, amount: 2 },
+};
+export type Provision = keyof typeof PROVISIONS;
 export const UPGRADES = {
   compass: {
     name: "Sanctuary Compass",
@@ -406,6 +472,44 @@ export class Game {
   relicPulse = 18;
   relicEcho = 0;
   smotherCooldown = 0;
+  /** This expedition's Omen; plain until an expedition rolls one. */
+  omenIndex = 0;
+  get omen(): Omen {
+    return OMENS[this.omenIndex] ?? OMENS[0];
+  }
+  /** Draw this expedition's seeded Omen and hand over its supplies. */
+  rollOmen() {
+    // A first-ever expedition always plays plain, so it teaches the base rules.
+    const novice = this.banked === 0 && this.archive.length === 0;
+    const hash = Math.imul((this.world.seed ^ 0x5bd1e995) >>> 0, 2654435761);
+    this.omenIndex = novice ? 0 : (hash >>> 0) % OMENS.length;
+    if (this.omen.id === "quiet") return;
+    this.matches += this.omen.matches ?? 0;
+    this.stones += this.omen.stones ?? 0;
+    if (this.omen.extraStalker) this.spawnSecondStalker();
+    this.say(`${this.omen.name}. ${this.omen.text}`);
+    this.save();
+  }
+  /** Provisions bought for the next expedition, not yet carried. */
+  provisions: Record<Provision, number> = { match: 0, stones: 0 };
+  /** Only between expeditions: after an escape or a death. */
+  buyProvision(kind: Provision) {
+    const spec = PROVISIONS[kind];
+    if (!["SANCTUARY", "DEAD"].includes(this.phase)) return false;
+    if (this.provisions[kind] >= spec.cap || this.banked < spec.cost)
+      return false;
+    this.banked -= spec.cost;
+    this.provisions[kind]++;
+    this.save();
+    return true;
+  }
+  /** Hand the bought provisions to a freshly started expedition. */
+  applyProvisions() {
+    this.matches += this.provisions.match * PROVISIONS.match.amount;
+    this.stones += this.provisions.stones * PROVISIONS.stones.amount;
+    this.provisions = { match: 0, stones: 0 };
+    this.save();
+  }
   /** Current Descent (1 = the ordinary crypt) and the deepest unlocked. */
   descent = 1;
   deepestDescent = 1;
@@ -919,21 +1023,6 @@ export class Game {
         findPath(this.world, this.start, p).length > 0,
     ) ?? { x: vault.x * 2, z: vault.z * 2 + 2 };
     this.enemies = [{ ...guard, kind: "stalker", state: "LISTENING" }];
-    if (this.descentLevel > 0) {
-      // A second Stalker listens in the deepest chamber away from the vault.
-      const lair = rooms
-        .filter((r) => r !== vault && r.depth > 0.4)
-        .sort((a, b) => b.depth - a.depth)
-        .map((r) => ({ x: r.x * 2, z: r.z * 2 + 2 }))
-        .find(
-          (p) =>
-            walkable(this.world, p.x, p.z) &&
-            findPath(this.world, this.start, p).length > 0 &&
-            dist(p, this.destination) > 10,
-        );
-      if (lair)
-        this.enemies.push({ ...lair, kind: "stalker", state: "LISTENING" });
-    }
     // The open side of each hiding tomb that faces away from its chamber's
     // centre: a dark nook between tomb and wall.
     this.hidingSpots = environmentBlocks(this.world)
@@ -991,6 +1080,30 @@ export class Game {
       }
     }
     this.hazards = planEnvironmentHazards(this.world, this.items);
+    this.omenIndex = 0;
+    if (this.descentLevel > 0) this.spawnSecondStalker();
+  }
+  /** A second Stalker listens in the deepest chamber away from the vault. */
+  private spawnSecondStalker() {
+    if (this.enemies.length > 1) return;
+    const rooms = this.world.layout!.rooms.filter(
+      (r) => r.kind !== "sanctuary",
+    );
+    // The vault is the chamber holding the sealed reliquary.
+    const reliquary = this.items.find((i) => i.encounter === "reliquary");
+    const vault = reliquary && roomAt(this.world, reliquary.x, reliquary.z);
+    const lair = rooms
+      .filter((r) => r !== vault && r.depth > 0.4)
+      .sort((a, b) => b.depth - a.depth)
+      .map((r) => ({ x: r.x * 2, z: r.z * 2 + 2 }))
+      .find(
+        (p) =>
+          walkable(this.world, p.x, p.z) &&
+          findPath(this.world, this.start, p).length > 0 &&
+          dist(p, this.destination) > 10,
+      );
+    if (lair)
+      this.enemies.push({ ...lair, kind: "stalker", state: "LISTENING" });
   }
   get currentRoom() {
     return roomAt(this.world, this.player.x, this.player.z);
@@ -1075,7 +1188,8 @@ export class Game {
       CONFIG.burnMultiplier *
       (1 - 0.08 * this.upgrades.wick) *
       (1 + this.depth * 0.3) *
-      (1 + DESCENT.fuelDrain * this.descentLevel)
+      (1 + DESCENT.fuelDrain * this.descentLevel) *
+      (this.omen.fuelRate ?? 1)
     );
   }
   get movementSpeed() {
@@ -1094,7 +1208,8 @@ export class Game {
     return (
       (crouch ? 1 : sprint ? 11 : 5) *
       (this.surface === "water" ? 1.65 : this.surface === "gravel" ? 1.25 : 1) *
-      (1 - 0.12 * this.upgrades.boots)
+      (1 - 0.12 * this.upgrades.boots) *
+      (this.omen.noise ?? 1)
     );
   }
   get relightDuration() {
@@ -1253,9 +1368,11 @@ export class Game {
       this.archive = [...new Set([...this.archive, ...this.discoveries])].slice(
         -100,
       );
-      this.descentBonus = Math.floor(
-        this.artifacts * DESCENT.bankBonus * this.descentLevel,
-      );
+      this.descentBonus =
+        Math.floor(this.artifacts * DESCENT.bankBonus * this.descentLevel) +
+        (this.omen.bankEvery
+          ? Math.floor(this.artifacts / this.omen.bankEvery)
+          : 0);
       this.banked += this.artifacts + this.descentBonus;
       this.deepestDescent = Math.min(
         DESCENT.max,
@@ -1325,7 +1442,7 @@ export class Game {
           this.fuel +
             (item.encounter === "oil_cache"
               ? (item.value ?? 300)
-              : CONFIG.fuelPickup),
+              : CONFIG.fuelPickup * (this.omen.oil ?? 1)),
         );
         if (this.fuel > 0 && this.phase !== "EXPLORING") {
           this.phase = "RELIGHTING";
@@ -1598,7 +1715,9 @@ export class Game {
           this.phase = "HUNT_GRACE";
           this.timer = Math.max(
             DESCENT.minGrace,
-            CONFIG.grace - DESCENT.graceLoss * this.descentLevel,
+            CONFIG.grace -
+              DESCENT.graceLoss * this.descentLevel +
+              (this.omen.grace ?? 0),
           );
           this.say("Something is waking. E to strike a match.");
         } else if (this.phase === "RELIGHTING") {
@@ -2177,6 +2296,8 @@ export class Game {
           seed: this.world.seed,
           banked: this.banked,
           descent: this.descent,
+          provisions: this.provisions,
+          omen: this.omenIndex,
           deepestDescent: this.deepestDescent,
           maxFuel: this.maxFuel,
           upgrades: this.upgrades,
@@ -2236,6 +2357,13 @@ export class Game {
       this.deepestDescent = level(d.deepestDescent);
       this.descent = Math.min(level(d.descent), this.deepestDescent);
       this.reset(Number(d.seed) || 1);
+      const omen = Math.floor(Number(d.omen) || 0);
+      this.omenIndex = omen >= 0 && omen < OMENS.length ? omen : 0;
+      for (const kind of Object.keys(PROVISIONS) as Provision[])
+        this.provisions[kind] = Math.min(
+          PROVISIONS[kind].cap,
+          Math.max(0, Math.floor(Number(d.provisions?.[kind]) || 0)),
+        );
       if (d.generation !== 4) {
         if (Array.isArray(d.discoveries))
           this.archive = [

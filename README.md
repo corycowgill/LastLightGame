@@ -6,6 +6,24 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Omens and provisions — 2026-10-30
+
+**Omens** vary every expedition after the first. Each run draws one seeded condition, always a trade, announced at the start and kept in the journal:
+
+| Omen | Drawback | Benefit |
+| --- | --- | --- |
+| A Quiet Crypt (about a quarter of runs) | — | — |
+| Echoing Halls | footsteps carry 25% farther | +2 throwing stones |
+| Thin Oil | oil pickups worth 30% less | +1 match |
+| Restless Dead | a second Stalker even at Descent I | +1 relic per 3 banked at the far fire |
+| Ember Wind | the Hunter wakes 2 s sooner | the torch burns 10% slower |
+
+A first-ever expedition always plays plain.
+
+**Provisions** give banked relics a use after upgrades are maxed. Between expeditions, after an escape or a death, spend a relic on a spare match (up to two) or a pouch of two extra throwing stones. They are carried into the next expedition only and survive closing the game.
+
+Validation: 190 tests and production build pass, covering Omen seeding and coverage, each Omen's exact trade, the plain first expedition, clearing between runs, provision purchase rules, one-expedition use and save/load bounds. A browser check confirmed the start announcement and buying a provision after a death.
+
 ## Rendering load cut by more than half — 2026-10-29
 
 Profiling the production build at High quality found 5–20 million triangles per frame, mostly from generated dressing far denser than its size: 12,000-triangle skulls (651 per map), 24,000-triangle bone piles and cobwebs, 18,000-triangle wall niches. Every catalog batch also cast shadows, including floor and ceiling tiles that can never shadow anything visible, multiplied by six cube faces per point-light shadow refresh.
