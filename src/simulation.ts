@@ -82,6 +82,9 @@ export const CONFIG = {
   sprintDrain: 0.13,
   relightMovement: 0.35,
   crouchSight: 0.55,
+  // Metres of error in where a Hunter places a heard sound: close and loud
+  // to faint and at the edge of hearing.
+  hearingError: [0.5, 3.5] as [number, number],
   // Crouching in a tomb nook hides you unless a Hunter is within arm's reach,
   // or lingers close long enough to sense you.
   hideRadius: 0.85,
@@ -95,6 +98,26 @@ export const CONFIG = {
   stalkerSmotherCooldown: 6,
   // Rooms at or beyond this depth hold heavier, two-relic votives.
   deepRelicDepth: 0.6,
+};
+/**
+ * Descents: an opt-in ladder past the first escape. Each level beyond the first
+ * burns fuel faster, shortens the grace before a Hunt, makes searching Hunters
+ * quicker and more persistent, adds a second Stalker and trims the starting
+ * matches; banking at the far
+ * sanctuary pays half a relic extra per relic per level. Chase speed is never
+ * raised, so a sprint can always outrun pursuit.
+ */
+export const DESCENT = {
+  max: 9,
+  fuelDrain: 0.12,
+  graceLoss: 1,
+  minGrace: 4,
+  searchSpeed: 0.3,
+  memory: 2,
+  bankBonus: 0.5,
+  // One fewer starting match every two levels, never fewer than one.
+  matchLossEvery: 2,
+  minMatches: 1,
 };
 export const UPGRADES = {
   compass: {
@@ -383,6 +406,21 @@ export class Game {
   relicPulse = 18;
   relicEcho = 0;
   smotherCooldown = 0;
+  /** Current Descent (1 = the ordinary crypt) and the deepest unlocked. */
+  descent = 1;
+  deepestDescent = 1;
+  /** Extra relics paid by the last sanctuary banking for the Descent. */
+  descentBonus = 0;
+  /** The Descent this expedition was lost on, if death cost a level. */
+  fellFrom = 0;
+  /** Death costs one Descent; the first can never be lost. */
+  private fall() {
+    this.fellFrom = this.descent > 1 ? this.descent : 0;
+    this.descent = Math.max(1, this.descent - 1);
+  }
+  private get descentLevel() {
+    return this.descent - 1;
+  }
   /** Relics carried at the moment of death, for an honest defeat summary. */
   lostRelics = 0;
   /** Nooks behind hiding tombs, where a crouched Torchbearer can hide. */
@@ -391,6 +429,31 @@ export class Game {
     return this.hidingSpots.find(
       (spot) => dist(spot, this.player) < CONFIG.hideRadius,
     );
+  }
+  /**
+   * Where a Hunter believes a sound came from. Faint or distant sounds are
+   * placed up to ~3.5 m off; close, loud ones almost exactly. The estimate is
+   * stable for a second at a time, so routes do not thrash every frame.
+   */
+  private heardEstimate(distance: number): Point {
+    const error =
+      CONFIG.hearingError[0] +
+      (CONFIG.hearingError[1] - CONFIG.hearingError[0]) *
+        Math.min(1, distance / Math.max(1, this.noise));
+    const bucket = Math.floor(this.elapsed);
+    const hash =
+      (Math.imul(this.world.seed ^ (bucket * 2654435761), 1597334677) >>> 0) /
+      4294967296;
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const angle = (hash + attempt * 0.381966) * Math.PI * 2,
+        reach = error * (0.55 + 0.45 * ((hash * 7.31 + attempt * 0.17) % 1));
+      const guess = {
+        x: this.player.x + Math.cos(angle) * reach,
+        z: this.player.z + Math.sin(angle) * reach,
+      };
+      if (walkable(this.world, guess.x, guess.z)) return guess;
+    }
+    return { ...this.player };
   }
   /** A clear straight walk into `p` from a navigable cell linked to the start. */
   private reachableOnFoot(p: Point) {
@@ -654,7 +717,10 @@ export class Game {
     this.reinforcementAttempt = CONFIG.reinforcementArrival;
     this.reinforcementSpawned = false;
     this.chalk = [];
-    this.matches = 2;
+    this.matches = Math.max(
+      DESCENT.minMatches,
+      2 - Math.floor(this.descentLevel / DESCENT.matchLossEvery),
+    );
     this.artifacts = 0;
     this.deathCause = "";
     this.deathAdvice = "";
@@ -670,6 +736,8 @@ export class Game {
     this.relicEcho = 0;
     this.smotherCooldown = 0;
     this.lostRelics = 0;
+    this.descentBonus = 0;
+    this.fellFrom = 0;
     this.elapsed = 0;
     this.completed = false;
     this.retreatTime = 0;
@@ -851,6 +919,21 @@ export class Game {
         findPath(this.world, this.start, p).length > 0,
     ) ?? { x: vault.x * 2, z: vault.z * 2 + 2 };
     this.enemies = [{ ...guard, kind: "stalker", state: "LISTENING" }];
+    if (this.descentLevel > 0) {
+      // A second Stalker listens in the deepest chamber away from the vault.
+      const lair = rooms
+        .filter((r) => r !== vault && r.depth > 0.4)
+        .sort((a, b) => b.depth - a.depth)
+        .map((r) => ({ x: r.x * 2, z: r.z * 2 + 2 }))
+        .find(
+          (p) =>
+            walkable(this.world, p.x, p.z) &&
+            findPath(this.world, this.start, p).length > 0 &&
+            dist(p, this.destination) > 10,
+        );
+      if (lair)
+        this.enemies.push({ ...lair, kind: "stalker", state: "LISTENING" });
+    }
     // The open side of each hiding tomb that faces away from its chamber's
     // centre: a dark nook between tomb and wall.
     this.hidingSpots = environmentBlocks(this.world)
@@ -991,7 +1074,8 @@ export class Game {
       CONFIG.flameRates[this.mode] *
       CONFIG.burnMultiplier *
       (1 - 0.08 * this.upgrades.wick) *
-      (1 + this.depth * 0.3)
+      (1 + this.depth * 0.3) *
+      (1 + DESCENT.fuelDrain * this.descentLevel)
     );
   }
   get movementSpeed() {
@@ -1169,7 +1253,14 @@ export class Game {
       this.archive = [...new Set([...this.archive, ...this.discoveries])].slice(
         -100,
       );
-      this.banked += this.artifacts;
+      this.descentBonus = Math.floor(
+        this.artifacts * DESCENT.bankBonus * this.descentLevel,
+      );
+      this.banked += this.artifacts + this.descentBonus;
+      this.deepestDescent = Math.min(
+        DESCENT.max,
+        Math.max(this.deepestDescent, this.descent + 1),
+      );
       this.artifacts = 0;
       this.fuel = this.maxFuel;
       this.phase = "SANCTUARY";
@@ -1505,7 +1596,10 @@ export class Game {
       if (this.timer <= 0) {
         if (this.phase === "EXTINGUISHING") {
           this.phase = "HUNT_GRACE";
-          this.timer = CONFIG.grace;
+          this.timer = Math.max(
+            DESCENT.minGrace,
+            CONFIG.grace - DESCENT.graceLoss * this.descentLevel,
+          );
           this.say("Something is waking. E to strike a match.");
         } else if (this.phase === "RELIGHTING") {
           this.fuel = Math.max(
@@ -1870,8 +1964,9 @@ export class Game {
       this.memory = 6;
       this.hunter.state = "INVESTIGATING";
     } else if (seen || heard) {
-      this.target = { ...this.player };
-      this.memory = CONFIG.memory + this.depth * 4;
+      this.target = seen ? { ...this.player } : this.heardEstimate(d);
+      this.memory =
+        CONFIG.memory + this.depth * 4 + DESCENT.memory * this.descentLevel;
       this.hunter.state = seen ? "PURSUING" : "INVESTIGATING";
     } else {
       this.memory = Math.max(0, this.memory - dt);
@@ -1904,7 +1999,7 @@ export class Game {
       this.hunter.state === "PURSUING"
         ? (CONFIG.hunterChase + this.depth * 0.55) *
             (this.hunterReadiness < 1 ? 0.4 : 1)
-        : CONFIG.hunterSearch,
+        : CONFIG.hunterSearch + DESCENT.searchSpeed * this.descentLevel,
       dt,
       this.hunter.state === "PURSUING",
     );
@@ -1917,6 +2012,7 @@ export class Game {
     const unnoticed = this.hidden && this.hunter.state !== "PURSUING";
     if (dist(this.hunter, this.player) < 1.1 && !unnoticed) {
       this.phase = "DEAD";
+      this.fall();
       this.deathCause = "Hunter";
       this.deathAdvice =
         "Break sight around corners, then crouch to quiet your footsteps. Use a match to relight, or reach sanctuary fire.";
@@ -2061,6 +2157,7 @@ export class Game {
       } else e.state = "LISTENING";
       if (!lit && this.phase === "HUNT_ACTIVE" && d < 1.1 && !crouch) {
         this.phase = "DEAD";
+        this.fall();
         this.deathCause = "Stalker";
         this.deathAdvice =
           "The Stalker follows sound. Crouch when fire dies; relight with a match or escape toward sanctuary fire.";
@@ -2079,6 +2176,8 @@ export class Game {
           generation: 4,
           seed: this.world.seed,
           banked: this.banked,
+          descent: this.descent,
+          deepestDescent: this.deepestDescent,
           maxFuel: this.maxFuel,
           upgrades: this.upgrades,
           player: this.player,
@@ -2132,6 +2231,10 @@ export class Game {
       this.archive = Array.isArray(d.archive)
         ? d.archive.filter((s: unknown) => typeof s === "string").slice(-100)
         : [];
+      const level = (value: unknown) =>
+        Math.min(DESCENT.max, Math.max(1, Math.floor(Number(value) || 1)));
+      this.deepestDescent = level(d.deepestDescent);
+      this.descent = Math.min(level(d.descent), this.deepestDescent);
       this.reset(Number(d.seed) || 1);
       if (d.generation !== 4) {
         if (Array.isArray(d.discoveries))

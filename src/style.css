@@ -2385,3 +2385,14 @@ body[data-touch="true"] #touchControls button[aria-pressed="true"] {
 .sensed #survivalHint {
   color: var(--gold);
 }
+
+/* Descent notes on result screens: ember for the push back, gold for the open way down. */
+.descent-note {
+  border-left: 2px solid var(--brass);
+  padding: 6px 12px;
+  color: #d8cfb8;
+  max-width: 470px;
+}
+.stats .bonus {
+  color: var(--gold);
+}

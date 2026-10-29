@@ -6,6 +6,16 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Descents and approximate hearing — 2026-10-29
+
+**Descents** give the game a goal after upgrades are maxed. Each escape to the far sanctuary unlocks the next Descent (up to IX); choose it from the result screen or the main menu's **Choose Descent**. Each level past the first burns fuel 12% faster, shortens the grace after extinction by a second (never under four), makes searching Hunters 0.3 m/s quicker and 2 s more persistent, adds a second Stalker deep in the crypt, and removes a starting match every two levels (never below one). Banking at the far sanctuary pays half a relic extra per relic per level; turning back to the first fire never does. Dying drops you one Descent. Chase speed never rises, so a sprint can still outrun pursuit.
+
+**Hearing is now approximate.** A heard sound sends a Hunter to an estimate of where it came from: within about half a metre when close and loud, up to about 3.5 m when faint or distant. Sight stays exact. Quiet movement and hiding now pay off more often.
+
+In 30-seed bot runs the careful "human" policy averaged 0.2 Hunts per run at Descent I, 1.1 at III, 1.7 at V and 2.3 at VII, with first losses appearing from Descent V; banked relics per run rose from about 3 to 6, and up to about 21 for full clears. The bots navigate perfectly and collect every match on their route, so human runs will be harder.
+
+Validation: 185 tests and production build pass, including Descent scaling, the second Stalker, banking bonus and unlock, the death penalty, starting matches, save/load bounds and approximate hearing. Menu and result screens were reviewed in a browser.
+
 ## Tomb nooks: hiding during the Hunt — 2026-10-22
 
 Each crypt chamber's hiding tombs now have a dark nook between tomb and wall, off every line a Hunter walks. During a Hunt a faint chalk ring marks each one. Step inside the ring and crouch to hide (**C / Xbox B / touch CROUCH**): a Hunter will not see you beyond arm's reach (0.7 m) and cannot grab you by brushing past. Two things still find you: a Hunter that watched you go in, and one that lingers within 2.5 m for 3.5 seconds and senses you. The HUD warns when one starts to sense you, so you can slip away or hold your nerve.

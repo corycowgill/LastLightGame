@@ -1,6 +1,6 @@
 import { glyphSvg, relicGlyph, visualCue } from "./visual-language";
 import { BRAND_CONFIG } from "./brands";
-import { CONFIG, UPGRADES, type Upgrade } from "./simulation";
+import { CONFIG, DESCENT, UPGRADES, type Upgrade } from "./simulation";
 import { relicIdentity } from "./relics";
 import "./style.css";
 import { CameraControls, orbit, zoom } from "./controls";
@@ -212,6 +212,11 @@ function button(id: string, text: string, action: () => void) {
   $("actions").append(b);
   b.onclick = action;
 }
+const roman = (n: number) =>
+  ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][n - 1] ??
+  String(n);
+const descentLabel = () =>
+  game.deepestDescent > 1 ? ` · DESCENT ${roman(game.descent)}` : "";
 function menu() {
   screen = "menu";
   audio.setVolume(0);
@@ -221,7 +226,18 @@ function menu() {
     intro +
       `<div id="actions"></div><div class="version">A CATACOMBS EXPEDITION · HEADPHONES RECOMMENDED<br>BUILD ${__BUILD_ID__}</div>`,
   );
-  button("new", "BEGIN EXPEDITION", () => begin(false));
+  button("new", `BEGIN EXPEDITION${descentLabel()}`, () => begin(false));
+  if (game.deepestDescent > 1)
+    button(
+      "descent",
+      `CHOOSE DESCENT · ${roman(game.descent)} OF ${roman(game.deepestDescent)}`,
+      () => {
+        // Cycle through unlocked Descents; deeper burns faster and pays more.
+        game.descent = (game.descent % game.deepestDescent) + 1;
+        game.save();
+        menu();
+      },
+    );
   button("continue", "CONTINUE JOURNEY", () => begin(true));
   button("settings", "SETTINGS", showSettings);
   button("controls", "FIELD GUIDE", controls);
@@ -551,7 +567,7 @@ function ended() {
   $("hud").hidden = true;
   $("presence").style.opacity = "0";
   panel(
-    `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}</div><h2 id="resultTitle">${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? (game.lostRelics ? `The dark keeps the ${game.lostRelics === 1 ? "relic" : `${game.lostRelics} relics`} you carried. Banked relics, upgrades and stories endure.` : "You carried nothing the dark could keep. Banked relics, upgrades and stories endure.") : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${dead ? `<p id="deathAdvice" class="learning-note"></p>` : ""}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats">${dead ? `<span class="lost">${game.lostRelics}<small>RELICS LOST</small></span>` : ""}<span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
+    `<div class="eyebrow">${dead ? "THE FLAME IS LOST" : "A FIRE THAT ENDURES"}${game.deepestDescent > 1 || game.fellFrom ? ` · DESCENT ${roman(game.fellFrom || game.descent)}` : ""}</div><h2 id="resultTitle">${dead ? "Taken by the dark." : "You made it to the light."}</h2><p>${dead ? (game.lostRelics ? `The dark keeps the ${game.lostRelics === 1 ? "relic" : `${game.lostRelics} relics`} you carried. Banked relics, upgrades and stories endure.` : "You carried nothing the dark could keep. Banked relics, upgrades and stories endure.") : "Your discoveries are safe. Rest, improve your equipment, then descend again."}</p>${dead && game.fellFrom ? `<p class="descent-note">The crypt pushes you back: Descent ${roman(game.fellFrom)} → ${roman(game.descent)}.</p>` : ""}${!dead && game.deepestDescent > game.descent ? `<p class="descent-note">Descent ${roman(game.descent + 1)} is open: fuel burns ${Math.round(DESCENT.fuelDrain * 100 * game.descent)}% faster and a second Stalker waits below, but every banked relic pays more.</p>` : ""}${dead ? `<p id="deathAdvice" class="learning-note"></p>` : ""}${check ? `<p id="checkResult">${check.status}</p>` : ""}<div class="stats">${dead ? `<span class="lost">${game.lostRelics}<small>RELICS LOST</small></span>` : ""}${!dead && game.descentBonus ? `<span class="bonus">+${game.descentBonus}<small>DESCENT BONUS</small></span>` : ""}<span>${game.banked}<small>BANKED RELICS</small></span><span>${Math.floor(game.elapsed / 60)}:${String(Math.floor(game.elapsed % 60)).padStart(2, "0")}<small>EXPEDITION TIME</small></span></div><div id="actions"></div>`,
   );
   if (dead) {
     if (game.deathCause)
@@ -581,7 +597,17 @@ function ended() {
         level >= spec.cap || game.banked < spec.cost;
     }
   }
-  button("again", "DESCEND AGAIN", () => begin(false));
+  if (!dead && game.deepestDescent > game.descent)
+    button(
+      "deeper",
+      `DESCEND DEEPER · DESCENT ${roman(game.descent + 1)}`,
+      () => {
+        game.descent += 1;
+        game.save();
+        begin(false);
+      },
+    );
+  button("again", `DESCEND AGAIN${descentLabel()}`, () => begin(false));
   button("menu", "MAIN MENU", menu);
 }
 window.addEventListener("keydown", (e) => {
@@ -1023,7 +1049,9 @@ function updateHUD() {
   // The art bible asks for a warning below 25% and urgency below 10%.
   document.body.classList.toggle("waning", pct >= 0.1 && pct < 0.25);
   // Room names surface briefly on entry, then sink back into the dark.
-  const roomName = game.currentRoom?.name ?? "THE WHISPER PASSAGE";
+  const roomName =
+    (game.currentRoom?.name ?? "THE WHISPER PASSAGE") +
+    (game.descent > 1 ? ` · DESCENT ${roman(game.descent)}` : "");
   if (roomName !== shownRoom) {
     shownRoom = roomName;
     roomRevealUntil = game.elapsed + 5;

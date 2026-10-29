@@ -774,3 +774,30 @@ test("hiding does not save you from a Hunter that watched you go in", () => {
   assert.equal(g.phase, "DEAD");
   assert.ok(Math.hypot(g.player.x - spot.x, g.player.z - spot.z) < 0.5);
 });
+
+test("a heard Torchbearer is placed approximately; a seen one exactly", () => {
+  const g = new Game(104729);
+  g.enemies = [];
+  g.phase = "HUNT_ACTIVE";
+  g.fuel = 0;
+  Object.assign(g.player, { x: 28, z: 2 });
+  g.hunter = { x: 22, z: 0, state: "SEARCHING" };
+  const sprint = { ...idle, forward: 1, sprint: true, yaw: Math.PI / 2 };
+  const errors: number[] = [];
+  for (let i = 0; i < 30; i++) {
+    g.step(1 / 60, sprint);
+    if (g.hunter.state === "INVESTIGATING")
+      errors.push(Math.hypot(g.target.x - g.player.x, g.target.z - g.player.z));
+  }
+  assert.ok(errors.length > 0, "the sprint is heard around the corner");
+  assert.ok(Math.max(...errors) > 0.4, "hearing is not pin-point");
+  assert.ok(Math.max(...errors) <= CONFIG.hearingError[1] + 0.2);
+  // Sight stays exact.
+  Object.assign(g.player, { x: 28, z: 0 });
+  g.hunter = { x: 31, z: 0, state: "SEARCHING", yaw: Math.PI / 2 };
+  g.step(1 / 60, idle);
+  assert.equal(g.hunter.state, "PURSUING");
+  assert.ok(
+    Math.hypot(g.target.x - g.player.x, g.target.z - g.player.z) < 0.01,
+  );
+});
