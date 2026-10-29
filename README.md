@@ -6,6 +6,12 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Baked floor and ceiling tiles — 2026-10-30
+
+Floor and ceiling tiles were the largest remaining cost: 1,530 instances of a near-flat 2,500-triangle generated tile, about 40% of every frame, and impossible to simplify without tearing texture seams. At load the game now renders the real tile straight down into a 512-pixel texture and draws every floor, wet floor and ceiling as a two-triangle square wearing that bake, with bump detail taken from it. The original stonework is kept; only its shallow relief geometry is gone.
+
+Triangles per frame, original → now: refuge 20.5M → 5.1M, corridor 18.5M → 4.4M, ossuary 13.5M → 3.6M, flooded 5.1M → 0.7M (73–86% lower overall). Rendered High-quality frames of the ossuary, start room and burial shelves show the floors unchanged to the eye. Validation: 190 tests and production build pass. Real-device frame rates remain to be measured.
+
 ## Omens and provisions — 2026-10-30
 
 **Omens** vary every expedition after the first. Each run draws one seeded condition, always a trade, announced at the start and kept in the journal:

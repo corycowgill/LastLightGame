@@ -114,6 +114,62 @@ export class GameScene {
   private sanctuaryFires: ReturnType<typeof createSanctuaryFire>[] = [];
   private emberGlow = createEmberGlow();
   private waterNormals?: THREE.Texture;
+  private bakedTargets: THREE.WebGLRenderTarget[] = [];
+  /**
+   * Orthographic top-down bake of a near-flat tile's real albedo into a square
+   * texture, so the tile can be drawn as two triangles. The tile is centred on
+   * a 2 x 2 m square; its generated relief is kept only as a bump hint.
+   */
+  private bakeTopFace(source: THREE.Object3D, size = 512) {
+    source.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(source);
+    const centre = box.getCenter(new THREE.Vector3());
+    const extent = box.getSize(new THREE.Vector3());
+    const camera = new THREE.OrthographicCamera(
+      -extent.x / 2,
+      extent.x / 2,
+      extent.z / 2,
+      -extent.z / 2,
+      0.01,
+      extent.y + 2,
+    );
+    camera.position.set(centre.x, box.max.y + 1, centre.z);
+    camera.up.set(0, 0, -1);
+    camera.lookAt(centre.x, box.min.y, centre.z);
+    const stage = new THREE.Scene();
+    const copy = source.clone(true);
+    const flats: THREE.Material[] = [];
+    copy.traverse((node) => {
+      const mesh = node as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.visible = true;
+      const flat = (material: THREE.Material) => {
+        const standard = material as THREE.MeshStandardMaterial;
+        const basic = new THREE.MeshBasicMaterial({
+          map: standard.map ?? null,
+          color: standard.color ?? new THREE.Color(0xffffff),
+        });
+        flats.push(basic);
+        return basic;
+      };
+      mesh.material = Array.isArray(mesh.material)
+        ? mesh.material.map(flat)
+        : flat(mesh.material);
+    });
+    stage.add(copy);
+    const target = new THREE.WebGLRenderTarget(size, size);
+    target.texture.colorSpace = THREE.SRGBColorSpace;
+    target.texture.anisotropy = 4;
+    const previous = this.renderer.getRenderTarget();
+    this.renderer.setRenderTarget(target);
+    this.renderer.setClearColor(0x2b2f35, 1);
+    this.renderer.clear();
+    this.renderer.render(stage, camera);
+    this.renderer.setRenderTarget(previous);
+    this.renderer.setClearColor(0x070d17);
+    flats.forEach((material) => material.dispose());
+    return target;
+  }
   private lowQuality = false;
   private renderBudget = new RenderBudget();
   private metricSeconds = 0;
@@ -712,17 +768,63 @@ export class GameScene {
         });
       },
     );
-    // Generated floor tiles have deep tray rims; a shallower fit makes the
-    // joints read as worn flagstone edges instead of a grid of trays.
-    this.catalog.batch(
-      "arc_floor_2m",
-      this.scene,
-      floorPlacements,
-      [2, 0.05, 2],
-      () => {
+    // Floor and ceiling tiles are near-flat (their generated relief costs
+    // 2,500 triangles each, ~40% of every frame). Bake the real tile's top face
+    // once and draw each as a two-triangle square wearing that bake.
+    {
+      const tile = new THREE.Group();
+      this.catalog.add("arc_floor_2m", tile, 0, 0, 0, 1, 0, () => {
+        if (this.scene.userData.disposed) return;
+        const bake = this.bakeTopFace(tile);
+        this.bakedTargets.push(bake);
+        const square = new THREE.PlaneGeometry(2, 2)
+          .rotateX(-Math.PI / 2)
+          .translate(0, 0.05, 0);
+        const lay = (
+          placements: THREE.Matrix4[],
+          tint = 0xffffff,
+          roughness = 0.9,
+        ) => {
+          if (!placements.length) return;
+          const material = new THREE.MeshStandardMaterial({
+            map: bake.texture,
+            bumpMap: bake.texture,
+            bumpScale: 0.035,
+            color: tint,
+            roughness,
+            metalness: 0,
+          });
+          const tiles = new THREE.InstancedMesh(
+            square,
+            material,
+            placements.length,
+          );
+          placements.forEach((matrix, i) => {
+            tiles.setMatrixAt(i, matrix);
+            const x = matrix.elements[12],
+              z = matrix.elements[14];
+            const shade =
+              0.66 + (Math.abs(Math.round(x * 17 + z * 31)) % 13) * 0.018;
+            tiles.setColorAt(
+              i,
+              new THREE.Color(shade * 0.91, shade * 0.97, shade),
+            );
+          });
+          tiles.receiveShadow = true;
+          tiles.computeBoundingSphere();
+          this.scene.add(tiles);
+        };
+        lay(floorPlacements);
+        lay(wetFloorPlacements, 0x548c9c, 0.22);
+        lay(ceilingPlacements);
         floors.visible = false;
-      },
-    );
+        ceiling.visible = false;
+        tile.traverse((node) => {
+          // The source mesh only fed the bake; free nothing shared with the catalog.
+          node.visible = false;
+        });
+      });
+    }
     if (wetFloorPlacements.length) {
       // Shallow standing water: a dark translucent sheet whose drifting ripple
       // normals make torchlight shimmer, so flooded floors read as water.
@@ -756,24 +858,6 @@ export class GameScene {
       water.computeBoundingSphere();
       this.scene.add(water);
     }
-    if (wetFloorPlacements.length)
-      this.catalog.batch(
-        "arc_floor_2m",
-        this.scene,
-        wetFloorPlacements,
-        [2, 0.05, 2],
-        () => {},
-        { tint: 0x548c9c, roughness: 0.22 },
-      );
-    this.catalog.batch(
-      "arc_floor_2m",
-      this.scene,
-      ceilingPlacements,
-      [2, 0.05, 2],
-      () => {
-        ceiling.visible = false;
-      },
-    );
     this.catalog.batch(
       "arc_arch_3m",
       this.scene,
@@ -1720,6 +1804,7 @@ export class GameScene {
       m.dispose();
     });
     textures.forEach((t) => t.dispose());
+    this.bakedTargets.forEach((target) => target.dispose());
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }
