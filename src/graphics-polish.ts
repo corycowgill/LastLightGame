@@ -135,6 +135,38 @@ export function createRippleNormals(size = 128) {
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   return texture;
 }
+/**
+ * Warm pool of torchlight on the floor (art bible §7: a compact orange pool in
+ * Ember, an amber key in Steady). One additive quad, no extra light: the torch
+ * light itself stays flat near the hood so the ivory cloth never blows out.
+ */
+export function createTorchPool() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const ctx = c.getContext("2d")!;
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, "rgba(255,196,120,0.95)");
+  g.addColorStop(0.25, "rgba(255,150,70,0.62)");
+  g.addColorStop(0.6, "rgba(214,91,39,0.22)");
+  g.addColorStop(1, "rgba(214,91,39,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  const pool = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({
+      map: new THREE.CanvasTexture(c),
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+    }),
+  );
+  (pool.material.map as THREE.Texture).colorSpace = THREE.SRGBColorSpace;
+  pool.renderOrder = 1;
+  return pool;
+}
 export class ContactShadows {
   private texture: THREE.CanvasTexture;
   private player: THREE.Mesh;

@@ -6,6 +6,10 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Torchlight pool — 2026-10-30
+
+The torch now casts a warm pool on the floor around the Torchbearer, matching the art bible's compact orange pool in Ember and amber key in Steady. It is a single additive floor quad, not another light: its radius follows the mode's mist-clearing reach (2.5, 4.5 and 7 m), it flickers and gutters with the flame, and it vanishes the moment the torch stops burning. The torch light itself keeps its flat near falloff, so the ivory hood beside the flame still does not blow out. Rendered High-quality frames of the ossuary, start room and burial shelves were reviewed.
+
 ## Baked floor and ceiling tiles — 2026-10-30
 
 Floor and ceiling tiles were the largest remaining cost: 1,530 instances of a near-flat 2,500-triangle generated tile, about 40% of every frame, and impossible to simplify without tearing texture seams. At load the game now renders the real tile straight down into a 512-pixel texture and draws every floor, wet floor and ceiling as a two-triangle square wearing that bake, with bump detail taken from it. The original stonework is kept; only its shallow relief geometry is gone.

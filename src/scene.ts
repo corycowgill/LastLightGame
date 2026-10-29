@@ -7,6 +7,7 @@ import {
   createEmberGlow,
   createSanctuaryFire,
   createRippleNormals,
+  createTorchPool,
 } from "./graphics-polish";
 import { HazardVisuals } from "./hazard-visuals";
 import {
@@ -114,6 +115,8 @@ export class GameScene {
   private sanctuaryFires: ReturnType<typeof createSanctuaryFire>[] = [];
   private emberGlow = createEmberGlow();
   private waterNormals?: THREE.Texture;
+  private torchPool = createTorchPool();
+  private poolAnchor = new THREE.Vector3();
   private bakedTargets: THREE.WebGLRenderTarget[] = [];
   /**
    * Orthographic top-down bake of a near-flat tile's real albedo into a square
@@ -258,6 +261,7 @@ export class GameScene {
     }
     this.scene.add(this.ambient, this.darkAdaptation);
     this.contactShadows = new ContactShadows(this.scene);
+    this.scene.add(this.torchPool);
     this.mistVisuals = new MistVisuals(this.scene);
     const stone = new THREE.MeshStandardMaterial({
         color: 0x59636b,
@@ -1294,6 +1298,34 @@ export class GameScene {
       intensity = [0.9, 2.2, 4.8][game.mode] || 2.2;
     const flicker = flameFlicker(this.elapsed, game.fuel / game.maxFuel);
     this.container.dataset.flameFlicker = flicker.toFixed(2);
+    // The floor pool matches the mist-clearing reach of each mode and gutters
+    // with the flame; it vanishes the moment the torch stops burning.
+    const poolRadius = [2.5, 4.5, 7][game.mode] ?? 4.5;
+    const poolMaterial = this.torchPool.material as THREE.MeshBasicMaterial;
+    poolMaterial.opacity = THREE.MathUtils.damp(
+      poolMaterial.opacity,
+      burning ? ([0.34, 0.42, 0.48][game.mode] ?? 0.42) * flicker : 0,
+      burning ? 10 : 20,
+      dt,
+    );
+    this.torchPool.visible = poolMaterial.opacity > 0.01;
+    this.torchPool.scale.setScalar(
+      THREE.MathUtils.damp(
+        this.torchPool.scale.x,
+        poolRadius * 2 * (0.94 + 0.06 * flicker),
+        6,
+        dt,
+      ),
+    );
+    this.torchPool.position.set(
+      this.player.position.x +
+        (this.flame.getWorldPosition(this.poolAnchor).x -
+          this.player.position.x) *
+          0.6,
+      0.02,
+      this.player.position.z +
+        (this.poolAnchor.z - this.player.position.z) * 0.6,
+    );
     this.torch.intensity = THREE.MathUtils.damp(
       this.torch.intensity,
       burning ? intensity * flicker + this.burst * 8 : 0,
