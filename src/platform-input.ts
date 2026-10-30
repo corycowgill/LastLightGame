@@ -34,6 +34,16 @@ export function stick(x: number, y: number, deadzone = 0.18) {
   const scale = Math.min(1, (size - deadzone) / (1 - deadzone)) / size;
   return { x: x * scale, y: y * scale };
 }
+/**
+ * Look response curve: small deflections turn slowly for fine aim, full
+ * deflection keeps the same top speed.
+ */
+export function lookCurve(v: { x: number; y: number }, exponent = 1.7) {
+  const size = Math.hypot(v.x, v.y);
+  if (!size) return { x: 0, y: 0 };
+  const scale = Math.pow(Math.min(1, size), exponent) / size;
+  return { x: v.x * scale, y: v.y * scale };
+}
 export class ControllerInput {
   movement: Movement = { forward: 0, strafe: 0, sprint: false, crouch: false };
   look = { x: 0, y: 0 };
@@ -102,7 +112,7 @@ export class ControllerInput {
       sprint: buttons.has(7) || buttons.has(10),
       crouch: this.crouched || buttons.has(6),
     };
-    this.look = right;
+    this.look = lookCurve(right);
     const actions: Record<number, PlatformAction> = {
       0: "interact",
       2: "burst",

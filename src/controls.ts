@@ -38,6 +38,7 @@ export class CameraControls {
     private sensitivity: () => number,
     private changed: () => void,
     private status: (captured: boolean, unavailable?: boolean) => void,
+    private invert: () => boolean = () => false,
   ) {
     const doc = element.ownerDocument;
     this.listen(element, "pointerdown", (e: PointerEvent) => {
@@ -65,7 +66,7 @@ export class CameraControls {
       orbit(
         this.pose,
         e.clientX - this.x,
-        e.clientY - this.y,
+        (e.clientY - this.y) * (this.invert() ? -1 : 1),
         this.sensitivity(),
       );
       this.x = e.clientX;
@@ -74,7 +75,12 @@ export class CameraControls {
     });
     this.listen(doc, "mousemove", (e: MouseEvent) => {
       if (this.active() && doc.pointerLockElement === element) {
-        orbit(this.pose, e.movementX, e.movementY, this.sensitivity());
+        orbit(
+          this.pose,
+          e.movementX,
+          e.movementY * (this.invert() ? -1 : 1),
+          this.sensitivity(),
+        );
         this.changed();
       }
     });
@@ -162,5 +168,40 @@ export class CameraControls {
   dispose() {
     this.release();
     this.disposers.forEach((dispose) => dispose());
+  }
+}
+
+/**
+ * Keyboard crouch that serves both habits: a quick tap toggles crouch on or
+ * off, while a long hold crouches only for as long as the key is down.
+ * Hiding in a nook no longer means pinning a key for a minute.
+ */
+export class CrouchKey {
+  static readonly TAP = 0.3;
+  private toggled = false;
+  private downAt: number | undefined;
+  press(time: number) {
+    if (this.downAt === undefined) this.downAt = time;
+  }
+  release(time: number) {
+    if (this.downAt === undefined) return;
+    const tap = time - this.downAt < CrouchKey.TAP;
+    // A tap flips the toggle; a hold always stands back up on release.
+    this.toggled = tap ? !this.toggled : false;
+    this.downAt = undefined;
+  }
+  /** Starting to run stands the Torchbearer up. */
+  cancel() {
+    this.toggled = false;
+  }
+  reset() {
+    this.toggled = false;
+    this.downAt = undefined;
+  }
+  get crouching() {
+    return this.toggled || this.downAt !== undefined;
+  }
+  get toggledOn() {
+    return this.toggled;
   }
 }

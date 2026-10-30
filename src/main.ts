@@ -12,7 +12,7 @@ import {
 } from "./simulation";
 import { relicIdentity } from "./relics";
 import "./style.css";
-import { CameraControls, orbit, zoom } from "./controls";
+import { CameraControls, CrouchKey, orbit, zoom } from "./controls";
 import {
   ControllerInput,
   TouchInput,
@@ -43,6 +43,7 @@ const coarse =
   matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
 const defaults = {
   sensitivity: 1,
+  invertLook: false,
   volume: 0.45,
   musicVolume: 0.7,
   cues: true,
@@ -74,7 +75,9 @@ const cameraControls = new CameraControls(
         ? "Mouse capture unavailable · Drag or use arrow keys"
         : "Drag: look · Arrows: look · Wheel: zoom";
   },
+  () => settings.invertLook,
 );
+const crouchKey = new CrouchKey();
 $("captureMouse").onclick = () => void cameraControls.capture();
 let inputSource = coarse ? "touch" : "keyboard";
 function selectInput(source: string) {
@@ -86,7 +89,7 @@ function selectInput(source: string) {
     hint.innerHTML =
       source === "gamepad"
         ? "LS Move · RS Look · A Use<br>RT Run · LT/B Crouch · X Burst · Y Chalk<br>LB / D-pad Flame · RB Brand · View Journal · Menu Pause"
-        : "WASD Move · Drag / Arrows Look · Wheel Zoom<br>SHIFT Sprint · C Crouch<br>E Use · Q Chalk · F Burst · G Brand · T Stone · TAB Journal";
+        : "WASD Move · Drag / Arrows Look · Wheel Zoom<br>SHIFT Sprint · C Crouch (tap: toggle)<br>E / SPACE Use · Q Chalk · F Burst · G Brand · T Stone · TAB Journal";
   }
 }
 if (new URLSearchParams(location.search).has("touch"))
@@ -443,6 +446,7 @@ function resume() {
   audio.setMusicVolume(settings.musicVolume);
   running = true;
   keys.clear();
+  crouchKey.release(Infinity);
   $("overlay").hidden = true;
   $("hud").hidden = false;
   last = performance.now();
@@ -455,6 +459,7 @@ function pause() {
   audio.setVolume(0);
   running = false;
   keys.clear();
+  crouchKey.release(Infinity);
   game.save();
   cameraControls.release();
   panel(
@@ -468,7 +473,7 @@ function pause() {
 function controls() {
   screen = "guide";
   panel(
-    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Drag mouse / arrow keys · Look &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C / CTRL · Crouch<br>E · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst &nbsp; G · Drop burning brand &nbsp; T · Throw stone<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Xbox: LS Move · RS Look · A Use · B Toggle Crouch · X Burst · Y Chalk · LB / D-pad Flame · RB Brand · LT Crouch · RT/LS Sprint · D-pad Up Stone · D-pad Down Zoom Out (LT + Down Zoom In) · RS Click Recenter · View Journal · Menu Pause. Menus: D-pad Navigate · A Select · B Back.</p><p>Touch: Left pad Move (push forward to the rim to run; ease back to walk) · Drag view Look · RUN Hold Sprint · CROUCH Toggle · USE Interact/Relight · BURST, BRAND, STONE, CHALK and JOURNAL actions · Flame buttons · +/− Zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps and reduce distant visual detection; close Hunters can still see you. Sprint in bursts: stamina recovers after a short rest. Break sight around corners to lose the Hunter. A fresh Steady torch lasts about two minutes. Oil adds about 30 seconds; each of your two starting matches buys about 20 seconds after a two second relight. Ember stretches fuel to about 3.6 minutes; Blaze empties a full torch in about 34 seconds. Relighting slows movement and prevents sprinting; find cover first. Flame bursts cannot reach through stone walls. Relit torchlight makes the Hunter recoil and flee before banishment; stronger flame protects a wider area. Sanctuary fires repel it when unobstructed. Deeper air drains fuel faster, and the Hunter grows more persistent. Stalkers can damage a steady flame at close range; use Blaze or keep your distance. Golden sanctuary fires banish the Hunt.</p><p>G / RB / BRAND drops a burning brand: costs 15 seconds of base Steady fuel while lit, or one match during a Hunt, lasts 18 seconds, and repels creatures within 4 metres when unobstructed. It is stationary and grants no sanctuary refill; Hunters resume searching after it dies. Its fire can also light a reliquary seal while your torch is out. Only one brand may burn, with a 24-second cooldown.</p><p>Some expeditions contain the Bell Crypt. Recover its sealed votive via the longer route, then choose: quietly retrace your steps or raise the loud return gate for a shorter route to fire. Flooded chambers have slower, noisy water and quieter dry edges.</p><div id="actions"></div>',
+    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Drag mouse / arrow keys · Look &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C · Crouch (tap to toggle, hold to crouch briefly)<br>E / SPACE · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst &nbsp; G · Drop burning brand &nbsp; T · Throw stone<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Xbox: LS Move · RS Look · A Use · B Toggle Crouch · X Burst · Y Chalk · LB / D-pad Flame · RB Brand · LT Crouch · RT/LS Sprint · D-pad Up Stone · D-pad Down Zoom Out (LT + Down Zoom In) · RS Click Recenter · View Journal · Menu Pause. Menus: D-pad Navigate · A Select · B Back.</p><p>Touch: Left pad Move (push forward to the rim to run; ease back to walk) · Drag view Look · RUN Hold Sprint · CROUCH Toggle · USE Interact/Relight · BURST, BRAND, STONE, CHALK and JOURNAL actions · Flame buttons · +/− Zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps and reduce distant visual detection; close Hunters can still see you. Sprint in bursts: stamina recovers after a short rest. Break sight around corners to lose the Hunter. A fresh Steady torch lasts about two minutes. Oil adds about 30 seconds; each of your two starting matches buys about 20 seconds after a two second relight. Ember stretches fuel to about 3.6 minutes; Blaze empties a full torch in about 34 seconds. Relighting slows movement and prevents sprinting; find cover first. Flame bursts cannot reach through stone walls. Relit torchlight makes the Hunter recoil and flee before banishment; stronger flame protects a wider area. Sanctuary fires repel it when unobstructed. Deeper air drains fuel faster, and the Hunter grows more persistent. Stalkers can damage a steady flame at close range; use Blaze or keep your distance. Golden sanctuary fires banish the Hunt.</p><p>G / RB / BRAND drops a burning brand: costs 15 seconds of base Steady fuel while lit, or one match during a Hunt, lasts 18 seconds, and repels creatures within 4 metres when unobstructed. It is stationary and grants no sanctuary refill; Hunters resume searching after it dies. Its fire can also light a reliquary seal while your torch is out. Only one brand may burn, with a 24-second cooldown.</p><p>Some expeditions contain the Bell Crypt. Recover its sealed votive via the longer route, then choose: quietly retrace your steps or raise the loud return gate for a shorter route to fire. Flooded chambers have slower, noisy water and quieter dry edges.</p><div id="actions"></div>',
   );
   button("back", "BACK", menu);
 }
@@ -478,18 +483,20 @@ function showSettings() {
   const was = running;
   touchInput.reset();
   keys.clear();
+  crouchKey.release(Infinity);
   if (was) {
     running = false;
     cameraControls.release();
   }
   panel(
-    `<div class="eyebrow">SETTINGS</div><h2>Shape your experience.</h2><label>Look sensitivity <input id="sensitivity" type="range" min="0.2" max="2" step="0.1" value="${settings.sensitivity}"></label><label>Audio volume <input id="volume" type="range" min="0" max="1" step="0.05" value="${settings.volume}"></label><label>Soundtrack level <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="${settings.musicVolume}"></label><label>Visual sound cues <input id="cues" type="checkbox" ${settings.cues ? "checked" : ""}></label><label>Show touch controls <input id="touchSetting" type="checkbox" ${settings.touchControls ? "checked" : ""}></label><label>Graphics <select id="quality"><option value="auto">Auto (recommended)</option><option value="high">High</option><option value="low">Low</option></select></label><div id="actions"></div>`,
+    `<div class="eyebrow">SETTINGS</div><h2>Shape your experience.</h2><label>Look sensitivity <input id="sensitivity" type="range" min="0.2" max="2" step="0.1" value="${settings.sensitivity}"></label><label>Invert vertical look <input id="invertLook" type="checkbox" ${settings.invertLook ? "checked" : ""}></label><label>Audio volume <input id="volume" type="range" min="0" max="1" step="0.05" value="${settings.volume}"></label><label>Soundtrack level <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="${settings.musicVolume}"></label><label>Visual sound cues <input id="cues" type="checkbox" ${settings.cues ? "checked" : ""}></label><label>Show touch controls <input id="touchSetting" type="checkbox" ${settings.touchControls ? "checked" : ""}></label><label>Graphics <select id="quality"><option value="auto">Auto (recommended)</option><option value="high">High</option><option value="low">Low</option></select></label><div id="actions"></div>`,
   );
   ($("quality") as HTMLSelectElement).value = settings.quality;
   button("back", "SAVE & RETURN", () => {
     settings.touchControls = ($("touchSetting") as HTMLInputElement).checked;
     document.body.dataset.touch = String(settings.touchControls);
     settings.sensitivity = +($("sensitivity") as HTMLInputElement).value;
+    settings.invertLook = ($("invertLook") as HTMLInputElement).checked;
     settings.volume = +($("volume") as HTMLInputElement).value;
     settings.musicVolume = +($("musicVolume") as HTMLInputElement).value;
     audio.setMusicVolume(settings.musicVolume);
@@ -515,6 +522,7 @@ function sketchFigure(title: string, compact = false) {
 function journal() {
   screen = "journal";
   keys.clear();
+  crouchKey.release(Infinity);
   audio.setVolume(0);
   running = false;
   cameraControls.release();
@@ -571,6 +579,7 @@ function ended() {
   screen = "ended";
   endingAnimation = 2.1;
   keys.clear();
+  crouchKey.reset();
   if (game.phase === "DEAD") audio.fadeAfterDefeat();
   else audio.setVolume(settings.volume);
   running = false;
@@ -669,7 +678,9 @@ window.addEventListener("keydown", (e) => {
   }
   if (!running) return;
   keys.add(e.code);
-  if (e.code === "KeyE") game.interact();
+  if (e.code === "KeyC") crouchKey.press(performance.now() / 1000);
+  if (e.code === "ShiftLeft" || e.code === "ShiftRight") crouchKey.cancel();
+  if (e.code === "KeyE" || e.code === "Space") game.interact();
   if (e.code === "KeyQ") game.mark();
   if (e.code === "KeyF") game.burst();
   if (e.code === "KeyG") game.dropBrand();
@@ -686,7 +697,10 @@ window.addEventListener("keydown", (e) => {
     }
   }
 });
-window.addEventListener("keyup", (e) => keys.delete(e.code));
+window.addEventListener("keyup", (e) => {
+  keys.delete(e.code);
+  if (e.code === "KeyC") crouchKey.release(performance.now() / 1000);
+});
 window.addEventListener("blur", pause);
 $("pauseButton").onclick = pause;
 window.addEventListener("resize", () => {
@@ -800,7 +814,7 @@ function frame(now: number) {
     orbit(
       cameraControls.pose,
       controller.look.x * 800 * dt,
-      controller.look.y * 600 * dt,
+      controller.look.y * 600 * dt * (settings.invertLook ? -1 : 1),
       settings.sensitivity,
     );
     if (pad && controller.connected)
@@ -816,7 +830,7 @@ function frame(now: number) {
         forward: Number(keys.has("KeyW")) - Number(keys.has("KeyS")),
         strafe: Number(keys.has("KeyD")) - Number(keys.has("KeyA")),
         sprint: keys.has("ShiftLeft") || keys.has("ShiftRight"),
-        crouch: keys.has("KeyC") || keys.has("ControlLeft"),
+        crouch: crouchKey.crouching,
       },
       controller.movement,
       touchInput.movement,
@@ -1141,6 +1155,7 @@ function updateHUD() {
     $("prompt").innerHTML =
       `<span class="prompt-icon">${glyphSvg(icon)}</span><kbd>${useLabel}</kbd> ${label}${pickup.encounter === "reliquary" ? " · 3.5s" : ""}`;
   }
+  $("stance").hidden = !game.player.crouched;
   const vowEl = $("vow");
   vowEl.hidden = !game.vow;
   if (game.vow) {
@@ -1289,4 +1304,5 @@ requestAnimationFrame(frame);
   },
   begin,
   resume,
+  crouchKey,
 };

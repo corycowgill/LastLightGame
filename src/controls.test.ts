@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CameraControls } from "./controls";
+import { CameraControls, CrouchKey } from "./controls";
 class Target extends EventTarget {
   ownerDocument!: Doc;
   focus() {}
@@ -140,4 +140,57 @@ test("blur cancels drag and disposing removes listeners", () => {
   });
   event(s.doc, "pointermove", { clientX: 100, clientY: 100 });
   assert.deepEqual(s.controls.pose, pose);
+});
+
+test("crouch key: a tap toggles, a hold crouches only while held", () => {
+  const c = new CrouchKey();
+  c.press(0);
+  assert.equal(c.crouching, true);
+  c.release(0.1);
+  assert.equal(c.crouching, true, "tap toggles crouch on");
+  c.press(5);
+  c.release(5.1);
+  assert.equal(c.crouching, false, "a second tap stands up");
+  c.press(10);
+  c.release(12);
+  assert.equal(c.crouching, false, "a long hold releases on key up");
+  c.press(20);
+  c.release(20.1);
+  c.press(30);
+  assert.equal(c.crouching, true);
+  c.release(31);
+  assert.equal(c.crouching, false, "holding from a toggle also stands up");
+  c.press(40);
+  c.release(40.1);
+  c.cancel();
+  assert.equal(c.crouching, false, "running stands up");
+  // A key released while the game was paused never arrives: treat as a hold.
+  c.press(50);
+  c.release(Infinity);
+  assert.equal(c.crouching, false);
+});
+
+test("invert look flips only the vertical axis of drag look", () => {
+  const element = new Target(),
+    doc = new Doc();
+  element.ownerDocument = doc;
+  const controls = new CameraControls(
+    element as unknown as HTMLElement,
+    () => true,
+    () => 1,
+    () => {},
+    () => {},
+    () => true,
+  );
+  const before = { ...controls.pose };
+  event(element, "pointerdown", {
+    button: 0,
+    pointerId: 1,
+    clientX: 0,
+    clientY: 0,
+  });
+  event(doc, "pointermove", { pointerId: 1, clientX: 20, clientY: 30 });
+  assert.ok(controls.pose.yaw < before.yaw, "horizontal unchanged");
+  assert.ok(controls.pose.pitch < before.pitch, "vertical inverted");
+  controls.dispose();
 });

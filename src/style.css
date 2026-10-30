@@ -2547,3 +2547,18 @@ body[data-touch="true"] #touchControls button[aria-pressed="true"] {
     top: calc(max(12px, env(safe-area-inset-top)) + 64px);
   }
 }
+
+/* Stance marker: a toggled crouch must be visible, not only felt. */
+#stance {
+  margin-top: 5px;
+  font:
+    9px Inter,
+    Arial,
+    sans-serif;
+  letter-spacing: 0.2em;
+  color: #9fb7b0;
+  opacity: 0.75;
+}
+#stance[hidden] {
+  display: none;
+}

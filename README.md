@@ -6,6 +6,17 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## Controls pass — 2026-10-30
+
+- **Ctrl no longer crouches.** Ctrl+W, pressed while crouch-walking forward, closes the browser tab, and pages cannot block it. Crouch is now C only.
+- **Smart crouch on keyboard.** A quick tap of C (under 0.3 s) toggles crouch on or off. A longer hold crouches only while held. Starting to sprint stands you up. Hiding in a nook no longer means holding a key down. `CrouchKey` in `controls.ts`.
+- **Crouch indicator.** A small _CROUCHED · QUIET STEPS_ line under the stamina bar shows a toggled crouch.
+- **Space also interacts.** It collects, uses fire and relights, alongside E.
+- **Invert vertical look.** A new setting that applies to mouse drag, captured mouse and the controller's right stick. Arrow keys are unaffected.
+- **Controller look curve.** The right stick eases in (exponent 1.7) for fine aim near the centre and keeps the same top speed at full tilt.
+
+`controls.test.ts` and `platform-input.test.ts` cover the crouch tap and hold behaviour, the inverted axis and the look curve.
+
 ## Vows — 2026-10-30
 
 From the second expedition on, the Torchbearer swears one seeded Vow at the first fire. Keep it all the way to the far sanctuary and it pays **+2 relics**. Turning back to the first fire forfeits it, and it dies with you.

@@ -281,3 +281,15 @@ test("forward joystick rim sprints without a third finger and releases safely", 
   assert.equal(s.touch.movement.forward, 0);
   s.touch.dispose();
 });
+
+test("controller look eases in for fine aim but keeps full-tilt speed", () => {
+  const c = new ControllerInput(() => {});
+  c.update(pad([0, 0, 1, 0]), 1 / 60, true);
+  assert.ok(Math.abs(c.look.x - 1) < 1e-9, "full deflection unchanged");
+  c.update(pad([0, 0, 0.5, 0]), 1 / 60, true);
+  const half = c.look.x;
+  // A half push past the deadzone turns well under half speed.
+  assert.ok(half > 0 && half < 0.3, `half push ${half}`);
+  c.update(pad([0, 0, 0.6, 0.6]), 1 / 60, true);
+  assert.ok(Math.abs(c.look.x - c.look.y) < 1e-9, "direction preserved");
+});
