@@ -58,6 +58,7 @@ try {
   };
 } catch {}
 let screen = "menu";
+let mouseCaptured = false;
 const cameraControls = new CameraControls(
   $("scene"),
   () => running,
@@ -66,6 +67,10 @@ const cameraControls = new CameraControls(
     draw = true;
   },
   (captured, unavailable) => {
+    // Esc while the mouse is captured only releases it in the browser; treat
+    // that release as the pause the player asked for.
+    if (mouseCaptured && !captured && running) pause();
+    mouseCaptured = captured;
     $("captureMouse").textContent = captured
       ? "RELEASE MOUSE"
       : "CAPTURE MOUSE";
@@ -73,9 +78,10 @@ const cameraControls = new CameraControls(
       ? "Mouse: look · Wheel: zoom · Esc: pause"
       : unavailable
         ? "Mouse capture unavailable · Drag or use arrow keys"
-        : "Drag: look · Arrows: look · Wheel: zoom";
+        : "Click the view to look with the mouse · Wheel: zoom";
   },
   () => settings.invertLook,
+  () => !settings.touchControls,
 );
 const crouchKey = new CrouchKey();
 $("captureMouse").onclick = () => void cameraControls.capture();
@@ -1269,7 +1275,8 @@ function updateHUD() {
     $("direction").textContent = "";
   }
 }
-game.load();
+// A brand-new player (no save at all) plays the first-expedition lesson once.
+if (!game.load()) game.initiated = false;
 rebuild();
 menu();
 // The Hallucinated Games studio intro, shared with the studio's other games,

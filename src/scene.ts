@@ -228,6 +228,8 @@ export class GameScene {
   private attachmentPoint = new THREE.Vector3();
   private torchAttachment = new TorchAttachment();
   private initialized = false;
+  private shoulder = 0;
+  private boom = 0;
   private encounterVisuals?: EncounterVisuals;
   private hazardVisuals?: HazardVisuals;
   private elapsed = 0;
@@ -1691,8 +1693,17 @@ export class GameScene {
       right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)),
       probeEnd = anchor.clone().add(centerOffset).addScaledVector(right, 0.85),
       framingWalls = this.cameraIndex?.query(anchor, probeEnd) ?? this.walls,
-      shoulder = shoulderOffset(anchor, centerOffset, right, framingWalls),
-      offset = centerOffset.addScaledVector(right, shoulder);
+      shoulderTarget = shoulderOffset(
+        anchor,
+        centerOffset,
+        right,
+        framingWalls,
+      );
+    // Ease the shoulder across instead of swinging it as walls come and go.
+    this.shoulder = this.initialized
+      ? THREE.MathUtils.damp(this.shoulder, shoulderTarget, 3, dt)
+      : shoulderTarget;
+    const offset = centerOffset.addScaledVector(right, this.shoulder);
     this.ray.set(anchor, offset.clone().normalize());
     this.ray.far = offset.length();
     const desiredRayEnd = anchor.clone().add(offset);
@@ -1702,7 +1713,14 @@ export class GameScene {
     if (this.container.dataset.cameraCandidates !== candidateCount)
       this.container.dataset.cameraCandidates = candidateCount;
     const hit = this.ray.intersectObjects(candidates, false)[0];
-    if (hit) offset.setLength(Math.max(0.4, hit.distance - 0.25));
+    const reach = hit ? Math.max(0.4, hit.distance - 0.25) : offset.length();
+    // Pull in at once when stone intrudes; drift back out gently, so passing
+    // pillars and door jambs do not pump the camera in and out.
+    this.boom =
+      !this.initialized || reach < this.boom
+        ? reach
+        : THREE.MathUtils.damp(this.boom, reach, 2.5, dt);
+    offset.setLength(Math.min(this.boom, offset.length()));
     const desired = anchor.clone().add(offset);
     desired.y = THREE.MathUtils.clamp(
       desired.y,

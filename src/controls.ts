@@ -28,6 +28,8 @@ export function zoom(pose: CameraPose, delta: number) {
 export class CameraControls {
   readonly pose: CameraPose = { yaw: -Math.PI / 2, pitch: 0.25, distance: 3.7 };
   private dragging = false;
+  /** Set once the browser refuses pointer lock; dragging stays available. */
+  private lockRefused = false;
   private dragPointer: number | undefined;
   private x = 0;
   private y = 0;
@@ -39,6 +41,8 @@ export class CameraControls {
     private changed: () => void,
     private status: (captured: boolean, unavailable?: boolean) => void,
     private invert: () => boolean = () => false,
+    /** A plain mouse click on the view takes mouse look, as most games do. */
+    private clickToCapture: () => boolean = () => false,
   ) {
     const doc = element.ownerDocument;
     this.listen(element, "pointerdown", (e: PointerEvent) => {
@@ -48,6 +52,14 @@ export class CameraControls {
       e.preventDefault();
       element.focus({ preventScroll: true });
       if (doc.pointerLockElement === element) return;
+      if (
+        e.pointerType === "mouse" &&
+        e.button === 0 &&
+        !this.lockRefused &&
+        this.clickToCapture()
+      )
+        void this.capture();
+      // Dragging starts too, so look still works wherever lock is refused.
       this.dragging = true;
       this.x = e.clientX;
       this.y = e.clientY;
@@ -117,7 +129,10 @@ export class CameraControls {
       this.dragging = false;
       this.status(doc.pointerLockElement === element);
     });
-    this.listen(doc, "pointerlockerror", () => this.status(false, true));
+    this.listen(doc, "pointerlockerror", () => {
+      this.lockRefused = true;
+      this.status(false, true);
+    });
     this.listen(doc.defaultView!, "blur", () => {
       this.dragging = false;
     });
@@ -147,6 +162,7 @@ export class CameraControls {
       }
       await this.element.requestPointerLock();
     } catch {
+      this.lockRefused = true;
       this.status(false, true);
     }
   }

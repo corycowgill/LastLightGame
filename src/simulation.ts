@@ -530,6 +530,16 @@ export class Game {
     this.say(`${this.omen.name}. ${this.omen.text}`);
     this.save();
   }
+  /**
+   * A player's first expedition teaches the core loop by playing it: the
+   * first relic lifted snuffs the torch, the Hunter rises in plain sight and
+   * a struck match drives it off. False only until that has happened once.
+   */
+  initiated = true;
+  private initiationAt: number | undefined;
+  /** Seconds left of the scripted Hunt's mercy: slow, and no capture yet. */
+  initiationMercy = 0;
+  private initiationHunt = false;
   /** This expedition's Vow; -1 when none was sworn. */
   vowIndex = -1;
   vowBroken = false;
@@ -1142,6 +1152,9 @@ export class Game {
     }
     this.hazards = planEnvironmentHazards(this.world, this.items);
     this.omenIndex = 0;
+    this.initiationAt = undefined;
+    this.initiationHunt = false;
+    this.initiationMercy = 0;
     this.vowIndex = -1;
     this.vowBroken = false;
     this.vowBonus = 0;
@@ -1525,6 +1538,10 @@ export class Game {
       } else if (item.kind === "match") this.matches++;
       else {
         this.artifacts += item.value ?? 1;
+        if (!this.initiated && item.encounter !== "reliquary") {
+          this.initiated = true;
+          this.initiationAt = this.elapsed + 2.5;
+        }
         if (item.encounter === "reliquary") {
           this.cursedRelic = true;
           this.relicPulse = 18;
@@ -1559,6 +1576,15 @@ export class Game {
     )
       this.breakVow("flame");
     if (this.elapsed > VOW_CONFIG.haste) this.breakVow("haste");
+    if (this.initiationAt !== undefined && this.elapsed >= this.initiationAt) {
+      this.initiationAt = undefined;
+      if (this.phase === "EXPLORING" && this.fuel > 0) {
+        this.initiationHunt = true;
+        this.forceHunt();
+        this.say("A cold breath rises from the relic. Your torch dies.");
+      }
+    }
+    this.initiationMercy = Math.max(0, this.initiationMercy - dt);
     const fires = [
       { ...this.start, radius: 8 },
       { ...this.destination, radius: 8 },
@@ -1794,7 +1820,12 @@ export class Game {
     ) {
       this.timer -= dt;
       if (this.timer <= 0) {
-        if (this.phase === "EXTINGUISHING") {
+        if (this.phase === "EXTINGUISHING" && this.initiationHunt) {
+          // The lesson needs the Hunter seen: it rises almost at once.
+          this.phase = "HUNT_GRACE";
+          this.timer = 1;
+          this.say("Something rises in the dark. E to strike a match.");
+        } else if (this.phase === "EXTINGUISHING") {
           this.phase = "HUNT_GRACE";
           this.timer = Math.max(
             DESCENT.minGrace,
@@ -1925,8 +1956,43 @@ export class Game {
     );
     return p;
   }
+  /** A cell 9–15 m away, in sight and ahead of the camera, for the lesson. */
+  private initiationSpawnPoint() {
+    const direction = {
+      x: -Math.sin(this.cameraYaw),
+      z: -Math.cos(this.cameraYaw),
+    };
+    return this.world.cells
+      .map((c) => ({ x: c.x * 2, z: c.z * 2 }))
+      .filter((p) => {
+        const d = dist(p, this.player);
+        if (d < 9 || d > 15 || !grid(this.world).has(key(p.x / 2, p.z / 2)))
+          return false;
+        const front =
+          ((p.x - this.player.x) * direction.x +
+            (p.z - this.player.z) * direction.z) /
+          d;
+        return (
+          lineOfSight(this.world, p, this.player) &&
+          dist(p, this.start) > 6 &&
+          findPath(this.world, p, this.player).length > 0 &&
+          front > -0.2
+        );
+      })
+      .sort((a, b) => {
+        const facing = (p: Point) =>
+          ((p.x - this.player.x) * direction.x +
+            (p.z - this.player.z) * direction.z) /
+          dist(p, this.player);
+        return facing(b) - facing(a);
+      })[0];
+  }
   private spawnHunter() {
-    const p = this.hunterSpawnPoint();
+    const lesson = this.initiationHunt;
+    this.initiationHunt = false;
+    const p =
+      (lesson && this.initiationSpawnPoint()) || this.hunterSpawnPoint();
+    if (lesson && p) this.initiationMercy = 8;
     if (!p) {
       this.timer = 1;
       this.phase = "HUNT_GRACE";
@@ -1940,7 +2006,11 @@ export class Game {
     this.target = { ...this.player };
     this.hunterReadiness = 0;
     this.phase = "HUNT_ACTIVE";
-    this.say("The Hunter searches. Break sight. Quiet your footsteps.");
+    this.say(
+      this.initiationMercy > 0
+        ? "The Hunter. E to strike a match: fire drives it back."
+        : "The Hunter searches. Break sight. Quiet your footsteps.",
+    );
   }
   private updateReinforcements(dt: number, safe: boolean) {
     if (safe || this.phase === "SANCTUARY" || this.phase === "DEAD") {
@@ -2198,10 +2268,12 @@ export class Game {
     this.moveEnemy(
       this.hunter,
       this.target,
-      this.hunter.state === "PURSUING"
-        ? (CONFIG.hunterChase + this.depth * 0.55) *
+      this.initiationMercy > 0
+        ? CONFIG.hunterSearch * 0.6
+        : this.hunter.state === "PURSUING"
+          ? (CONFIG.hunterChase + this.depth * 0.55) *
             (this.hunterReadiness < 1 ? 0.4 : 1)
-        : CONFIG.hunterSearch + DESCENT.searchSpeed * this.descentLevel,
+          : CONFIG.hunterSearch + DESCENT.searchSpeed * this.descentLevel,
       dt,
       this.hunter.state === "PURSUING",
     );
@@ -2212,7 +2284,11 @@ export class Game {
     // Brushing past a hidden Torchbearer is not a capture: the Hunter must
     // first notice them (arm's reach or sensing) and give chase.
     const unnoticed = this.hidden && this.hunter.state !== "PURSUING";
-    if (dist(this.hunter, this.player) < 1.1 && !unnoticed) {
+    if (
+      dist(this.hunter, this.player) < 1.1 &&
+      !unnoticed &&
+      this.initiationMercy <= 0
+    ) {
       this.phase = "DEAD";
       this.fall();
       this.deathCause = "Hunter";
@@ -2385,6 +2461,7 @@ export class Game {
           vow: this.vowIndex,
           vowBroken: this.vowBroken,
           deepestDescent: this.deepestDescent,
+          initiated: this.initiated,
           maxFuel: this.maxFuel,
           upgrades: this.upgrades,
           player: this.player,
@@ -2445,6 +2522,8 @@ export class Game {
       this.reset(Number(d.seed) || 1);
       const omen = Math.floor(Number(d.omen) || 0);
       this.omenIndex = omen >= 0 && omen < OMENS.length ? omen : 0;
+      // Saves from before the lesson existed belong to experienced players.
+      this.initiated = d.initiated !== false;
       const vow = Math.floor(Number(d.vow ?? -1));
       this.vowIndex = vow >= 0 && vow < VOWS.length ? vow : -1;
       this.vowBroken = !!d.vowBroken;
