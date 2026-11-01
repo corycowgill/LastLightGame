@@ -6,6 +6,31 @@ This repository documents the development process as well as the game: prompts, 
 
 Expeditions now generate **12–18 chambers** with changing routes, branches, loops and destination sanctuaries. Bone Warrens, Drowned Tombs and Ashen Archive vary the room mix and atmosphere within the Catacombs. See [world generation](docs/WORLD_GENERATION.md) for implementation, testing and save migration.
 
+## First-time players: the hook, the goal, the camera — 2026-11-01
+
+This pass answers playtest feedback: _"There is no desire to play. Camera control is poor and it's not clear what to do the first time."_
+
+**The hook.** The headline mechanic, "when the flame dies, the hunt begins", almost never happened on a first run, so newcomers got a calm walk. A brand-new player's first expedition now plays the core loop within the first minute:
+
+1. Lifting the first relic lets out a cold breath, and 2.5 seconds later the torch dies.
+2. The Hunter rises in plain sight, 9–15 m down the passage.
+3. The prompt reads _E — STRIKE A MATCH_. A struck match makes the Hunter recoil and flee.
+
+For the first 8 seconds the Hunter walks slowly and cannot capture, so a frozen first-timer gets a fair window, but after that the Hunt is real. The lesson plays once per save. Older saves count as experienced players, and only a player with no save at all gets it. `initiation.test.ts` covers it across 30 seeds.
+
+**The goal.**
+
+- The first expedition opens with a three-line brief at the top right: find relics, carry them to golden fire, guard your torch. It adapts to the input device and clears once you set off.
+- The objective line under the fuel gauge is larger and marked with a gold ◆.
+- The menu now says plainly what you do and what is at stake.
+
+**The camera.**
+
+- On desktop, a click on the view captures the mouse for normal third-person mouse-look. Esc releases it and pauses. Dragging still works wherever the browser refuses pointer lock.
+- The camera pulls in at once when a wall intrudes but eases back out, so pillars and door jambs no longer pump it in and out.
+- The over-the-shoulder offset now eases across instead of jumping as walls come and go.
+- The sanctuary fire fades as the camera nears it, so the opening view no longer starts behind a full-screen orange smear.
+
 ## Controls pass — 2026-10-30
 
 - **Ctrl no longer crouches.** Ctrl+W, pressed while crouch-walking forward, closes the browser tab, and pages cannot block it. Crouch is now C only.

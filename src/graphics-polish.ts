@@ -27,17 +27,17 @@ export function createTorchFlame() {
   return new THREE.Mesh(
     new THREE.PlaneGeometry(0.15, 0.19, 1, 8),
     new THREE.ShaderMaterial({
-      uniforms: { time: { value: 0 } },
+      uniforms: { time: { value: 0 }, fade: { value: 1 } },
       transparent: true,
       depthWrite: false,
       side: THREE.DoubleSide,
       toneMapped: false,
       vertexShader: `varying vec2 flameUv; uniform float time;
   void main(){flameUv=uv;vec3 p=position;p.x+=sin(uv.y*8.0-time*11.0)*0.012*uv.y*uv.y;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);}`,
-      fragmentShader: `varying vec2 flameUv;uniform float time;
+      fragmentShader: `varying vec2 flameUv;uniform float time;uniform float fade;
   void main(){vec2 p=flameUv;float taper=mix(0.47,0.025,p.y);float sway=sin(p.y*9.0-time*11.0)*0.035*p.y;
   float edge=abs(p.x-0.5-sway)/taper;float body=(1.0-smoothstep(0.65,1.0,edge))*smoothstep(0.0,0.12,p.y)*(1.0-smoothstep(0.8,1.0,p.y));
-  float core=(1.0-smoothstep(0.0,0.45,edge))*(1.0-p.y);vec3 fire=mix(vec3(1.0,0.16,0.015),vec3(1.0,0.66,0.10),1.0-p.y*0.6);fire=mix(fire,vec3(1.0,0.91,0.55),core);gl_FragColor=vec4(fire,body*0.94);}`,
+  float core=(1.0-smoothstep(0.0,0.45,edge))*(1.0-p.y);vec3 fire=mix(vec3(1.0,0.16,0.015),vec3(1.0,0.66,0.10),1.0-p.y*0.6);fire=mix(fire,vec3(1.0,0.91,0.55),core);gl_FragColor=vec4(fire,body*0.94*fade);}`,
     }),
   );
 }
@@ -86,17 +86,26 @@ export function createSanctuaryFire(glow: THREE.Texture) {
         camera.position.x - world.x,
         camera.position.z - world.z,
       );
+      // A camera standing over the brazier would see only an orange smear:
+      // the fire thins away as the lens nears it.
+      const fade = THREE.MathUtils.smoothstep(
+        Math.hypot(camera.position.x - world.x, camera.position.z - world.z),
+        1.2,
+        3,
+      );
       for (const flame of layers) {
         const t = elapsed + flame.userData.phase;
         const base = flame.userData.base as THREE.Vector3;
-        (flame.material as THREE.ShaderMaterial).uniforms.time.value = t * 0.8;
+        const uniforms = (flame.material as THREE.ShaderMaterial).uniforms;
+        uniforms.time.value = t * 0.8;
+        uniforms.fade.value = fade;
         flame.scale.set(
           base.x * (1 + 0.06 * Math.sin(t * 5.3)),
           base.y * (1 + 0.1 * Math.sin(t * 7.1) + 0.05 * Math.sin(t * 13)),
           1,
         );
       }
-      halo.material.opacity = 0.5 + 0.08 * Math.sin(elapsed * 6.3);
+      halo.material.opacity = (0.5 + 0.08 * Math.sin(elapsed * 6.3)) * fade;
     },
   };
 }

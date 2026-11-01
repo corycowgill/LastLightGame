@@ -95,7 +95,7 @@ function selectInput(source: string) {
     hint.innerHTML =
       source === "gamepad"
         ? "LS Move · RS Look · A Use<br>RT Run · LT/B Crouch · X Burst · Y Chalk<br>LB / D-pad Flame · RB Brand · View Journal · Menu Pause"
-        : "WASD Move · Drag / Arrows Look · Wheel Zoom<br>SHIFT Sprint · C Crouch (tap: toggle)<br>E / SPACE Use · Q Chalk · F Burst · G Brand · T Stone · TAB Journal";
+        : "WASD Move · Click + Mouse Look · Wheel Zoom<br>SHIFT Sprint · C Crouch (tap: toggle)<br>E / SPACE Use · Q Chalk · F Burst · G Brand · T Stone · TAB Journal";
   }
 }
 if (new URLSearchParams(location.search).has("touch"))
@@ -213,7 +213,7 @@ function platformAction(action: PlatformAction) {
     cameraControls.pose.pitch = 0.25;
   }
 }
-const intro = `<div class="eyebrow">AN EXPEDITION INTO THE FORGOTTEN CATACOMBS</div><h1>THE LAST<br><em>LIGHT</em></h1><p class="tagline">When the flame dies, the hunt begins.</p><div id="inputStatus" class="input-status">Xbox: press a button to connect · Touch: landscape recommended</div><div class="divider"></div><p class="description">Recover a votive from the crypt and bring it back to golden fire.<br>Go deeper for richer discoveries. Leave before the flame fails.<br>And if your light goes out — keep moving.</p>`;
+const intro = `<div class="eyebrow">AN EXPEDITION INTO THE FORGOTTEN CATACOMBS</div><h1>THE LAST<br><em>LIGHT</em></h1><p class="tagline">When the flame dies, the hunt begins.</p><div id="inputStatus" class="input-status">Xbox: press a button to connect · Touch: landscape recommended</div><div class="divider"></div><p class="description">Descend with one torch. Find the relics of the forgotten dead and carry them back to golden fire.<br>Your flame is all that keeps the Hunter asleep. When it dies, run, hide, or strike a match.</p>`;
 function panel(content: string) {
   touchInput.reset();
   document.body.dataset.playing = "false";
@@ -354,6 +354,8 @@ async function begin(load: boolean) {
     game.rollOmen();
     game.rollVow();
   }
+  // A newcomer gets a three-line brief that clears once they set off.
+  $("firstSteps").hidden = game.initiated;
   if (load) cameraControls.pose.yaw = game.player.yaw;
   else game.player.yaw = cameraControls.pose.yaw = game.startingHeading;
   // Reproducible art-review position using the real world, light and game renderer.
@@ -479,7 +481,7 @@ function pause() {
 function controls() {
   screen = "guide";
   panel(
-    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Drag mouse / arrow keys · Look &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C · Crouch (tap to toggle, hold to crouch briefly)<br>E / SPACE · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst &nbsp; G · Drop burning brand &nbsp; T · Throw stone<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Xbox: LS Move · RS Look · A Use · B Toggle Crouch · X Burst · Y Chalk · LB / D-pad Flame · RB Brand · LT Crouch · RT/LS Sprint · D-pad Up Stone · D-pad Down Zoom Out (LT + Down Zoom In) · RS Click Recenter · View Journal · Menu Pause. Menus: D-pad Navigate · A Select · B Back.</p><p>Touch: Left pad Move (push forward to the rim to run; ease back to walk) · Drag view Look · RUN Hold Sprint · CROUCH Toggle · USE Interact/Relight · BURST, BRAND, STONE, CHALK and JOURNAL actions · Flame buttons · +/− Zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps and reduce distant visual detection; close Hunters can still see you. Sprint in bursts: stamina recovers after a short rest. Break sight around corners to lose the Hunter. A fresh Steady torch lasts about two minutes. Oil adds about 30 seconds; each of your two starting matches buys about 20 seconds after a two second relight. Ember stretches fuel to about 3.6 minutes; Blaze empties a full torch in about 34 seconds. Relighting slows movement and prevents sprinting; find cover first. Flame bursts cannot reach through stone walls. Relit torchlight makes the Hunter recoil and flee before banishment; stronger flame protects a wider area. Sanctuary fires repel it when unobstructed. Deeper air drains fuel faster, and the Hunter grows more persistent. Stalkers can damage a steady flame at close range; use Blaze or keep your distance. Golden sanctuary fires banish the Hunt.</p><p>G / RB / BRAND drops a burning brand: costs 15 seconds of base Steady fuel while lit, or one match during a Hunt, lasts 18 seconds, and repels creatures within 4 metres when unobstructed. It is stationary and grants no sanctuary refill; Hunters resume searching after it dies. Its fire can also light a reliquary seal while your torch is out. Only one brand may burn, with a 24-second cooldown.</p><p>Some expeditions contain the Bell Crypt. Recover its sealed votive via the longer route, then choose: quietly retrace your steps or raise the loud return gate for a shorter route to fire. Flooded chambers have slower, noisy water and quieter dry edges.</p><div id="actions"></div>',
+    '<div class="eyebrow">TORCHBEARER’S FIELD GUIDE</div><h2>Know the darkness.</h2><p>WASD · Move &nbsp; Click the view, then mouse · Look (or drag / arrow keys) &nbsp; Wheel · Zoom<br>SHIFT · Sprint &nbsp; C · Crouch (tap to toggle, hold to crouch briefly)<br>E / SPACE · Collect / use fire / relight<br>Q · Leave a chalk mark &nbsp; F · Flame burst &nbsp; G · Drop burning brand &nbsp; T · Throw stone<br>1 / 2 / 3 · Ember / Steady / Blaze<br>TAB · Journal &nbsp; ESC · Pause</p><p>Click Capture Mouse for free mouse look if your browser permits it. Otherwise hold either mouse button and drag over the game. Arrow keys always rotate the camera. Scroll to zoom.</p><p>Xbox: LS Move · RS Look · A Use · B Toggle Crouch · X Burst · Y Chalk · LB / D-pad Flame · RB Brand · LT Crouch · RT/LS Sprint · D-pad Up Stone · D-pad Down Zoom Out (LT + Down Zoom In) · RS Click Recenter · View Journal · Menu Pause. Menus: D-pad Navigate · A Select · B Back.</p><p>Touch: Left pad Move (push forward to the rim to run; ease back to walk) · Drag view Look · RUN Hold Sprint · CROUCH Toggle · USE Interact/Relight · BURST, BRAND, STONE, CHALK and JOURNAL actions · Flame buttons · +/− Zoom.</p><p>Ember saves fuel; Blaze spends it quickly for visibility. Crouch to quiet your steps and reduce distant visual detection; close Hunters can still see you. Sprint in bursts: stamina recovers after a short rest. Break sight around corners to lose the Hunter. A fresh Steady torch lasts about two minutes. Oil adds about 30 seconds; each of your two starting matches buys about 20 seconds after a two second relight. Ember stretches fuel to about 3.6 minutes; Blaze empties a full torch in about 34 seconds. Relighting slows movement and prevents sprinting; find cover first. Flame bursts cannot reach through stone walls. Relit torchlight makes the Hunter recoil and flee before banishment; stronger flame protects a wider area. Sanctuary fires repel it when unobstructed. Deeper air drains fuel faster, and the Hunter grows more persistent. Stalkers can damage a steady flame at close range; use Blaze or keep your distance. Golden sanctuary fires banish the Hunt.</p><p>G / RB / BRAND drops a burning brand: costs 15 seconds of base Steady fuel while lit, or one match during a Hunt, lasts 18 seconds, and repels creatures within 4 metres when unobstructed. It is stationary and grants no sanctuary refill; Hunters resume searching after it dies. Its fire can also light a reliquary seal while your torch is out. Only one brand may burn, with a 24-second cooldown.</p><p>Some expeditions contain the Bell Crypt. Recover its sealed votive via the longer route, then choose: quietly retrace your steps or raise the loud return gate for a shorter route to fire. Flooded chambers have slower, noisy water and quieter dry edges.</p><div id="actions"></div>',
   );
   button("back", "BACK", menu);
 }
@@ -1162,6 +1164,29 @@ function updateHUD() {
       `<span class="prompt-icon">${glyphSvg(icon)}</span><kbd>${useLabel}</kbd> ${label}${pickup.encounter === "reliquary" ? " · 3.5s" : ""}`;
   }
   $("stance").hidden = !game.player.crouched;
+  if (!$("firstSteps").hidden) {
+    const start = game.startingPosition;
+    if (
+      game.initiated ||
+      game.elapsed > 18 ||
+      Math.hypot(game.player.x - start.x, game.player.z - start.z) > 6
+    )
+      $("firstSteps").hidden = true;
+    else {
+      const key =
+        inputSource === "gamepad" ? "A" : inputSource === "touch" ? "USE" : "E";
+      for (const el of document.querySelectorAll(".use-key"))
+        el.textContent = key;
+      $("firstStepsControls").textContent =
+        inputSource === "gamepad"
+          ? "Left stick move · Right stick look"
+          : inputSource === "touch"
+            ? "Left pad move · Drag the view to look"
+            : mouseCaptured
+              ? "WASD move · Mouse look · Esc pause"
+              : "WASD move · Click the view, then move the mouse to look";
+    }
+  }
   const vowEl = $("vow");
   vowEl.hidden = !game.vow;
   if (game.vow) {

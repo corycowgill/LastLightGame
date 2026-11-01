@@ -2562,3 +2562,85 @@ body[data-touch="true"] #touchControls button[aria-pressed="true"] {
 #stance[hidden] {
   display: none;
 }
+
+/* First expedition brief: three lines, top right, gone once the player sets off. */
+#firstSteps {
+  position: absolute;
+  right: 24px;
+  top: 92px;
+  width: min(330px, 42vw);
+  padding: 14px 18px 12px;
+  border-left: 2px solid #d8bd84;
+  background: linear-gradient(90deg, #0a1018ee, #0a1018b8);
+  color: #d9d1c3;
+  box-shadow: 0 8px 28px #0005;
+  animation: discovery-arrival 0.5s ease-out;
+  pointer-events: none;
+}
+#firstSteps[hidden] {
+  display: none;
+}
+#firstSteps ol {
+  margin: 8px 0 6px;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+#firstSteps li {
+  margin-bottom: 5px;
+}
+#firstSteps li::marker {
+  color: #d8bd84;
+  font-family: Georgia, serif;
+}
+#firstSteps b {
+  color: #f0dfb8;
+  font-weight: 600;
+}
+#firstSteps kbd {
+  display: inline-block;
+  min-width: 16px;
+  padding: 0 4px;
+  border: 1px solid #d8bd8488;
+  border-radius: 3px;
+  color: #f6b85b;
+  font:
+    11px Inter,
+    Arial,
+    sans-serif;
+  text-align: center;
+}
+#firstStepsControls {
+  margin: 4px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: #9fb7b0;
+}
+@media (max-width: 950px), (pointer: coarse) {
+  #firstSteps {
+    top: auto;
+    bottom: 120px;
+    right: 12px;
+    width: min(300px, 60vw);
+    padding: 10px 12px 8px;
+  }
+  #firstSteps ol {
+    font-size: 11px;
+  }
+}
+
+/* The objective line reads as a goal, not as fine print. */
+#survivalHint {
+  font-size: 12px;
+  color: #e3d3b3;
+  letter-spacing: 0.05em;
+}
+#survivalHint:not(:empty)::before {
+  content: "◆ ";
+  color: #f6b85b;
+}
+@media (max-height: 500px) {
+  #survivalHint {
+    font-size: 9px;
+  }
+}

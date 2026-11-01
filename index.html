@@ -30,7 +30,9 @@
           <button id="captureMouse">CAPTURE MOUSE</button
           ><button id="pauseButton">ESC · PAUSE</button>
           <button id="audioUnlock" hidden>TAP FOR SOUND</button>
-          <div id="lookHint">Click the view to look with the mouse · Wheel: zoom</div>
+          <div id="lookHint">
+            Click the view to look with the mouse · Wheel: zoom
+          </div>
         </div>
       </header>
       <div id="compass" hidden role="img" aria-label="Sanctuary compass">
@@ -42,6 +44,24 @@
       <div id="relicPouch" aria-label="Collected relics"></div>
       <div id="phase"></div>
       <div id="direction"></div>
+      <aside id="firstSteps" hidden aria-live="polite">
+        <span class="eyebrow">YOUR FIRST EXPEDITION</span>
+        <ol>
+          <li>
+            <b>Find relics.</b> Walk up to a glimmer and
+            <kbd class="use-key">E</kbd> take it.
+          </li>
+          <li>
+            <b>Carry them to golden fire.</b> Only relics brought to a fire are
+            kept.
+          </li>
+          <li>
+            <b>Guard your torch.</b> When it dies, the Hunter wakes. A match
+            relights it.
+          </li>
+        </ol>
+        <p id="firstStepsControls"></p>
+      </aside>
       <aside id="relicDiscovery" hidden role="status" aria-live="polite">
         <div id="relicEmblem"></div>
         <span class="eyebrow" id="pickupTitle">VOTIVE RECOVERED</span>
@@ -63,7 +83,7 @@
           <div id="survivalHint" role="status" aria-live="polite"></div>
         </section>
         <section class="hint">
-          WASD Move · Drag / Arrows Look · Wheel Zoom<br />SHIFT Sprint · C
+          WASD Move · Click + Mouse Look · Wheel Zoom<br />SHIFT Sprint · C
           Crouch (tap: toggle)<br />E / SPACE Interact / Relight · Q Chalk · F
           Burst · G Brand · TAB Journal
         </section>

@@ -194,3 +194,59 @@ test("invert look flips only the vertical axis of drag look", () => {
   assert.ok(controls.pose.pitch < before.pitch, "vertical inverted");
   controls.dispose();
 });
+
+test("a mouse click on the view takes mouse look; a refusal falls back to drag", async () => {
+  const element = new Target(),
+    doc = new Doc();
+  element.ownerDocument = doc;
+  let requests = 0,
+    allow = true;
+  element.requestPointerLock = () => {
+    requests++;
+    if (!allow) return Promise.reject(new Error("embedded"));
+    doc.pointerLockElement = element;
+    doc.dispatchEvent(new Event("pointerlockchange"));
+    return Promise.resolve();
+  };
+  let captured = false;
+  const controls = new CameraControls(
+    element as unknown as HTMLElement,
+    () => true,
+    () => 1,
+    () => {},
+    (value) => (captured = value),
+    () => false,
+    () => true,
+  );
+  const click = (pointerType = "mouse") =>
+    event(element, "pointerdown", {
+      button: 0,
+      pointerId: 1,
+      pointerType,
+      clientX: 0,
+      clientY: 0,
+    });
+  click("touch");
+  assert.equal(requests, 0, "touch never asks for pointer lock");
+  event(doc, "pointerup", { pointerId: 1 });
+  click();
+  await Promise.resolve();
+  assert.equal(requests, 1);
+  assert.equal(captured, true);
+  // Captured: further clicks do not toggle the lock off.
+  click();
+  assert.equal(requests, 1);
+  doc.exitPointerLock();
+  allow = false;
+  click();
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.equal(requests, 2);
+  event(doc, "pointerup", { pointerId: 1 });
+  click();
+  assert.equal(requests, 2, "a refused lock is not requested again");
+  const yaw = controls.pose.yaw;
+  event(doc, "pointermove", { pointerId: 1, clientX: 50, clientY: 0 });
+  assert.ok(controls.pose.yaw < yaw, "drag still looks after the refusal");
+  controls.dispose();
+});
